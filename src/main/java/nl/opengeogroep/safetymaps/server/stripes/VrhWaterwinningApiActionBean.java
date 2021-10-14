@@ -277,6 +277,8 @@ public class VrhWaterwinningApiActionBean implements ActionBean {
                 + "from "
                 + " (select geom, st_closestpoint(geom, st_setsrid(st_point(?, ?), ?)) as point, 'open_water' as \"type\", '' as info from vrh_new.openwater_vlakken "
                 + "  union all "
+                + "  select geom, st_closestpoint(geom, st_setsrid(st_point(?, ?), ?)) as point, 'open_water' as \"type\", '' as info from vrh_new.openwater_hm "
+                + "  union all "
                 + "  select geom, geom as point, 'bluswaterriool' as \"type\", overige_in as info from vrh_new.bluswaterriool) b "
                 + " where st_distance(b.geom, st_setsrid(st_point(?, ?), ?)) < ? "
                 + " order by 1 asc limit ?", new MapListHandler(), x, y, srid, x, y, srid, x, y, srid, distance, count);
