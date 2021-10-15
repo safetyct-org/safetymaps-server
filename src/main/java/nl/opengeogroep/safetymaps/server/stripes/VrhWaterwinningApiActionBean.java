@@ -283,7 +283,7 @@ public class VrhWaterwinningApiActionBean implements ActionBean {
                 + "  union all "
                 + "  select geom, geom as point, 'bluswaterriool' as \"type\", overige_in as info from vrh_new.bluswaterriool) b "
                 + " where st_distance(b.geom, st_setsrid(st_point(?, ?), ?)) < ? "
-                + " order by 1 asc limit ?", new MapListHandler(), x, y, srid, x, y, srid, x, y, srid, x, y, srid, distance, count);
+                + " order by 1 asc limit ?", new MapListHandler(), x, y, srid, x, y, srid, x, y, srid, x, y, srid, x, y, srid, distance, count);
 
         log.debug("Waterwinning secondary results " + getContext().getRequest().getRequestURI() + "?" + getContext().getRequest().getQueryString() + ": " + rows);
 
