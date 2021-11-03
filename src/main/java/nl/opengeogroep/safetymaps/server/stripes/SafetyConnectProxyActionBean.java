@@ -98,7 +98,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         }
 
         String qs = context.getRequest().getQueryString();
-        String uri = url + "/" + path + (regioCode == null ? (qs == null ? "" : "?") : "?regioCode=" + regioCode + (qs == null ? "" : "&") + qs);
+        String uri = url + "/" + path + (regioCode == null ? (qs == null ? "" : "?") : "?regioCode=" + regioCode + (qs == null ? "" : "&")) + qs;
         final HttpUriRequest req;
         
         if (requestIs(KLADBLOKREGEL_REQUEST)) {
