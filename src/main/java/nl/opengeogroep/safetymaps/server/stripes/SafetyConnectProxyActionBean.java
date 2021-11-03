@@ -91,24 +91,26 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
         String authorization = Cfg.getSetting("safetyconnect_webservice_authorization");
         String url = Cfg.getSetting("safetyconnect_webservice_url");
+        String regioCode = Cfg.getSetting("safetyconnect_regio_code");
 
         if(authorization == null || url == null) {
             return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");
         }
 
         String qs = context.getRequest().getQueryString();
+        String uri = url + "/" + path + (regioCode == null ? (qs == null ? "" : "?") : "?regioCode=" + regioCode + (qs == null ? "" : "&") + qs);
         final HttpUriRequest req;
         
         if (requestIs(KLADBLOKREGEL_REQUEST)) {
             req = RequestBuilder.post()
-                .setUri(url + "/" + path + (qs == null ? "" : "?" + qs))
+                .setUri(uri)
                 .addHeader("Authorization", authorization)
                 .addHeader("Content-Type", "none")
                 .setEntity(new StringEntity(""))
                 .build();
         } else {
             req = RequestBuilder.get()
-                .setUri(url + "/" + path + (qs == null ? "" : "?" + qs))
+                .setUri(uri)
                 .addHeader("Authorization", authorization)
                 .build();
         }
