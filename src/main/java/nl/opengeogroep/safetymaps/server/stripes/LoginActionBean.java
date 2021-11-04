@@ -32,8 +32,10 @@ public class LoginActionBean implements ActionBean {
         
         return new StreamingResolution("text/html",
             "<html><head>" +
-                "<meta http-equiv=\"refresh\" content=\"0;url=" + context.getRequest().getContextPath() + returnTo + "\">" +
+                "<meta http-equiv=\"refresh\" content=\"0;url=" + returnTo + "\">" +
             "</head></html>"
         );
     }
 }
+
+//+ context.getRequest().getContextPath()
