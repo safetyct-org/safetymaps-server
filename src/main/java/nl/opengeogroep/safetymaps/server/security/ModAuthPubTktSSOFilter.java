@@ -149,7 +149,7 @@ public class ModAuthPubTktSSOFilter implements Filter {
         ticket += ";sig=" + ModAuthPubTkt.getSignature(ticket, privateKey);
         Cookie cookie = new Cookie(name, URLEncoder.encode(ticket, "US-ASCII"));
         cookie.setMaxAge(validitySeconds);
-        cookie.setPath("/");
+        cookie.setPath("/smsng");
         cookie.setDomain(domain);
         cookie.setHttpOnly(true);
         cookie.setSecure(request.getScheme().equals("https"));
