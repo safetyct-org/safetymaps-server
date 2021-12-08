@@ -197,7 +197,7 @@ public class UpdatableLoginSessionFilter implements Filter {
     }
 
     private static String[] getExternalRolesAsUsersForGroupMembership() throws SQLException, NamingException {
-        String[] externalRolesSettingsValue = Cfg.getSetting("external_roles_as_users_for_group_membership", "").split(",");
+        String[] externalRolesSettingsValue = Cfg.getSetting("external_roles_as_users_for_group_membership", ":").split(",");
         List<String> externalRolesAsUsersForGroupMembership = new ArrayList<String>();
 
         for(int i = 0; i < externalRolesSettingsValue.length; i++) {
