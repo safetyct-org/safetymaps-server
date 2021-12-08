@@ -201,7 +201,8 @@ public class UpdatableLoginSessionFilter implements Filter {
         List<String> externalRolesAsUsersForGroupMembership = new ArrayList<String>();
 
         for(int i = 0; i < externalRolesSettingsValue.length; i++) {
-            externalRolesAsUsersForGroupMembership.add(externalRolesSettingsValue[i].split(":")[1].trim());
+            String[] roleValues = externalRolesSettingsValue[i].split(":");
+            externalRolesAsUsersForGroupMembership.add(roleValues[1].trim());
         }
 
         return externalRolesAsUsersForGroupMembership.toArray(new String[externalRolesAsUsersForGroupMembership.size()]);
