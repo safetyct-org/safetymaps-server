@@ -196,20 +196,8 @@ public class UpdatableLoginSessionFilter implements Filter {
         }
     }
 
-    /*private static String[] getExternalRolesAsUsersForGroupMembership() throws SQLException, NamingException {
-        String[] externalRolesSettingsValue = Cfg.getSetting("external_roles_as_users_for_group_membership", ":").split(",");
-        List<String> externalRolesAsUsersForGroupMembership = new ArrayList<String>();
-
-        for(int i = 0; i < externalRolesSettingsValue.length; i++) {
-            String[] roleValues = externalRolesSettingsValue[i].split(":");
-            externalRolesAsUsersForGroupMembership.add(roleValues[1].trim());
-        }
-
-        return externalRolesAsUsersForGroupMembership.toArray(new String[externalRolesAsUsersForGroupMembership.size()]);
-    }*/
-
     private static String[] getExternalRolesAsUsersForGroupMembership() throws SQLException, NamingException {
-        String[] externalRolesAsUsersForGroupMembership = Cfg.getSetting("external_roles_as_users_for_group_membership", ":").split(",");
+        String[] externalRolesAsUsersForGroupMembership = Cfg.getSetting("external_roles_as_users_for_group_membership", "").split(",");
         for(int i = 0; i < externalRolesAsUsersForGroupMembership.length; i++) {
             externalRolesAsUsersForGroupMembership[i] = externalRolesAsUsersForGroupMembership[i].trim();
         }
@@ -217,14 +205,10 @@ public class UpdatableLoginSessionFilter implements Filter {
     }
 
     private static void addExternalRolesAsUsersForGroupMembershipToNewRoles(Collection<String> previousRoles, Collection<String> newRoles) throws Exception {
-        for(String roleString: getExternalRolesAsUsersForGroupMembership()) {
-            String[] role = roleString.split(":");
-            int rolenameIndex = role.length - 1;
-            int roleidIndex = 0;
-
-            if(previousRoles.contains(role[roleidIndex])) {
-                newRoles.addAll(roleProvider.getRoles(role[rolenameIndex]));
-                newRoles.add(role[rolenameIndex]);
+        for(String role: getExternalRolesAsUsersForGroupMembership()) {
+            if(previousRoles.contains(role)) {
+                newRoles.addAll(roleProvider.getRoles(role));
+                newRoles.add(role);
             }
         }
     }
