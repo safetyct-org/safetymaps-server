@@ -349,21 +349,14 @@ public class ViewerApiActionBean implements ActionBean {
             options.put("userVoertuignummer", details.optString("voertuignummer", null));
         } else if (isSmvng && "IncidentMonitor".equals(name)) {
             options.put(prefixSmvng + "LeavingIncidentForLocalVehcile", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incidentmonitor_leaveincident")); 
-        } else if (isSmvng && "LiveData".equals(name)) {
-            options.put(prefixSmvng + "streetview", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_livedata_streetview")); 
-            options.put(prefixSmvng + "twitter", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_livedata_twitter")); 
-            options.put(prefixSmvng + "drawings", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_livedata_drawings")); 
-            options.put(prefixSmvng + "photos", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_livedata_photos")); 
-            options.put(prefixSmvng + "earth", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_livedata_earth")); 
-            options.put(prefixSmvng + "livestream", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_livedata_livestream")); 
         } else if (isSmvng && "VehicleInfo".equals(name)) {
             options.put(prefixSmvng + "showVehicleLocationsOnIncident", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations")); 
             options.put(prefixSmvng + "showVehicleLocationsOnMap", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_maplocations")); 
             options.put(prefixSmvng + "showLocationsFromUnasignedVehiclesOnMap", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_unasigned")); 
         } else if (isSmvng && "Drawing".equals(name)) {
             options.put(prefixSmvng + "crud", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_drawing_crud")); 
-        } else if (isSmvng && "ImageDrawing".equals(name)) {
-            options.put(prefixSmvng + "imageDrawing", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_imagedrawing")); 
+        } else if (isSmvng && "Streetview".equals(name)) {
+            options.put(prefixSmvng + "earth", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_streetview_earth")); 
         }
 
         return module;
