@@ -170,7 +170,7 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
     private void loadInfo() throws NamingException, SQLException {
         allRoles = qr().query("select * from " + ROLE_TABLE + " where protected = false or role = 'admin' order by protected desc, role", new MapListHandler());
 
-        allModules = qr().query("select issmvngmodule, name, enabled from organisation.modules where issmvngmodule = true order by 1, 2", new MapListHandler());
+        allModules = qr().query("select issmvngmodule, name, enabled, description from organisation.modules where issmvngmodule = true order by 1, 2", new MapListHandler());
 
         allLayers = qr().query("select issmvngwms, uid, enabled, name from organisation.wms where issmvngwms = true and coalesce(isbackgroundlayer, false) = false and enabled = true order by 1, 2", new MapListHandler());
 

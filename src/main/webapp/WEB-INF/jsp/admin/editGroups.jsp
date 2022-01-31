@@ -108,7 +108,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             <c:forEach var="module" items="${actionBean.allModules}" varStatus="status">
                                 <div class="custom-control custom-checkbox">
                                     <stripes:checkbox name="modules" class="custom-control-input" value="${module.name}" id="role${status.index}"/>
-                                    <label class="custom-control-label" for="role${status.index}" style="${module.enabled ? '' : 'text-decoration: line-through;'} ${module.issmvngmodule ? 'font-style: italic;' : ''}"><c:out value="${module.name}"/></label>
+                                    <label class="custom-control-label" for="role${status.index}" style="${module.enabled ? '' : 'text-decoration: line-through;'} ${module.issmvngmodule ? 'font-style: italic;' : ''}"><c:out value="${module.name} (${module.description})"/></label>
                                 </div>
                             </c:forEach>
                         </div>
