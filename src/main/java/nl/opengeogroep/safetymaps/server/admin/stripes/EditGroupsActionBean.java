@@ -53,6 +53,7 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
     private ActionBeanContext context;
 
     private List<Map<String,Object>> allRoles;
+    private List<Map<String,Object>> extraRoles;
     private List<Map<String,Object>> allModules;
     private List<Map<String,Object>> allLayers;
     private List<String> allUsers;
@@ -117,6 +118,14 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
         this.allRoles = allRoles;
     }
 
+    public List<Map<String, Object>> getExtraRoles() {
+        return extraRoles;
+    }
+
+    public void setExtraRoles(List<Map<String, Object>> extraRoles) {
+        this.extraRoles = extraRoles;
+    }
+
     public boolean isProtectedGroup() {
         return protectedGroup;
     }
@@ -169,6 +178,8 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
     @Before
     private void loadInfo() throws NamingException, SQLException {
         allRoles = qr().query("select * from " + ROLE_TABLE + " where protected = false or role = 'admin' order by protected desc, role", new MapListHandler());
+
+        extraRoles = qr().query("select role, coalesce(description, role) as description from " + ROLE_TABLE + " where protected = false or (protected = true and (left(role, 6) = 'smvng_' or role = 'admin' or role = 'safetyconnect_webservice' or role = 'vrh_ags_replica')) order by protected desc, role", new MapListHandler());
 
         allModules = qr().query("select issmvngmodule, name, enabled, description from organisation.modules where issmvngmodule = true order by 1, 2", new MapListHandler());
 

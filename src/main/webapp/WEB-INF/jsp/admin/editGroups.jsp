@@ -109,6 +109,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                                 <div class="custom-control custom-checkbox">
                                     <stripes:checkbox name="modules" class="custom-control-input" value="${module.name}" id="role${status.index}"/>
                                     <label class="custom-control-label" for="role${status.index}" style="${module.enabled ? '' : 'text-decoration: line-through;'} ${module.issmvngmodule ? 'font-style: italic;' : ''}"><c:out value="${module.description} (${module.name})"/></label>
+                                    
+                                    <c:forEach var="extraRole" items="${actionBean.extraRoles}" varStatus="status">
+                                        <c:if test="${fn:containsIgnoreCase(extraRole, module.name)}">
+                                            <div class="custom-control custom-checkbox">
+                                                <stripes:checkbox name="extraRole" class="custom-control-input" value="${extraRole.role}" id="extraRole${status.index}"/>
+                                                <label class="custom-control-label" for="extraRole${status.index}"><c:out value="${extraRole.description}"/></label>
+                                            </div>
+                                        </c:if>
+                                    </c:forEach>
+                                    
                                 </div>
                             </c:forEach>
                         </div>
