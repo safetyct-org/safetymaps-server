@@ -111,9 +111,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                                     <label class="custom-control-label" for="role${status.index}" style="${module.enabled ? '' : 'text-decoration: line-through;'} ${module.issmvngmodule ? 'font-style: italic;' : ''}"><c:out value="${module.description} (${module.name})"/></label>
                                     
                                     <c:forEach var="extraRole" items="${actionBean.extraRoles}" varStatus="status">
-                                        <c:if test="${fn:containsIgnoreCase(extraRole, '('.concat(module.name).concat(')'))}">
+                                        <c:if test="${fn:containsIgnoreCase(extraRole.role, '_'.concat(module.name).concat('_'))}">
                                             <div class="custom-control custom-checkbox" style="margin-left: 16px !important;">
-                                                <stripes:checkbox name="extraRole" class="custom-control-input" value="${extraRole.role}" id="extraRole${module.name}${status.index}"/>
+                                                <stripes:checkbox name="extraRole${module.name}" class="custom-control-input" value="${extraRole.role}" id="extraRole${module.name}${status.index}"/>
                                                 <label class="custom-control-label" for="extraRole${module.name}${status.index}"><c:out value="${extraRole.description}"/></label>
                                             </div>
                                         </c:if>
