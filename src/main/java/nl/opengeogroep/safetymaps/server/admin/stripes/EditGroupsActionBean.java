@@ -145,6 +145,14 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
         this.modules = modules;
     }
 
+    public List<String> getExtraRoles() {
+        return extraRoles;
+    }
+
+    public void setExtraRoles(List<String> extraRoles) {
+        this.extraRoles = extraRoles;
+    }
+
     public List<String> getLayers() {
         return layers;
     }
