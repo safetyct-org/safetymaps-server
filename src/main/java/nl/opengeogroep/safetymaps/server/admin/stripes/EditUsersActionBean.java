@@ -327,7 +327,7 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
             qr().update("insert into " + USER_TABLE + " (username, password, session_expiry_number, session_expiry_timeunit) values(?, ?, ?, ?)", username, hashedPassword, expiry, expiryTimeUnit);
         }
         
-        qr().update("delete from " + USER_ROLE_TABLE + " where username = ? and (left(role, 6) = 'smvng_' or role in (select role from safetymaps.role where protected = false))", username);
+        qr().update("delete from " + USER_ROLE_TABLE + " where username = ? and (left(role, 6) = 'smvng_' or role in (select role from safetymaps.role where protected = false or role = 'viewer'))", username);
 
         if(roles != null) {
             for(String r: roles) {
