@@ -272,7 +272,7 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
         }
 
         for(String user : users) {
-            qr().update("delete from " + USER_ROLE_TABLE + " where username = ? and role != ? and role != 'viewer'", user, role);
+            qr().update("delete from " + USER_ROLE_TABLE + " where username = ? and role != ? and left(role, 6) = 'smvng_'", user, role);
         }
 
         for(String user : users) {
