@@ -49,7 +49,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
     private ActionBeanContext context;
 
-    static final String ROLE = "safetyconnect_webservice";
+    static final String ROLE = "smvng_incident_safetyconnect_webservice";
 
     static final String[] UNMODIFIED_REPSONSES = { "eenheid", "eenheidstatus" };
     static final String INCIDENT_RESPONSE = "incident";
