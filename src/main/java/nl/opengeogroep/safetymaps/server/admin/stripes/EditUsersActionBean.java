@@ -50,6 +50,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -324,15 +326,27 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
         if(update == 0) {
             qr().update("insert into " + USER_TABLE + " (username, password, session_expiry_number, session_expiry_timeunit) values(?, ?, ?, ?)", username, hashedPassword, expiry, expiryTimeUnit);
         }
+        
         qr().update("delete from " + USER_ROLE_TABLE + " where username = ?", username);
+
         if(roles != null) {
             for(String r: roles) {
                 qr().update("insert into " + USER_ROLE_TABLE + " (username, role) values (?, ?)", username, r);
+        
+                String er = qr().query("select roles from " + ROLE_TABLE + " where role = ?", new ScalarHandler<String>(), r);
+                if(er != null) {
+                    List<String> extraRoles = new ArrayList<>();
+                    extraRoles = Arrays.asList(er.split(", "));
+        
+                    for(String extraRole : extraRoles) {
+                        qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values(?,?)", username, extraRole);
+                    }
+                }
             }
         }
+
         qr().update("insert into " + USER_ROLE_TABLE + " (username, role) values (?, ?)", username, "viewer");
-        //qr().update("insert into " + USER_ROLE_TABLE + " (username, role) values (?, ?)", username, "safetyconnect_webservice");
-        
+
         UpdatableLoginSessionFilter.updateUserSessionRoles(username);
 
         getContext().getMessages().add(new SimpleMessage("Gebruiker is opgeslagen"));
