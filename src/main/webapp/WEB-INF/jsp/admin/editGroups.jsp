@@ -107,14 +107,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             <p>
                             <c:forEach var="module" items="${actionBean.allModules}" varStatus="status">
                                 <div class="custom-control custom-checkbox">
-                                    <stripes:checkbox name="modules" class="custom-control-input" value="${module.name}" id="role${status.index}"/>
+                                    <stripes:checkbox name="modules" class="custom-control-input" value="${module.name}" id="role${status.index}" onClick="javascript:handleChildren(this, ${module.name});"/>
                                     <label class="custom-control-label" for="role${status.index}" style="${module.enabled ? '' : 'text-decoration: line-through;'} ${module.issmvngmodule ? 'font-style: italic;' : ''}"><c:out value="${module.description} (${module.name})"/></label>
                                     
                                     <c:forEach var="extraRole" items="${actionBean.allExtraRoles}" varStatus="status">
                                         <c:if test="${fn:containsIgnoreCase(extraRole.role, '_'.concat(module.name).concat('_'))}">
-                                            <div class="custom-control custom-checkbox" style="margin-left: 16px !important;">
-                                                <stripes:checkbox name="extraRoles" class="custom-control-input" value="${extraRole.role}" id="extraRole${module.name}${status.index}"/>
-                                                <label class="custom-control-label" for="extraRole${module.name}${status.index}"><c:out value="${extraRole.description}"/></label>
+                                            <div class="custom-control custom-checkbox" style="margin-left: 32px !important;">
+                                                <stripes:checkbox name="extraRoles" class="custom-control-input ${module.name}_child" value="${extraRole.role}" id="extraRole${module.name}${status.index}"/>
+                                                <label class="custom-control-label" style="font-weight: 300 !important;" for="extraRole${module.name}${status.index}"><c:out value="${extraRole.description}"/></label>
                                             </div>
                                         </c:if>
                                     </c:forEach>
@@ -163,6 +163,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 </div>
             </c:if>
         </stripes:form>
+
+        <script language="javascript" type="text/javascript">
+            function handleChildren(obj, module) {
+                Array.from(document.getElementsByClassName(module + "_child")).forEach(
+                    function (element, index, array) {
+                        element.checked = false;
+                        element.disabled = !(obj.checked == false);
+                    }
+                );
+            }
+        </script>
 
     </stripes:layout-component>
 </stripes:layout-render>
