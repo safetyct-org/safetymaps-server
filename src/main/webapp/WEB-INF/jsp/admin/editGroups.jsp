@@ -107,8 +107,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             <p>
                             <c:forEach var="module" items="${actionBean.allModules}" varStatus="status">
                                 <div class="custom-control custom-checkbox">
-                                    <stripes:checkbox name="modules" class="custom-control-input" value="${module.name}" id="role${status.index}" onClick="javascript:handleChildren(this, ${module.name});"/>
-                                    <label class="custom-control-label" for="role${status.index}" style="${module.enabled ? '' : 'text-decoration: line-through;'} ${module.issmvngmodule ? 'font-style: italic;' : ''}"><c:out value="${module.description} (${module.name})"/></label>
+                                    <stripes:checkbox name="modules" class="custom-control-input" value="${module.name}" id="role${status.index}" onclick="javascript:handleChildren(this, '${module.name}');"/>
+                                    <label class="custom-control-label" for="role${status.index}" style="${module.enabled ? '' : 'text-decoration: line-through;'}"><c:out value="${module.description} (${module.name})"/></label>
                                     
                                     <c:forEach var="extraRole" items="${actionBean.allExtraRoles}" varStatus="status">
                                         <c:if test="${fn:containsIgnoreCase(extraRole.role, '_'.concat(module.name).concat('_'))}">
@@ -130,7 +130,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             <c:forEach var="layer" items="${actionBean.allLayers}" varStatus="status">
                                 <div class="custom-control custom-checkbox">
                                     <stripes:checkbox name="layers" class="custom-control-input" value="${layer.uid}" id="authLayer${status.index}"/>
-                                    <label class="custom-control-label" for="authLayer${status.index}" style="${layer.enabled ? '' : 'text-decoration: line-through;'} ${layer.issmvngwms ? 'font-style: italic;' : ''}"><c:out value="${layer.name} (${layer.uid})"/></label>
+                                    <label class="custom-control-label" for="authLayer${status.index}" style="${layer.enabled ? '' : 'text-decoration: line-through;'}"><c:out value="${layer.name} (${layer.uid})"/></label>
                                 </div>
                             </c:forEach>
                         </div>
@@ -169,7 +169,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 Array.from(document.getElementsByClassName(module + "_child")).forEach(
                     function (element, index, array) {
                         element.checked = false;
-                        element.disabled = !(obj.checked == false);
+                        element.disabled = (obj.checked == false);
                     }
                 );
             }
