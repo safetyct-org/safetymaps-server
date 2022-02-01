@@ -243,6 +243,12 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
             return list();
         }
 
+        for(String user : users) {
+            for(String extraRole : extraRoles) {
+                qr().update("delete from " + USER_ROLE_TABLE + " where username = ? and role = ?", user, extraRole);
+            }
+        }
+
         int count = qr().update("delete from " + USER_ROLE_TABLE + " where role = ?", role);
         log.info("Removing role " + role + ", deleted " + count + " user roles ");
         count = qr().update("delete from " + ROLE_TABLE + " where role = ?", role);
@@ -262,6 +268,16 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
         if(ROLE_ADMIN.equals(role)) {
             if(!users.contains(USER_ADMIN)) {
                 users.add(USER_ADMIN);
+            }
+        }
+
+        for(String user : users) {
+            qr().update("delete from " + USER_ROLE_TABLE + " where username = ? and role != ?", user, role);
+        }
+
+        for(String user : users) {
+            for(String extraRole : extraRoles) {
+                qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values(?,?)", user, extraRole);
             }
         }
 
