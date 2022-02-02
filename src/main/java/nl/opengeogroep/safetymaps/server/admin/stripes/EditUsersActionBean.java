@@ -335,12 +335,12 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
         
                 if (r != "admin") {
                     String er = qr().query("select roles from " + ROLE_TABLE + " where role = ?", new ScalarHandler<String>(), r);
-                    if(er != null && er.trim() != "") {
+                    if(er != null && er.length() > 0) {
                         List<String> extraRoles = new ArrayList<>();
                         extraRoles = Arrays.asList(er.split(", "));
             
                         for(String extraRole : extraRoles) {
-                            if (extraRole.trim() != "") {
+                            if (extraRole.length() > 0) {
                                 qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values(?,?)", username, extraRole);
                             }
                         }
