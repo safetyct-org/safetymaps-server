@@ -333,14 +333,16 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
             for(String r: roles) {
                 qr().update("insert into " + USER_ROLE_TABLE + " (username, role) values (?, ?)", username, r);
         
-                String er = qr().query("select roles from " + ROLE_TABLE + " where role = ?", new ScalarHandler<String>(), r);
-                if(er != null && er.trim() != "") {
-                    List<String> extraRoles = new ArrayList<>();
-                    extraRoles = Arrays.asList(er.split(", "));
-        
-                    for(String extraRole : extraRoles) {
-                        if (extraRole.trim() != "") {
-                            qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values(?,?)", username, extraRole);
+                if (r != "admin") {
+                    String er = qr().query("select roles from " + ROLE_TABLE + " where role = ?", new ScalarHandler<String>(), r);
+                    if(er != null && er.trim() != "") {
+                        List<String> extraRoles = new ArrayList<>();
+                        extraRoles = Arrays.asList(er.split(", "));
+            
+                        for(String extraRole : extraRoles) {
+                            if (extraRole.trim() != "") {
+                                qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values(?,?)", username, extraRole);
+                            }
                         }
                     }
                 }
