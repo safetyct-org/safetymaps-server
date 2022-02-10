@@ -81,7 +81,7 @@ public class GraphHopper implements RoutingService {
             Function<Point,String> toLonLat = CRS.getAxisOrder(serviceCrs) == CRS.AxisOrder.NORTH_EAST
                     ? p -> p.getX() + "," + p.getY()
                     : p -> p.getY() + "," + p.getX();
-
+                    
             // TODO: maybe use https://github.com/graphhopper/directions-api-clients/tree/master/java
 
             try(CloseableHttpClient client = getClient()) {
