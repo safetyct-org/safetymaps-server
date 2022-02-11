@@ -21,23 +21,75 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <!DOCTYPE html>
 <html>
     <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Inloggen</title>
+        <title>Safetymaps NG</title>
 
-        <link rel="stylesheet" href="${contextPath}/viewer/css/safetymaps.css?" type="text/css" media="screen">
-        <link rel="stylesheet" href="${contextPath}/viewer/css/libs.min.css?" type="text/css" media="screen">
-        <link rel="stylesheet" href="${contextPath}/viewer/css/customize.css?" type="text/css" media="screen">
+        <style>
+            .modal {
+                margin: 0 auto;
+                margin-top: 0px;
+                max-width: 310px;
+                margin-top: calc(50vh - 175px);
+                max-height: 350px;
+                min-height: 350px;
+                border: 1px solid black;
+                padding: 15px;
+                background-color: rgb(31, 31, 31);
+                border-radius: 5px;
+            }
 
-        <script src="${contextPath}/viewer/js/libs/libs.min.js" type="text/javascript"></script>
-        <script src="${contextPath}/viewer/js/safetymaps/config/options.js?" type="text/javascript"></script>
-        <script src="${contextPath}/viewer/js/safetymaps/config/i18n.js?" type="text/javascript"></script>
+            .modal-dialog, .modal-content {
+                padding: 0;
+                margin: 0;
+            }
+
+            h4 {
+                margin-top: 0;
+                font-size: 1.13em;
+                text-align: center;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .form-group label {
+                min-width: 300px;
+                display: block;
+                min-height: 25px;
+                font-size: .87em;
+                color: rgba(255, 255, 255, .6);
+            }
+
+            .form-group input {
+                width: 300px;
+                min-height: 20px;
+                border: 1px solid black;
+                background-color: rgba(255,255,255, .1);
+                color: white;
+                border-radius: 3px;
+            }
+
+            .btn-default {
+                display: block;
+                width: 307px;
+                height: 30px;
+                margin-top: 30px;
+                border: 1px solid rgba(30, 185, 128, 0.87);
+                border-radius: 3px;
+                background-color: rgba(30, 185, 128, 0.6);
+                color: white;
+                font-weight: bold;
+            }
+        </style>
     </head>
-    <body>
+    <body style="background-color: rgb(18, 18, 18); color: rgba(255,255,255,0.87); font-family: Roboto, 'Helvetica Neue', sans-serif;">
         <div id="loginpanel" class="modal fade">
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <h4 class="modal-title" id="login_title"><span class="glyphicon glyphicon-lock"></span> Inloggen</h4>
+                <h4 class="modal-title" id="login_title"><span class="glyphicon glyphicon-lock"></span> SAFETYMAPS NG</h4>
               </div>
                 <div id="loginpanel_b" class="modal-body">
                     <form method="post" action="j_security_check">
@@ -53,19 +105,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             </c:catch>
 
                             <c:if test="${!empty loginFailMessage}">
-                                <p style="color: red; font-weight: bold"><c:out value="${loginFailMessage}"/></p>
+                                <p style="color: #ff5548; font-size: .6em; margin-bottom: 30px;"><c:out value="${loginFailMessage}"/></p>
                             </c:if>
                         </div>
                         <div class="form-group">
-                            <label for="j_username"><span class="glyphicon glyphicon-user"></span> <span id="login_username">Gebruikersnaam1</span>:</label>
+                            <label for="j_username"><span class="glyphicon glyphicon-user"></span> <span id="login_username">Gebruikersnaam</span>:</label>
                             <input type="text" class="form-control" name="j_username" autocapitalize="none" autofocus="autofocus">
                         </div>
                         <div class="form-group">
-                            <label for="j_password"><span class="glyphicon glyphicon-eye-open"></span> <span id="login_password">Wachtwoord1</span>:</label>
+                            <label for="j_password"><span class="glyphicon glyphicon-eye-open"></span> <span id="login_password">Wachtwoord</span>:</label>
                             <input type="password" class="form-control" name="j_password">
                         </div>
                         <input type="submit" id="loginsubmit2" style="display: none" onclick="$('#btn_login_submit').click(); return false;"></input>
-                        <button id="btn_login_submit" type="submit" class="btn btn-default btn-success btn-block"><span class="glyphicon glyphicon-log-in"></span> <span id="login_submit">Inloggen1</span></button>
+                        <button id="btn_login_submit" type="submit" class="btn btn-default btn-success btn-block"><span class="glyphicon glyphicon-log-in"></span> <span id="login_submit">INLOGGEN</span></button>
                     </form>
                 </div>
             </div>
@@ -75,36 +127,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
         <script type="text/javascript">
 $(document).ready(function() {
-    i18n.init({
-        resGetPath: "${contextPath}/viewer/locales/__lng__/__ns__.json",
-        lng: dbkjsLang, fallbackLng: 'en', debug: false
-    }, function () {
-        init();
-    });
+    init();
 });
 
 function init() {
-    $('#c_settings').attr("title",i18n.t("settings.title"));
-    $('#settings_title').text(i18n.t("settings.title"));
-
-    $("#login_title").text(i18n.t("login.title"));
-    $("#login_username").text(i18n.t("login.username"));
-    $("#login_password").text(i18n.t("login.password"));
-    $("#login_submit").text(i18n.t("login.submit"));
-    $("#login_retry").text(i18n.t("login.retry"));
-
-    $("#btn_login_submit").on("click", function() {
-        $("#btn_login_submit").attr("disabled", "disabled");
-        $("#login_submit").text(i18n.t("login.processing"));
-        document.forms[0].submit();
-    });
-
-    $("#loginpanel").on('shown.bs.modal', function() {
-        $("input[name='j_username']").focus();
-    })
-
-    $("#loginpanel").modal({backdrop:'static',keyboard:false, show:true});
-
+    $("input[name='j_username']").focus();
 }
         </script>
     </body>
