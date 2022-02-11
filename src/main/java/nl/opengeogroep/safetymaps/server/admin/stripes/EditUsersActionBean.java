@@ -168,7 +168,7 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
 
     @Before
     private void loadInfo() throws NamingException, SQLException {
-        allRoles = qr().query("select role from " + ROLE_TABLE + " order by protected desc, role", new ColumnListHandler<String>());
+        allRoles = qr().query("select role from " + ROLE_TABLE + " where left(role, 6) <> 'smvng_' order by protected desc, role", new ColumnListHandler<String>());
 
         allUsers = qr().query("select 'userDatabase' as login_source, username, length(password) > 40 as secure_password, (select count(*) from " + SESSION_TABLE + " ps where ps.username = u.username) as session_count, (select max(created_at) from " + SESSION_TABLE + " ps where ps.username = u.username) as last_login\n" +
                 "from " + USER_TABLE + " u\n" +
@@ -274,7 +274,7 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
         if(update == 0) {
             qr().update("insert into " + USER_TABLE + " (username, password, session_expiry_number, session_expiry_timeunit) values(?, ?, ?, ?)", username, hashedPassword, expiry, expiryTimeUnit);
         }
-        qr().update("delete from " + USER_ROLE_TABLE + " where username = ?", username);
+        qr().update("delete from " + USER_ROLE_TABLE + " where username = ? and left(role, 6) <> 'smvng_'", username);
         if(roles != null) {
             for(String r: roles) {
                 qr().update("insert into " + USER_ROLE_TABLE + " (username, role) values (?, ?)", username, r);
