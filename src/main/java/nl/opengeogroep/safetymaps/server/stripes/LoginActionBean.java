@@ -10,7 +10,7 @@ import net.sourceforge.stripes.action.UrlBinding;
  *
  * @author matthijsln
  */
-@UrlBinding("/viewer/api/login")
+@UrlBinding("/login")
 public class LoginActionBean implements ActionBean {
     private ActionBeanContext context;
 
@@ -27,7 +27,7 @@ public class LoginActionBean implements ActionBean {
     public Resolution redirect() {
         String returnTo = context.getRequest().getParameter("returnTo");
         if (returnTo == null) {
-            returnTo = "/safetymaps/";
+            returnTo = "/viewer/";
         }
         
         return new StreamingResolution("text/html",
