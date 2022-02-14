@@ -93,7 +93,7 @@
         </init-param>
         <init-param>
             <param-name>persistentLoginPathPrefix</param-name>
-            <param-value>/viewer/api/</param-value>
+            <param-value>/api/</param-value>
         </init-param>
         <init-param>
             <param-name>rolesAsDbUsernames</param-name>
@@ -146,7 +146,7 @@
              when the origin matches one of those configured in safetymaps.settings table in the cors_allowed_origins key,
              and responds to OPTIONS requests with an OK status (so this filter must be BEFORE checking authorizations).
         -->
-        <url-pattern>/viewer/api/*</url-pattern>
+        <url-pattern>/api/*</url-pattern>
     </filter-mapping>
     <filter-mapping>
         <filter-name>MellonHeaderAuthenticationFilter</filter-name>
@@ -162,11 +162,11 @@
     </filter-mapping>
     <filter-mapping>
         <filter-name>AuthenticationRequiredFilter</filter-name>
-        <url-pattern>/viewer/api/*</url-pattern>
+        <url-pattern>/api/*</url-pattern>
     </filter-mapping>
     <filter-mapping>
         <filter-name>ModAuthPubTktSSOFilter</filter-name>
-        <url-pattern>/viewer/api/organisation-smvng.json</url-pattern>
+        <url-pattern>/api/organisation-smvng.json</url-pattern>
     </filter-mapping>
     <filter-mapping>
         <filter-name>StripesFilter</filter-name>
@@ -195,7 +195,7 @@
     </servlet-mapping-->
     <servlet-mapping>
         <servlet-name>StripesDispatcher</servlet-name>
-        <url-pattern>/viewer/api/*</url-pattern>
+        <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>StripesDispatcher</servlet-name>
@@ -235,7 +235,7 @@
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>viewer-login</web-resource-name>
-            <url-pattern>/viewer/api/login</url-pattern>
+            <url-pattern>/api/login</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <role-name>*</role-name>

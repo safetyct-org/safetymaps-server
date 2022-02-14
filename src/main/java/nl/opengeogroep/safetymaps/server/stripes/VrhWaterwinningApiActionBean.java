@@ -23,11 +23,11 @@ import org.json.JSONObject;
 /**
  * API for waterwinning info around VRH incidents.
  * 
- * /viewer/api/vrh/waterwinning.json?x=...&amp;y=...&dist=2500&count=
+ * /api/vrh/waterwinning.json?x=...&amp;y=...&dist=2500&count=
  * @author matthijsln
  */
 @StrictBinding
-@UrlBinding("/viewer/api/vrh/waterwinning.json")
+@UrlBinding("/api/vrh/waterwinning.json")
 public class VrhWaterwinningApiActionBean implements ActionBean {
     private static final Log log = LogFactory.getLog(VrhWaterwinningApiActionBean.class);
     

@@ -45,7 +45,7 @@ import static nl.opengeogroep.safetymaps.server.db.JsonExceptionUtils.*;
  *
  * @author matthijsln
  */
-@UrlBinding("/viewer/api/safetyconnect/{path}")
+@UrlBinding("/api/safetyconnect/{path}")
 public class SafetyConnectProxyActionBean implements ActionBean {
     private static final Log log = LogFactory.getLog(SafetyConnectProxyActionBean.class);
 

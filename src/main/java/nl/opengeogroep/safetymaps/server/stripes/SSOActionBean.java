@@ -43,11 +43,11 @@ public class SSOActionBean implements ActionBean {
 
         String returnTo = context.getRequest().getParameter("returnTo");
         if (returnTo == null) {
-            returnTo = "/safetymaps/";
+            returnTo = "/viewer/";
         }
         returnTo = URLEncoder.encode(returnTo, "UTF-8");
 
-        String url = "/viewer/api/login?returnTo=" + returnTo;
+        String url = "/api/login?returnTo=" + returnTo;
 
         // Check if SSO is configured/enabled
         if(ssoPassiveUrl != null) {

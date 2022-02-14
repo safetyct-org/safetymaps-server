@@ -36,7 +36,7 @@ import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_SMVNG_KLADBLOKCHAT_VI
  * @author Bart Verhaar
  */
 @StrictBinding
-@UrlBinding("/viewer/api/kladblok/{incident}.json")
+@UrlBinding("/api/kladblok/{incident}.json")
 public class KladblokActionBean implements ActionBean {
     private ActionBeanContext context;
 

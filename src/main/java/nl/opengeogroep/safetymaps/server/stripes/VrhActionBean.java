@@ -43,7 +43,7 @@ import org.json.JSONObject;
  * @author Matthijs Laan
  */
 @StrictBinding
-@UrlBinding("/viewer/api/vrh/{path}")
+@UrlBinding("/api/vrh/{path}")
 public class VrhActionBean implements ActionBean {
     private ActionBeanContext context;
 

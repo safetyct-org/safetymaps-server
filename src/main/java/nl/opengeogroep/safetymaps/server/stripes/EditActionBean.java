@@ -14,7 +14,7 @@ import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_EDITOR;
  * @author Matthijs Laan
  */
 @StrictBinding
-@UrlBinding("/viewer/api/edit")
+@UrlBinding("/api/edit")
 public class EditActionBean  implements ActionBean {
     private ActionBeanContext context;
 
