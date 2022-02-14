@@ -235,7 +235,7 @@
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>viewer-login</web-resource-name>
-            <url-pattern>/login</url-pattern>
+            <url-pattern>/viewer/api/login</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <role-name>*</role-name>

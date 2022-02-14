@@ -47,7 +47,7 @@ public class SSOActionBean implements ActionBean {
         }
         returnTo = URLEncoder.encode(returnTo, "UTF-8");
 
-        String url = "/login?returnTo=" + returnTo;
+        String url = "/viewer/api/login?returnTo=" + returnTo;
 
         // Check if SSO is configured/enabled
         if(ssoPassiveUrl != null) {

@@ -10,7 +10,7 @@ import net.sourceforge.stripes.action.UrlBinding;
  *
  * @author matthijsln
  */
-@UrlBinding("/login")
+@UrlBinding("/viewer/login")
 public class LoginActionBean implements ActionBean {
     private ActionBeanContext context;
 
