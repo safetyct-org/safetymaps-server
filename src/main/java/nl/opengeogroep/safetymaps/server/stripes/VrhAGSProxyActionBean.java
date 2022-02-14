@@ -40,7 +40,7 @@ import org.apache.http.message.BasicNameValuePair;
  *
  * @author matthijsln
  */
-@UrlBinding("/api/vrhAGS{path}")
+@UrlBinding("/viewer/api/vrhAGS{path}")
 public class VrhAGSProxyActionBean implements ActionBean {
     private static final Log log = LogFactory.getLog(VrhAGSProxyActionBean.class);
 

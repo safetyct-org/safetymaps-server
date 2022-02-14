@@ -3,7 +3,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html><html>
     <head>
-        <meta http-equiv="Refresh" content="0;url=${contextPath}/viewer/">
+        <meta http-equiv="Refresh" content="0;url=${contextPath}/safetymaps/">
         <title>SafetyMaps Viewer</title>
     </head>
     <body>

@@ -27,7 +27,7 @@ import nl.opengeogroep.safetymaps.server.db.Cfg;
  */
 @StrictBinding
 @MultipartConfig
-@UrlBinding("/api/media/{filename}")
+@UrlBinding("/viewer/api/media/{filename}")
 public class MediaActionBean implements ActionBean {
 
     private ActionBeanContext context;

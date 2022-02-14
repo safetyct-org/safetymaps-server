@@ -31,7 +31,7 @@ import org.json.JSONObject;
  * @author Matthijs Laan
  */
 @StrictBinding
-@UrlBinding("/api/twitter")
+@UrlBinding("/viewer/api/twitter")
 public class TwitterSearchActionBean implements ActionBean {
     private static final Log log = LogFactory.getLog("twitter");
 

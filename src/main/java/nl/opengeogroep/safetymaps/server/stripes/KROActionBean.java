@@ -31,7 +31,7 @@ import nl.opengeogroep.safetymaps.server.db.DB;
 /**
  * @author bartv
  */
-@UrlBinding("/api/kro/{path}")
+@UrlBinding("/viewer/api/kro/{path}")
 public class KROActionBean implements ActionBean {
     private static final Log log = LogFactory.getLog(SafetyConnectProxyActionBean.class);
     private ActionBeanContext context;

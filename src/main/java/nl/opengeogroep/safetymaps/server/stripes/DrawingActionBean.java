@@ -32,7 +32,7 @@ import static nl.opengeogroep.safetymaps.server.security.CorsFilter.addCorsHeade
  * @author Matthijs Laan
  */
 @StrictBinding
-@UrlBinding("/api/drawing/{incident}.json")
+@UrlBinding("/viewer/api/drawing/{incident}.json")
 public class DrawingActionBean  implements ActionBean {
     private static final Log log = LogFactory.getLog(DrawingActionBean.class);
 
