@@ -1,10 +1,13 @@
 package nl.opengeogroep.safetymaps.server.security;
 
-import nl.opengeogroep.safetymaps.server.db.Cfg;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.naming.NamingException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -15,17 +18,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.security.Principal;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.Function;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Filter that keeps all container sessions and can invalidate them when an account
@@ -52,11 +46,14 @@ public class UpdatableLoginSessionFilter implements Filter {
 
     private static final Log log = LogFactory.getLog(UpdatableLoginSessionFilter.class);
 
+    private static String[] externalRoleNamesForGroupMembership = new String[] {};
+
     private static RoleProvider roleProvider;
 
     private static final ConcurrentMap<String,HttpSession> CONTAINER_SESSIONS = new ConcurrentHashMap();
 
-    private static final String SESSION_UPDATABLE_PRINCIPAL = UpdatableLoginSessionFilter.class.getName() + ".PRINCIPAL";
+    private static final String SESSION_ATTR_ROLES = UpdatableLoginSessionFilter.class.getName() + ".ROLES";
+    private static final String SESSION_ATTR_USERNAME = UpdatableLoginSessionFilter.class.getName() + ".USERNAME";
 
     private static final Collection<SessionInvalidateMonitor> sessionInvalidateMonitors = new ArrayList();
 
@@ -64,38 +61,15 @@ public class UpdatableLoginSessionFilter implements Filter {
 
     private static final long INACTIVE_SESSIONS_PRUNE_INTERVAL = 10 * 60 * 1000;
 
-    public static class UpdatablePrincipal implements Principal {
-
-        private String name;
-        private Collection<String> roles;
-
-        public UpdatablePrincipal(String name, Collection<String> roles) {
-            this.name = name;
-            this.roles = roles;
-        }
-
-        public Collection<String> getRoles() {
-            return roles;
-        }
-
-        // For JSTL property in authinfo.jsp
-        public void setRoles(Collection<String> roles) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public String toString() {
-            return String.format("UpdatablePrincipal [name=%s, roles=%s]", getName(), roles);
-        }
-    }
-
     @Override
     public void init(FilterConfig filterConfig) {
+
+        String s = filterConfig.getInitParameter("externalRolesForGroupMembership");
+
+        if(s != null) {
+            externalRoleNamesForGroupMembership = s.split(",");
+        }
+
         String providerClass = filterConfig.getInitParameter("roleProviderClass");
         if(providerClass != null) {
             try {
@@ -134,7 +108,9 @@ public class UpdatableLoginSessionFilter implements Filter {
                     log.debug("Pruned " + sessionIdsToRemove + " inactive sessions");
                 }
             }
+
         }
+
     }
 
     @Override
@@ -158,10 +134,10 @@ public class UpdatableLoginSessionFilter implements Filter {
 
         // Check if we already processed the session the first time it was authenticated
 
-        UpdatablePrincipal principal = (UpdatablePrincipal)session.getAttribute(SESSION_UPDATABLE_PRINCIPAL);
+        Collection<String> roles = (Collection<String>)session.getAttribute(SESSION_ATTR_ROLES);
 
-        if(principal != null) {
-            chainWithPrincipal(request, response, chain, principal);
+        if(roles != null) {
+            chainWithRoles(request, response, chain, roles);
             return;
         }
 
@@ -176,58 +152,31 @@ public class UpdatableLoginSessionFilter implements Filter {
         // session, so they can be updated when membership changes
 
         try {
-            Collection<String> roles = new HashSet(roleProvider.getRoles(request.getRemoteUser()));
+            roles = new HashSet(roleProvider.getRoles(request.getRemoteUser()));
 
-            for(String role: getExternalRolesAsUsersForGroupMembership()) {
+            for(String role: externalRoleNamesForGroupMembership) {
                 if(request.isUserInRole(role)) {
                     roles.addAll(roleProvider.getRoles(role));
-                    // Make sure when updating role membership, we can check whether
+                    // Make sure when updating role membership, we can check wether
                     // the user was in this role again
                     roles.add(role);
                 }
             }
 
-            principal = new UpdatablePrincipal(request.getRemoteUser(), roles);
-            session.setAttribute(SESSION_UPDATABLE_PRINCIPAL, principal);
+            session.setAttribute(SESSION_ATTR_USERNAME, request.getRemoteUser());
+            session.setAttribute(SESSION_ATTR_ROLES, roles);
 
-            chainWithPrincipal(request, response, chain, principal);
+            chainWithRoles(request, response, chain, roles);
         } catch(Exception e) {
             throw new ServletException(e);
         }
     }
 
-    private static String[] getExternalRolesAsUsersForGroupMembership() throws SQLException, NamingException {
-        String[] externalRolesAsUsersForGroupMembership = Cfg.getSetting("external_roles_as_users_for_group_membership", "").split(",");
-        for(int i = 0; i < externalRolesAsUsersForGroupMembership.length; i++) {
-            externalRolesAsUsersForGroupMembership[i] = externalRolesAsUsersForGroupMembership[i].trim();
-        }
-        return externalRolesAsUsersForGroupMembership;
-    }
-
-    private static void addExternalRolesAsUsersForGroupMembershipToNewRoles(Collection<String> previousRoles, Collection<String> newRoles) throws Exception {
-        for(String role: getExternalRolesAsUsersForGroupMembership()) {
-            if(previousRoles.contains(role)) {
-                newRoles.addAll(roleProvider.getRoles(role));
-                newRoles.add(role);
-            }
-        }
-    }
-
-    private static void chainWithPrincipal(final HttpServletRequest request, HttpServletResponse response, FilterChain chain, final UpdatablePrincipal principal) throws IOException, ServletException {
+    private static void chainWithRoles(final HttpServletRequest request, HttpServletResponse response, FilterChain chain, final Collection<String> roles) throws IOException, ServletException {
         chain.doFilter(new HttpServletRequestWrapper(request) {
             @Override
-            public Principal getUserPrincipal() {
-                return principal;
-            }
-
-            @Override
             public boolean isUserInRole(String role) {
-                return principal.getRoles().contains(role);
-            }
-
-            @Override
-            public String getRemoteUser() {
-                return principal.getName();
+                return roles.contains(role);
             }
         }, response);
     }
@@ -236,14 +185,12 @@ public class UpdatableLoginSessionFilter implements Filter {
         List<String> invalidSessionIds = new ArrayList<>();
         for(HttpSession session: CONTAINER_SESSIONS.values()) {
             try {
-                UpdatablePrincipal principal = (UpdatablePrincipal)session.getAttribute(SESSION_UPDATABLE_PRINCIPAL);
-                if (principal != null) {
-                    log.debug("Checking container session " + session.getId() + " to delete, session principal = " + principal);
-                    if (name.equals(principal.getName())) {
-                        log.info("Invalidating container session for user " + name + ": " + session.getId());
-                        session.invalidate();
-                        invalidSessionIds.add(session.getId());
-                    }
+                String sessionUser = (String)session.getAttribute(SESSION_ATTR_USERNAME);
+                log.debug("Checking container session " + session.getId() + " to delete, session user = " + sessionUser);
+                if(name.equals(sessionUser)) {
+                    log.info("Invalidating container session for user " + name + ": " + session.getId());
+                    session.invalidate();
+                    invalidSessionIds.add(session.getId());
                 }
             } catch(IllegalStateException e) {
                 log.info("Session already invalid: " + session.getId());
@@ -263,18 +210,6 @@ public class UpdatableLoginSessionFilter implements Filter {
         sessionInvalidateMonitors.add(monitor);
     }
 
-    private static void updatePrincipalRoles(UpdatablePrincipal principalToUpdate, HttpSession session, Function<String,Collection<String>> roleProvider) throws Exception {
-        Collection<String> previousRoles = principalToUpdate.getRoles();
-        Collection<String> newRoles = roleProvider.apply(principalToUpdate.getName());
-        if (newRoles == null) {
-            newRoles = new HashSet<>();
-        }
-        addExternalRolesAsUsersForGroupMembershipToNewRoles(previousRoles, newRoles);
-        // Create a new instance, do not update the roles of the previous instance so active requests
-        // do not get updated roles for consistency...
-        session.setAttribute(SESSION_UPDATABLE_PRINCIPAL, new UpdatablePrincipal(principalToUpdate.getName(), newRoles));
-    }
-
     public static void updateUserSessionRoles(String username) throws Exception {
         if(roleProvider == null) {
             return;
@@ -284,17 +219,16 @@ public class UpdatableLoginSessionFilter implements Filter {
 
             for(HttpSession session: CONTAINER_SESSIONS.values()) {
                 try {
-                    UpdatablePrincipal principal = (UpdatablePrincipal)session.getAttribute(SESSION_UPDATABLE_PRINCIPAL);
+                    String sessionUsername = (String)session.getAttribute(SESSION_ATTR_USERNAME);
 
-                    if(principal != null) {
-                        boolean needsUpdate = principal.getName().equals(username);
+                    if(sessionUsername != null) {
+                        boolean needsUpdate = sessionUsername.equals(username);
 
-                        Collection<String> previousRoles = principal.getRoles();
+                        Collection<String> previousRoles = (Collection<String>)session.getAttribute(SESSION_ATTR_ROLES);
 
-                        // Also update session when updating roles of a user with a name that is an external role
-                        // which is used for role membership
+                        // Also update session when updating roles of user that is used
+                        // for role membership by setting a role in the original request
 
-                        String[] externalRoleNamesForGroupMembership = getExternalRolesAsUsersForGroupMembership();
                         for(String role: externalRoleNamesForGroupMembership) {
                             if(role.equals(username) && previousRoles.contains(role)) {
                                 needsUpdate = true;
@@ -302,7 +236,17 @@ public class UpdatableLoginSessionFilter implements Filter {
                         }
 
                         if(needsUpdate) {
-                            updatePrincipalRoles(principal, session, roleProvider::getRoles);
+                            Collection<String> newRoles = new HashSet();
+
+                            newRoles.addAll(roleProvider.getRoles(username));
+
+                            for(String role: externalRoleNamesForGroupMembership) {
+                                if(previousRoles.contains(role)) {
+                                    newRoles.addAll(roleProvider.getRoles(role));
+                                    newRoles.add(role);
+                                }
+                            }
+                            session.setAttribute(SESSION_ATTR_ROLES, newRoles);
                         }
                     }
                 } catch(IllegalStateException e) {
@@ -322,20 +266,24 @@ public class UpdatableLoginSessionFilter implements Filter {
         synchronized(CONTAINER_SESSIONS) {
             for(HttpSession session: CONTAINER_SESSIONS.values()) {
                 try {
-                    UpdatablePrincipal principal = (UpdatablePrincipal)session.getAttribute(SESSION_UPDATABLE_PRINCIPAL);
+                    String username = (String)session.getAttribute(SESSION_ATTR_USERNAME);
 
-                    if(principal != null) {
-                        updatePrincipalRoles(principal, session, rolesByUsername::get);
-                        Collection<String> previousRoles = principal.getRoles();
+                    if(username != null) {
+                        Collection<String> previousRoles = (Collection<String>)session.getAttribute(SESSION_ATTR_ROLES);
                         Collection<String> newRoles = new HashSet();
-                        Collection<String> myRoles = rolesByUsername.get(principal.getName());
+                        Collection<String> myRoles = rolesByUsername.get(username);
 
                         if (myRoles != null) {
-                            newRoles.addAll(rolesByUsername.get(principal.getName()));
+                            newRoles.addAll(rolesByUsername.get(username));
                         }
-                        addExternalRolesAsUsersForGroupMembershipToNewRoles(previousRoles, newRoles);
-                        principal = new UpdatablePrincipal(principal.getName(), newRoles);
-                        session.setAttribute(SESSION_UPDATABLE_PRINCIPAL, principal);
+
+                        for(String role: externalRoleNamesForGroupMembership) {
+                            if(previousRoles.contains(role)) {
+                                newRoles.addAll(rolesByUsername.get(role));
+                                newRoles.add(role);
+                            }
+                        }
+                        session.setAttribute(SESSION_ATTR_ROLES, newRoles);
                     }
                 } catch(IllegalStateException e) {
                     // Session was invalid

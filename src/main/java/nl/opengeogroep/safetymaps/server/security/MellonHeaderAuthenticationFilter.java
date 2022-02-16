@@ -2,17 +2,12 @@ package nl.opengeogroep.safetymaps.server.security;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.sql.SQLException;
-
-import javax.naming.NamingException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -282,7 +277,7 @@ public class MellonHeaderAuthenticationFilter implements Filter {
 
         if(request.getRequestURI().equals(request.getContextPath() + "/" + authPath)) {
             String headerPrefix = readHeaderPrefixCfgFromDb();
-            
+
             if(headerPrefix != null) {
                 // Must be protected by Apache auth module!
 
@@ -300,26 +295,7 @@ public class MellonHeaderAuthenticationFilter implements Filter {
                 }
                 String r = request.getHeader(headerPrefix + rolesHeader);
                 if(r != null) {
-                    String[] rolesFromHeader = r.split(Pattern.quote(";"));
-                    String[] externalRoles;
-                    List<String> rolenames = new ArrayList<String>();
-
-                    try {
-                        externalRoles = getExternalRoles();
-
-                        for(int i = 0; i < externalRoles.length; i++) {
-                            String[] externalRole = externalRoles[i].split(":");
-                            int rolenameIndex = externalRole.length - 1;
-                            int roleidIndex = 0;
-    
-                            if (Arrays.asList(rolesFromHeader).contains(externalRole[roleidIndex])) {
-                                rolenames.add(externalRole[rolenameIndex]);
-                            }
-                        }
-                    }
-                    catch(NamingException | SQLException e) { }
-
-                    roles.addAll(rolenames);
+                    roles.addAll(Arrays.asList(r.split(Pattern.quote(";"))));
                 }
 
                 log.info("Authenticated user from header [prefix]" + userHeader + ": " + user + ", roles: " + roles);
@@ -393,19 +369,11 @@ public class MellonHeaderAuthenticationFilter implements Filter {
         }
     }
 
-    private static String[] getExternalRoles() throws SQLException, NamingException {
-        String[] externalRoles = Cfg.getSetting("external_roles", ":").split(",");
-        for(int i = 0; i < externalRoles.length; i++) {
-            externalRoles[i] = externalRoles[i].trim();
-        }
-        return externalRoles;
-    }
-
     public static Map<String, String> getExtraHeaders(HttpServletRequest request) {
         return (Map<String, String>)request.getSession().getAttribute(ATTR_EXTRA_HEADERS);
     }
 
-    public static class HeaderAuthenticatedPrincipal implements Principal {
+    private class HeaderAuthenticatedPrincipal implements Principal {
         private final String name;
         private final Set<String> roles;
 
