@@ -279,7 +279,9 @@ public class UpdatableLoginSessionFilter implements Filter {
 
                         for(String role: externalRoleNamesForGroupMembership) {
                             if(previousRoles.contains(role)) {
-                                newRoles.addAll(rolesByUsername.get(role));
+                                if (myRoles != null) {
+                                    newRoles.addAll(rolesByUsername.get(role));
+                                }
                                 newRoles.add(role);
                             }
                         }
