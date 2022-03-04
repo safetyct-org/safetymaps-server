@@ -54,7 +54,7 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
     String authorization;
     String url;
     String regioncode;  
-    
+
     @Override
     public void execute(JobExecutionContext jec) throws JobExecutionException {
       // Try get config values
@@ -62,47 +62,49 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
         authorization = Cfg.getSetting("safetyconnect_webservice_authorization");
         url = Cfg.getSetting("safetyconnect_webservice_url");
         regioncode = Cfg.getSetting("safetyconnect_regio_code");
+
+        // Stop if no config values
+        if (authorization == null || url == null) {
+          return;
+        }
+        log.info("GetIncidentsJob triggered.");
+        // Build request
+        final String uri = url + "incident?extended=true&kladblokregels=true" + (regioncode == null ? "" : "&regioCode=" + regioncode);
+        final HttpUriRequest req = RequestBuilder.get()
+          .setUri(uri)
+          .addHeader("Authorization", authorization)
+          .build();
+        // Try request and cache response
+        try(CloseableHttpClient client = HttpClients.createDefault()) {
+          // Try request
+          final String response = client.execute(req, new ResponseHandler<String>() {
+            @Override
+            public String handleResponse(HttpResponse hr) {
+              try {
+                return IOUtils.toString(hr.getEntity().getContent(), "UTF-8");
+              } catch(IOException e) {
+                log.error("Exception reading HTTP response:", e);
+                return null;
+              }
+            }
+          });
+          // Try convert HTTP response to JSON
+          JSONArray responseJSON = null;
+          try {
+            responseJSON = new JSONArray(response);
+          } catch(JSONException e) {
+            log.error("Exception reading JSON from HTTP response:", e);
+          }
+          // Cache me if you can
+          if (responseJSON != null) {
+            log.info("Incidents cached: " + responseJSON.length());
+            CacheUtil.AddOrReplace(CacheUtil.INCIDENT_CACHE_KEY, responseJSON);
+          }
+        } catch(Exception e) {
+          log.error("Exception caching HTTP response:", e);
+        }
       } catch (Exception e) {
         log.error("Exception getting SETTINGS from DB:", e);
-      }
-      // Stop if no config values
-      if (authorization == null || url == null) {
-        return;
-      }
-      // Build request
-      final String uri = url + "incident?extended=true&kladblokregels=true" + (regioncode == null ? "" : "&regioCode=" + regioncode);
-      final HttpUriRequest req = RequestBuilder.get()
-        .setUri(uri)
-        .addHeader("Authorization", authorization)
-        .build();
-      // Try request and cache response
-      try(CloseableHttpClient client = HttpClients.createDefault()) {
-        // Try request
-        final String response = client.execute(req, new ResponseHandler<String>() {
-          @Override
-          public String handleResponse(HttpResponse hr) {
-            try {
-              return IOUtils.toString(hr.getEntity().getContent(), "UTF-8");
-            } catch(IOException e) {
-              log.error("Exception reading HTTP response:", e);
-              return null;
-            }
-          }
-        });
-        // Try convert HTTP response to JSON
-        JSONArray responseJSON = null;
-        try {
-          responseJSON = new JSONArray(response);
-        } catch(JSONException e) {
-          log.error("Exception reading JSON from HTTP response:", e);
-        }
-        // Cache me if you can
-        if (responseJSON != null) {
-          log.info("Incidents cached: " + responseJSON.length());
-          CacheUtil.AddOrReplace(CacheUtil.INCIDENT_CACHE_KEY, responseJSON);
-        }
-      } catch(Exception e) {
-        log.error("Exception caching HTTP response:", e);
       }
     }
 
