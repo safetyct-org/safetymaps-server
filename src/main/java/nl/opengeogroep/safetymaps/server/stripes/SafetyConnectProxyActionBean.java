@@ -115,11 +115,24 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     } else {
                         out = response.getOutputStream();
                     }
-                    Object cache = CacheUtil.Get(CacheUtil.INCIDENT_CACHE_KEY);
+                    JSONArray cache = (JSONArray)CacheUtil.Get(CacheUtil.INCIDENT_CACHE_KEY);
                     if (cache == null || cache.toString() == "") {
                         IOUtils.copy(new StringReader("[]"), out, "UTF-8");
                     } else {
-                        IOUtils.copy(new StringReader(cache.toString()), out, "UTF-8");
+                        int idIndex = path.indexOf("/");
+                        if (idIndex != -1) {
+                            JSONArray content = new JSONArray();
+                            String id = path.substring(idIndex);
+                            for(int i=0; i<cache.length(); i++) {
+                                JSONObject incident = (JSONObject)cache.get(i);
+                                if (incident.get("IncidentNummer").equals(idIndex)) {
+                                    content.put(incident);
+                                }
+                            }
+                            IOUtils.copy(new StringReader(content.toString()), out, "UTF-8");
+                        } else {
+                            IOUtils.copy(new StringReader(cache.toString()), out, "UTF-8");
+                        }
                     }
                     out.flush();
                     out.close();

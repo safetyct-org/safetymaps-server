@@ -59,8 +59,6 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
     public void execute(JobExecutionContext jec) throws JobExecutionException {
       // Try get config values
       try {
-        log.info("GetIncidentsJob triggered.");
-
         authorization = Cfg.getSetting("safetyconnect_webservice_authorization");
         url = Cfg.getSetting("safetyconnect_webservice_url");
         regioncode = Cfg.getSetting("safetyconnect_regio_code");
@@ -99,7 +97,6 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
           }
           // Cache me if you can
           if (responseJSON != null) {
-            log.info("Incidents cached: " + responseJSON.length());
             CacheUtil.AddOrReplace(CacheUtil.INCIDENT_CACHE_KEY, responseJSON);
           }
         } catch(Exception e) {
