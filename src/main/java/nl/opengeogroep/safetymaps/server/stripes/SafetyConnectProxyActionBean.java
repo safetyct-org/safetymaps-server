@@ -91,8 +91,16 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             return unAuthorizedResolution();
         }
 
-        String useRequestCache = Cfg.getSetting("safetyconnect_use_cache");
-        if (useRequestCache != null && useRequestCache == "true" && requestIs(INCIDENT_REQUEST)) {
+        String authorization = Cfg.getSetting("safetyconnect_webservice_authorization");
+        String url = Cfg.getSetting("safetyconnect_webservice_url");
+        String regioCode = Cfg.getSetting("safetyconnect_regio_code");
+
+        if(authorization == null || url == null) {
+            return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");
+        }
+
+        String useRequestCache = Cfg.getSetting("safetyconnect_use_cache", "false");
+        if (useRequestCache == "true" && requestIs(INCIDENT_REQUEST)) {
             return new Resolution() {
                 @Override
                 public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -112,14 +120,6 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     out.close();
                 }
             };
-        }
-
-        String authorization = Cfg.getSetting("safetyconnect_webservice_authorization");
-        String url = Cfg.getSetting("safetyconnect_webservice_url");
-        String regioCode = Cfg.getSetting("safetyconnect_regio_code");
-
-        if(authorization == null || url == null) {
-            return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");
         }
 
         String qs = context.getRequest().getQueryString();
