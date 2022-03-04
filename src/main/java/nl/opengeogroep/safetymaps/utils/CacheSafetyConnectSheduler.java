@@ -38,7 +38,7 @@ import org.quartz.impl.StdSchedulerFactory;
  * Cache SafetyConnect requests for incidents and units
  * so proxying request from viewers isnt needed anymore
  * and request from viewers returns cached informaton
- * 
+ *
  * @author Bart Verhaar (Safety C&T)
  */
 
@@ -53,9 +53,10 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
   public static class GetIncidentsJob implements Job {
     String authorization;
     String url;
-    String regioncode;
-
-    public GetIncidentsJob() {
+    String regioncode;  
+    
+    @Override
+    public void execute(JobExecutionContext jec) throws JobExecutionException {
       // Try get config values
       try {
         authorization = Cfg.getSetting("safetyconnect_webservice_authorization");
@@ -64,10 +65,6 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
       } catch (Exception e) {
         log.error("Exception getting SETTINGS from DB:", e);
       }
-    }
-
-    @Override
-    public void execute(JobExecutionContext jec) throws JobExecutionException {
       // Stop if no config values
       if (authorization == null || url == null) {
         return;
