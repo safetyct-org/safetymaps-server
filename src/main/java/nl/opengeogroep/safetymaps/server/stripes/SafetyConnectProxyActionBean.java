@@ -115,11 +115,11 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     } else {
                         out = response.getOutputStream();
                     }
-                    String cache = CacheUtil.Get(CacheUtil.INCIDENT_CACHE_KEY).toString();
-                    if (cache == "") {
+                    Object cache = CacheUtil.Get(CacheUtil.INCIDENT_CACHE_KEY);
+                    if (cache == null || cache.toString() == "") {
                         cache = "[]";
                     }
-                    IOUtils.copy(new StringReader(cache), out, "UTF-8");
+                    IOUtils.copy(new StringReader(cache.toString()), out, "UTF-8");
                     out.flush();
                     out.close();
                 }
