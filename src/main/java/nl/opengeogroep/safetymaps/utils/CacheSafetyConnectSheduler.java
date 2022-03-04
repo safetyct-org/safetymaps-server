@@ -73,7 +73,7 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
         return;
       }
       // Build request
-      final String uri = url + "/incident?extended=true&kladblokregels=true" + (regioncode == null ? "" : "&regioCode=" + regioncode);
+      final String uri = url + "incident?extended=true&kladblokregels=true" + (regioncode == null ? "" : "&regioCode=" + regioncode);
       final HttpUriRequest req = RequestBuilder.get()
         .setUri(uri)
         .addHeader("Authorization", authorization)
@@ -101,6 +101,7 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
         }
         // Cache me if you can
         if (responseJSON != null) {
+          log.info("Incidents cached: " + responseJSON.length());
           CacheUtil.AddOrReplace(CacheUtil.INCIDENT_CACHE_KEY, responseJSON);
         }
       } catch(Exception e) {
@@ -120,7 +121,7 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
         .withIdentity(INCIDENT_JOB_ID)
         .withDescription("Get incidents from SafetyConnect each x seconds")
         .build();
-      Trigger incidentTrigger = CreateTrigger("0/5 0 0 ? * * *");
+      Trigger incidentTrigger = CreateTrigger("*/5 0 0 ? * * *");
 
       incidentScheduler.scheduleJob(incidentJob, incidentTrigger);
 
