@@ -59,6 +59,8 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
     public void execute(JobExecutionContext jec) throws JobExecutionException {
       // Try get config values
       try {
+        log.info("GetIncidentsJob triggered.");
+        
         authorization = Cfg.getSetting("safetyconnect_webservice_authorization");
         url = Cfg.getSetting("safetyconnect_webservice_url");
         regioncode = Cfg.getSetting("safetyconnect_regio_code");
@@ -67,7 +69,7 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
         if (authorization == null || url == null) {
           return;
         }
-        log.info("GetIncidentsJob triggered.");
+
         // Build request
         final String uri = url + "incident?extended=true&kladblokregels=true" + (regioncode == null ? "" : "&regioCode=" + regioncode);
         final HttpUriRequest req = RequestBuilder.get()
