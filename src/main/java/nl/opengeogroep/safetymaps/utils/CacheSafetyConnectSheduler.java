@@ -1,6 +1,7 @@
 package nl.opengeogroep.safetymaps.utils;
 
 import nl.opengeogroep.safetymaps.server.db.Cfg;
+import nl.opengeogroep.safetymaps.utils.CacheUtil;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -42,7 +43,6 @@ import org.quartz.impl.StdSchedulerFactory;
  */
 
 public class CacheSafetyConnectSheduler implements ServletContextListener {
-  private static final String INCIDENT_CACHE_KEY = "incident";
   private static final String INCIDENT_JOB_ID = "GetIncidents";
 
   private static final Log log = LogFactory.getLog(CacheSafetyConnectSheduler.class);
@@ -101,7 +101,7 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
         }
         // Cache me if you can
         if (responseJSON != null) {
-          CacheUtil.AddOrReplace(INCIDENT_CACHE_KEY, responseJSON);
+          CacheUtil.AddOrReplace(CacheUtil.INCIDENT_CACHE_KEY, responseJSON);
         }
       } catch(Exception e) {
         log.error("Exception caching HTTP response:", e);

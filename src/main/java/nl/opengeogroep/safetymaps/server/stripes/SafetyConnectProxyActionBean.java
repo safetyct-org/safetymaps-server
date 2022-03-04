@@ -8,6 +8,8 @@ import net.sourceforge.stripes.action.StreamingResolution;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.CacheUtil;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.logging.Log;
@@ -87,6 +89,29 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
         if (requestIs(KLADBLOKREGEL_REQUEST) && !context.getRequest().isUserInRole(ROLE_KLADBLOKCHAT_EDITOR_GMS) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
             return unAuthorizedResolution();
+        }
+
+        String useRequestCache = Cfg.getSetting("safetyconnect_use_cache");
+        if (useRequestCache != null && useRequestCache == "true" && requestIs(INCIDENT_REQUEST)) {
+            return new Resolution() {
+                @Override
+                public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+                    response.setCharacterEncoding("UTF-8");
+                    response.setContentType("application/json");
+
+                    OutputStream out;
+                    String acceptEncoding = request.getHeader("Accept-Encoding");
+                    if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+                        response.setHeader("Content-Encoding", "gzip");
+                        out = new GZIPOutputStream(response.getOutputStream(), true);
+                    } else {
+                        out = response.getOutputStream();
+                    }
+                    IOUtils.copy(new StringReader(CacheUtil.Get(CacheUtil.INCIDENT_CACHE_KEY).toString()), out, "UTF-8");
+                    out.flush();
+                    out.close();
+                }
+            };
         }
 
         String authorization = Cfg.getSetting("safetyconnect_webservice_authorization");
