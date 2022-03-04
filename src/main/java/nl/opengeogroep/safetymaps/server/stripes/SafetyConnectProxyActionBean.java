@@ -123,9 +123,10 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                         if (idIndex != -1) {
                             JSONArray content = new JSONArray();
                             String id = path.substring(idIndex + 1);
+                            log.info(id);
                             for(int i=0; i<cache.length(); i++) {
                                 JSONObject incident = (JSONObject)cache.get(i);
-                                if (incident.get("IncidentNummer").equals(id)) {
+                                if (incident.get("IncidentNummer").toString().equals(id)) {
                                     content.put(incident);
                                 }
                             }
