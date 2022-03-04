@@ -100,7 +100,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         }
 
         String useRequestCache = Cfg.getSetting("safetyconnect_use_cache", "false");
-        if (useRequestCache == "true" && requestIs(INCIDENT_REQUEST)) {
+        if ("true".equals(useRequestCache) && requestIs(INCIDENT_REQUEST)) {
             return new Resolution() {
                 @Override
                 public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
