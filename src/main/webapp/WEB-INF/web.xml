@@ -130,7 +130,7 @@
         <filter-class>nl.opengeogroep.safetymaps.server.security.AuthenticationRequiredFilter</filter-class>
         <init-param>
             <param-name>allowedRoles</param-name>
-            <param-value>viewer,admin,LDAPUser</param-value>
+            <param-value>viewer,admin,LDAPUser,SAML</param-value>
         </init-param>
     </filter>
     <filter-mapping>
