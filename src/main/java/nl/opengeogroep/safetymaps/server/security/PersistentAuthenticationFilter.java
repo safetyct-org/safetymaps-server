@@ -4,6 +4,9 @@ import java.io.IOException;
 import javax.servlet.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import nl.opengeogroep.safetymaps.server.db.Cfg;
+
 import java.security.Principal;
 import java.sql.SQLException;
 import java.util.Calendar;
@@ -78,13 +81,25 @@ public class PersistentAuthenticationFilter implements Filter {
         return value;
     }
 
+    private static String[] getExternalRolesAsUsersForGroupMembership() {
+        try {
+            String[] externalRolesAsUsersForGroupMembership = Cfg.getSetting("external_roles_as_users_for_group_membership", "").split(",");
+            for(int i = 0; i < externalRolesAsUsersForGroupMembership.length; i++) {
+                externalRolesAsUsersForGroupMembership[i] = externalRolesAsUsersForGroupMembership[i].trim();
+            }
+            return externalRolesAsUsersForGroupMembership;
+        } catch(SQLException | NamingException e) {
+            return "".split(",");
+        }
+    }
+
     @Override
     public void init(FilterConfig filterConfig) {
         this.filterConfig = filterConfig;
 
         this.enabled = "true".equals(ObjectUtils.firstNonNull(getInitParameter(PARAM_ENABLED), "true"));
         this.persistentLoginPrefix = ObjectUtils.firstNonNull(getInitParameter(PARAM_PERSISTENT_LOGIN_PATH_PREFIX), "/");
-        this.rolesAsDbUsernames =  ObjectUtils.firstNonNull(getInitParameter(PARAM_ROLES_AS_DB_USERNAMES), "").split(",");
+        this.rolesAsDbUsernames = getExternalRolesAsUsersForGroupMembership(); //ObjectUtils.firstNonNull(getInitParameter(PARAM_ROLES_AS_DB_USERNAMES), "").split(",");
         this.logoutUrl = ObjectUtils.firstNonNull(getInitParameter(PARAM_LOGOUT_URL), "/logout.jsp");
         this.noSameSite = "true".equals(getInitParameter(PARAM_NO_SAMESITE));
 
