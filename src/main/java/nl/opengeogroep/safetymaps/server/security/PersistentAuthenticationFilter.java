@@ -47,6 +47,8 @@ public class PersistentAuthenticationFilter implements Filter {
 
     private static final String DEFAULT_LOGIN_SOURCE = "SafetyMaps";
 
+    public static final String PARAM_COMMON_ROLE = "commonRole";
+
     private static final String SESSION_PRINCIPAL = PersistentAuthenticationFilter.class.getName() + ".PRINCIPAL";
     private static final String SESSION_PROCESSED = PersistentAuthenticationFilter.class.getName() + ".PROCESSED";
     
@@ -64,6 +66,7 @@ public class PersistentAuthenticationFilter implements Filter {
     private boolean enabled;
     private String logoutUrl;
     private boolean noSameSite;
+    private String commonRole;
 
     /**
      * Get a filter init-parameter which can be overridden by a context parameter
@@ -102,6 +105,7 @@ public class PersistentAuthenticationFilter implements Filter {
         this.rolesAsDbUsernames = getExternalRolesAsUsersForGroupMembership(); //ObjectUtils.firstNonNull(getInitParameter(PARAM_ROLES_AS_DB_USERNAMES), "").split(",");
         this.logoutUrl = ObjectUtils.firstNonNull(getInitParameter(PARAM_LOGOUT_URL), "/logout.jsp");
         this.noSameSite = "true".equals(getInitParameter(PARAM_NO_SAMESITE));
+        this.commonRole = getInitParameter(PARAM_COMMON_ROLE);
 
         UpdatableLoginSessionFilter.monitorSessionInvalidation(new SessionInvalidateMonitor() {
             @Override
@@ -220,7 +224,7 @@ public class PersistentAuthenticationFilter implements Filter {
                 String dbUsername = request.getRemoteUser();
 
                 for(String role: rolesAsDbUsernames) {
-                    if(request.isUserInRole(role)) {
+                    if(!role.equals(this.commonRole) && request.isUserInRole(role)) {
                         log.trace(request.getRequestURI() + ": Request externally authenticated and in role " + role + " which will be used as username to get persistent session settings");
                         dbUsername = role;
                         break;
