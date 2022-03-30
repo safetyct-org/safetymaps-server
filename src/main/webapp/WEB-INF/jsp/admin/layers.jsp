@@ -182,11 +182,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         </div>
                         <div class="form-group">
                             <div class="col-sm-2" style="padding-top: 5px">Pixel radius voor feature info:</div>
-                            <div class="col-sm-10"><stripes-dynattr:text name="featureInfoRadius" class="form-control input-sm" style="width: 80px" type="number"/></div>
+                            <div class="col-sm-10"><stripes:text name="featureInfoRadius" class="form-control input-sm" style="width: 80px"/></div>
                         </div>
                         <div class="form-group">
                             <div class="col-sm-2" style="padding-top: 5px">Niet weergeven boven resolutie</div>
-                            <div class="col-sm-10"><stripes-dynattr:text name="maxResolution" class="form-control input-sm" style="width: 80px" type="number" step="0.0001" min="0"/></div>
+                            <div class="col-sm-10"><stripes:text name="maxResolution" class="form-control input-sm" style="width: 80px"/></div>
                             <div class="col-sm-12">
                                 (Wanneer een kaart niet zichtbaar hoeft te zijn, vermindert dit het dataverbruik. <a href="<c:out value="${contextPath}/viewer/?res=true"/>" target="_blank">Open voertuigviewer met resolutie weergave</a>)
                             </div>
