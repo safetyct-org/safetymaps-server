@@ -76,7 +76,7 @@
         <filter-class>nl.opengeogroep.safetymaps.server.security.MellonHeaderAuthenticationFilter</filter-class>
         <init-param>
             <param-name>commonRole</param-name>
-            <param-value>SAML</param-value>
+            <param-value>AZURE</param-value>
         </init-param>
         <init-param>
             <param-name>saveExtraHeaders</param-name>
@@ -97,7 +97,7 @@
         </init-param>
         <init-param>
             <param-name>rolesAsDbUsernames</param-name>
-            <param-value>LDAP</param-value>
+            <param-value>LDAP,AZURE</param-value>
         </init-param>
     </filter>
     <filter>
@@ -106,7 +106,7 @@
         <filter-class>nl.opengeogroep.safetymaps.server.security.UpdatableLoginSessionFilter</filter-class>
         <init-param>
             <param-name>externalRolesForGroupMembership</param-name>
-            <param-value>LDAP,SAML</param-value>
+            <param-value>LDAP,AZURE</param-value>
         </init-param>
         <init-param>
             <param-name>roleProviderClass</param-name>
@@ -130,7 +130,7 @@
         <filter-class>nl.opengeogroep.safetymaps.server.security.AuthenticationRequiredFilter</filter-class>
         <init-param>
             <param-name>allowedRoles</param-name>
-            <param-value>viewer,admin,LDAPUser,SAML</param-value>
+            <param-value>viewer,admin,LDAPUser,AZURE</param-value>
         </init-param>
     </filter>
     <filter-mapping>
