@@ -9,8 +9,10 @@ import nl.opengeogroep.safetymaps.server.db.Cfg;
 
 import java.security.Principal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.naming.NamingException;
@@ -222,13 +224,21 @@ public class PersistentAuthenticationFilter implements Filter {
                 // to get the persistent session settings.
 
                 String dbUsername = request.getRemoteUser();
+                List<String> rolesAsUsers = new ArrayList<String>();
 
                 for(String role: rolesAsDbUsernames) {
-                    if(!role.equals(this.commonRole) && request.isUserInRole(role)) {
+                    /*if(!role.equals(commonRole) && request.isUserInRole(role)) {
                         log.trace(request.getRequestURI() + ": Request externally authenticated and in role " + role + " which will be used as username to get persistent session settings");
                         dbUsername = role;
                         break;
+                    }*/
+                    if (request.isUserInRole(role)) {
+                        rolesAsUsers.add(role);
                     }
+                }
+
+                if (rolesAsUsers.size() > 0) {
+                    dbUsername = String.join(",", rolesAsUsers);
                 }
 
                 Map<String,Object> data;
@@ -308,7 +318,11 @@ public class PersistentAuthenticationFilter implements Filter {
 
                 Set<String> roles = new HashSet();
                 if(!DEFAULT_LOGIN_SOURCE.equals(persistentSession.get("login_source"))) {
-                    roles.add((String)persistentSession.get("login_source"));
+                    //roles.add((String)persistentSession.get("login_source"));
+                    String rolesInLoginSource = (String)persistentSession.get("login_source");
+                    for (String roleFromLoginSource: rolesInLoginSource.split(",")) {
+                        roles.add(roleFromLoginSource);
+                    }
                 }
 
                 persistentPrincipal = new AuthenticatedPrincipal((String)persistentSession.get("username"), roles);
