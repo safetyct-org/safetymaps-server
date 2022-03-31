@@ -224,6 +224,7 @@ public class PersistentAuthenticationFilter implements Filter {
                 // to get the persistent session settings.
 
                 String dbUsername = request.getRemoteUser();
+                String checkUsername = dbUsername;
                 List<String> rolesAsUsers = new ArrayList<String>();
 
                 for(String role: rolesAsDbUsernames) {
@@ -239,11 +240,12 @@ public class PersistentAuthenticationFilter implements Filter {
 
                 if (rolesAsUsers.size() > 0) {
                     dbUsername = String.join(",", rolesAsUsers);
+                    checkUsername = commonRole;
                 }
 
                 Map<String,Object> data;
                 try {
-                    data = qr().query("select * from " + USER_TABLE + " where username = ?", new MapHandler(), dbUsername);
+                    data = qr().query("select * from " + USER_TABLE + " where username = ?", new MapHandler(), checkUsername);
                 } catch(SQLException | NamingException e) {
                     throw new IOException(e);
                 }
