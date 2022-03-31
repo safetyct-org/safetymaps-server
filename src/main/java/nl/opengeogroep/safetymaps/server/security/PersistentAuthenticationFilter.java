@@ -225,7 +225,7 @@ public class PersistentAuthenticationFilter implements Filter {
 
                 String dbUsername = request.getRemoteUser();
                 String checkUsername = dbUsername;
-                List<String> rolesAsUsers = new ArrayList<String>();
+                ArrayList<String> rolesAsUsers = new ArrayList<>();
 
                 for(String role: rolesAsDbUsernames) {
                     /*if(!role.equals(commonRole) && request.isUserInRole(role)) {
