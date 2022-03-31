@@ -233,14 +233,14 @@ public class PersistentAuthenticationFilter implements Filter {
                         dbUsername = role;
                         break;
                     }*/
-                    //if (request.isUserInRole(role)) {
+                    if (request.isUserInRole(role)) {
                         rolesAsUsers.add(role);
-                    //}
+                    }
                 }
 
                 if (rolesAsUsers.size() > 0) {
                     dbUsername = String.join(",", rolesAsUsers);
-                    checkUsername = commonRole;
+                    checkUsername = "AZURE";
                 }
 
                 Map<String,Object> data;
