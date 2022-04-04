@@ -361,7 +361,9 @@ public class ViewerApiActionBean implements ActionBean {
         } else if (isSmvng && "Cyclomedia".equals(name)) {
             options.put(prefixSmvng + "earth", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_cyclomedia_earth")); 
             options.put(prefixSmvng + "birdview", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_cyclomedia_birdview")); 
-        }
+        } else if (isSmvng && "Dbk".equals(name)) {
+            options.put(prefixSmvng + "DefaultHide", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_dbk_defaulthide")); 
+        } 
 
         return module;
     }
