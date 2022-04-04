@@ -358,6 +358,9 @@ public class ViewerApiActionBean implements ActionBean {
             options.put(prefixSmvng + "crud", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_drawing_crud")); 
         } else if (isSmvng && "Streetview".equals(name)) {
             options.put(prefixSmvng + "earth", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_streetview_earth")); 
+        } else if (isSmvng && "Cyclomedia".equals(name)) {
+            options.put(prefixSmvng + "earth", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_cyclomedia_earth")); 
+            options.put(prefixSmvng + "birdview", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_cyclomedia_birdview")); 
         }
 
         return module;
