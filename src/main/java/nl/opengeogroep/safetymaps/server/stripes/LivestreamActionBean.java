@@ -32,7 +32,7 @@ import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
  */
 @StrictBinding
 @UrlBinding("/viewer/api/livestream/{incident}.json")
-public class LivestreamActionBean {
+public class LivestreamActionBean implements ActionBean {
   private ActionBeanContext context;
 
   @Validate
