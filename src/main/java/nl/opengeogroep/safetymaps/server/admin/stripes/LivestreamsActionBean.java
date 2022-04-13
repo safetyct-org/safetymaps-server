@@ -118,7 +118,7 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
     if (rowid == null) {
       DB.qr().update("insert into safetymaps.live(incident, name, url) values(?, ?, ?)", incident, name, url);
     } else {
-      DB.qr().update("update safetymaps.live set incident = ?, name = ?, url = ? where row_id=?", incident, name, url, rowid);
+      DB.qr().update("update safetymaps.live set incident = ?, name = ?, url = ? where CONCAT(incident, '-', name)=?", incident, name, url, rowid);
     }
     return cancel();
   }
