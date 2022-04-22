@@ -163,9 +163,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         <%--div class="checkbox">
                             <label><stripes:checkbox name="layer.baselayer"/>Basislaag</label>
                         </div--%>
-                        <%--div class="checkbox">
+                        <div class="checkbox">
                             <label><stripes:checkbox name="visible"/>Standaard ingeschakeld</label>
-                        </div--%>                        
+                        </div>                        
                         <div class="checkbox">
                             <label><stripes:checkbox name="hidefeatureinfo"/>Geen feature info weergeven</label>
                         </div>

@@ -28,11 +28,11 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
  * @author Safety C&T
  */
 @StrictBinding
-@UrlBinding("/admin/action/livestreams")
-public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler {
+@UrlBinding("/admin/action/maptrip")
+public class MaptripActionBean implements ActionBean, ValidationErrorHandler {
   private ActionBeanContext context;
 
-  private static final String JSP = "/WEB-INF/jsp/admin/livestreams.jsp";
+  private static final String JSP = "/WEB-INF/jsp/admin/maptrip.jsp";
 
   @Override
   public ActionBeanContext getContext() {
@@ -43,12 +43,12 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
       this.context = context;
   }
 
-  private List<Map<String,Object>> streams = new ArrayList();
-  public List<Map<String, Object>> getStreams() {
-      return streams;
+  private List<Map<String,Object>> units = new ArrayList();
+  public List<Map<String, Object>> getUnits() {
+      return units;
   }
-  public void setStreams(List<Map<String, Object>> streams) {
-      this.streams = streams;
+  public void setUnits(List<Map<String, Object>> units) {
+      this.units = units;
   }
 
   @Validate
@@ -62,38 +62,28 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
   }
 
   @Validate
-  private String incident;
+  private String voertuignummer;
 
-  public String getIncident() {
-    return incident;
+  public String getVoertuignummer() {
+    return voertuignummer;
   }
-  public void setIncident(String incident) {
-    this.incident = incident;
-  }
-
-  @Validate
-  private String name;
-
-  public String getName() {
-    return name;
-  }
-  public void setName(String name) {
-    this.name = name;
+  public void setVoertuignummer(String voertuignummer) {
+    this.voertuignummer = voertuignummer;
   }
 
   @Validate
-  private String url;
+  private String maptriplicentie;
 
-  public String getUrl() {
-    return url;
+  public String getMaptriplicentie() {
+    return maptriplicentie;
   }
-  public void setUrl(String url) {
-    this.url = url;
+  public void setMaptriplicentie(String maptriplicentie) {
+    this.maptriplicentie = maptriplicentie;
   }
 
   @Before
   private void loadInfo() throws NamingException, SQLException {
-    streams = DB.qr().query("select CONCAT(incident, '-', name) as row_id, * from safetymaps.live", new MapListHandler());
+    units = DB.maptripQr().query("select * from broker.unit_devices order by safetyconnect_unit", new MapListHandler());
   }
 
   @DefaultHandler
@@ -103,12 +93,11 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
 
   public Resolution edit() throws SQLException, NamingException {
     if (rowid != null) {
-      Map<String,Object> data = DB.qr().query("select CONCAT(incident, '-', name) as row_id, * from safetymaps.live where CONCAT(incident, '-', name) = ?", new MapHandler(), rowid);
+      Map<String,Object> data = DB.maptripQr().query("select * from broker.unit_devices where row_id = ?", new MapHandler(), Integer.parseInt(rowid));
 
       if(data.get("row_id") != null) {
-        incident = data.get("incident").toString();
-        name = data.get("name").toString();
-        url = data.get("url").toString();
+        voertuignummer = data.get("safetyconnect_unit").toString();
+        maptriplicentie = data.get("maptrip_device").toString();
       }
     }
     return new ForwardResolution(JSP);
@@ -116,15 +105,15 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
 
   public Resolution save() throws Exception {
     if (rowid == null) {
-      DB.qr().update("insert into safetymaps.live(incident, name, url) values(?, ?, ?)", incident, name, url);
+      DB.maptripQr().update("insert into broker.unit_devices(safetyconnect_unit, maptrip_device) values(?, ?)", voertuignummer, maptriplicentie);
     } else {
-      DB.qr().update("update safetymaps.live set incident = ?, name = ?, url = ? where CONCAT(incident, '-', name)=?", incident, name, url, rowid);
+      DB.maptripQr().update("update broker.unit_devices set maptrip_device = ? where row_id=?", maptriplicentie, Integer.parseInt(rowid));
     }
     return cancel();
   }
 
   public Resolution delete() throws Exception {
-    DB.qr().update("delete from safetymaps.live where CONCAT(incident, '-', name) = ?", rowid);
+    DB.maptripQr().update("delete from broker.unit_devices where row_id = ?", Integer.parseInt(rowid));
     return cancel();
   }
 

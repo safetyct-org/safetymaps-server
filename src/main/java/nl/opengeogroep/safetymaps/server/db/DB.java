@@ -47,7 +47,6 @@ public class DB {
 
     public static final String ROLE_SMVNG_KLADBLOKCHAT_EDITOR = "smvng_incident_addchat";
     public static final String ROLE_SMVNG_KLADBLOKCHAT_VIEWER = "smvng_incident_showchat";
-    public static final String ROLE_SMVNG_KLADBLOKCHAT_GMS = "smvng_incident_logtogms_notepadchat";
 
     public static final String USERNAME_LDAP = "LDAP";
 
