@@ -85,7 +85,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             return unAuthorizedResolution();
         }
 
-        if (requestIs(KLADBLOKREGEL_REQUEST) && !context.getRequest().isUserInRole(ROLE_KLADBLOKCHAT_EDITOR_GMS) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
+        if (requestIs(KLADBLOKREGEL_REQUEST) && !context.getRequest().isUserInRole("smvng_incident_logtogms_notepadchat") && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
             return unAuthorizedResolution();
         }
 
