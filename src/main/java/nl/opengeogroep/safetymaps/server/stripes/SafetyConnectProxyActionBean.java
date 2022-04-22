@@ -8,6 +8,7 @@ import net.sourceforge.stripes.action.StreamingResolution;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.CacheUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.logging.Log;
@@ -95,6 +96,47 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
         if(authorization == null || url == null) {
             return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");
+        }
+
+        String useRequestCache = Cfg.getSetting("safetyconnect_use_cache", "false");
+        if ("true".equals(useRequestCache) && requestIs(INCIDENT_REQUEST)) {
+            return new Resolution() {
+                @Override
+                public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+                    response.setCharacterEncoding("UTF-8");
+                    response.setContentType("application/json");
+
+                    OutputStream out;
+                    String acceptEncoding = request.getHeader("Accept-Encoding");
+                    if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+                        response.setHeader("Content-Encoding", "gzip");
+                        out = new GZIPOutputStream(response.getOutputStream(), true);
+                    } else {
+                        out = response.getOutputStream();
+                    }
+                    JSONArray cache = (JSONArray)CacheUtil.Get(CacheUtil.INCIDENT_CACHE_KEY);
+                    if (cache == null || cache.toString() == "") {
+                        IOUtils.copy(new StringReader("[]"), out, "UTF-8");
+                    } else {
+                        int idIndex = path.indexOf("/");
+                        if (idIndex != -1) {
+                            JSONArray content = new JSONArray();
+                            String id = path.substring(idIndex + 1);
+                            for(int i=0; i<cache.length(); i++) {
+                                JSONObject incident = (JSONObject)cache.get(i);
+                                if (incident.get("IncidentNummer").toString().equals(id)) {
+                                    content.put(incident);
+                                }
+                            }
+                            IOUtils.copy(new StringReader(content.toString()), out, "UTF-8");
+                        } else {
+                            IOUtils.copy(new StringReader(cache.toString()), out, "UTF-8");
+                        }
+                    }
+                    out.flush();
+                    out.close();
+                }
+            };
         }
 
         String qs = context.getRequest().getQueryString();
