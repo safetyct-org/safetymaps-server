@@ -17,33 +17,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <%@include file="/WEB-INF/jsp/taglibs.jsp"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 
-<stripes:layout-render name="/WEB-INF/jsp/templates/admin.jsp" pageTitle="Maptrip beheer" menuitem="maptrip">
+<stripes:layout-render name="/WEB-INF/jsp/templates/admin.jsp" pageTitle="Livestream beheer" menuitem="livestreams">
   <stripes:layout-component name="content">
 
-    <h1>Maptrip koppelingen</h1>
+    <h1>Active livestreams</h1>
 
-    <table class="table table-bordered table-striped table-fixed-header table-condensed table-hover" id="maptrip-table">
+    <table class="table table-bordered table-striped table-fixed-header table-condensed table-hover" id="livestream-table">
       <thead>
           <tr>
-              <th>Voertuignummer</th>
-              <th>Maptrip deviceid</th>
+              <th>Incident</th>
+              <th>Name</th>
               <th class="table-actions">&nbsp;</th>
           </tr>
       </thead>
       <tbody>
-        <c:forEach var="u" items="${actionBean.units}">
-          <stripes:url var="editLink" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.MaptripActionBean" event="edit">
+        <c:forEach var="u" items="${actionBean.streams}">
+          <stripes:url var="editLink" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="edit">
             <stripes:param name="rowid" value="${u.row_id}"/>
           </stripes:url>
           <tr style="cursor: pointer" class="${actionBean.rowid == u.row_id ? 'info' : ''}" onclick="${ 'window.location.href=\''.concat(editLink).concat('\'') }">
-            <td><c:out value="${u.safetyconnect_unit}"/></td>
-            <td><c:out value="${u.maptrip_device}"/></td>
+            <td><c:out value="${u.incident}"/></td>
+            <td><c:out value="${u.name}"/></td>
             <td class="table-actions">
-              <stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.MaptripActionBean" event="edit" title="Bewerken">
+              <stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="edit" title="Bewerken">
                   <stripes:param name="rowid" value="${u.row_id}"/>
                   <span class="glyphicon glyphicon-pencil"></span>
               </stripes:link>
-              <stripes:link class="remove-item" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.MaptripActionBean" event="delete" title="Verwijderen">
+              <stripes:link class="remove-item" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="delete" title="Verwijderen">
                   <stripes:param name="rowid" value="${u.row_id}"/>
                   <span class="glyphicon glyphicon-remove"></span>
               </stripes:link>
@@ -53,11 +53,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       </tbody>
     </table>
 
-    <stripes:form beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.MaptripActionBean" class="form-horizontal">
+    <stripes:form beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" class="form-horizontal">
       <c:set var="event" value="${actionBean.context.eventName}"/>
       <br>
       <c:if test="${event == 'list'}">
-          <stripes:submit name="edit" class="btn btn-primary">Nieuwe koppeling</stripes:submit>
+          <stripes:submit name="edit" class="btn btn-primary">Nieuwe livestream</stripes:submit>
       </c:if>
       <c:if test="${event == 'edit' || event == 'save'}">
         <stripes:submit name="save" class="btn btn-primary">Opslaan</stripes:submit>
@@ -70,18 +70,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <stripes:hidden name="rowid" value="${actionBean.rowid}"/>
         </c:if>
         <div class="form-group">
-          <label class="col-sm-2 control-label">Voertuignummer:</label>
+          <label class="col-sm-2 control-label">Incident:</label>
           <div class="col-sm-10">
-            <stripes:text class="form-control" name="voertuignummer" disabled="${!empty actionBean.rowid}"/>
-            <c:if test="${!empty actionBean.rowid}">
-                <stripes:hidden name="voertuignummer" value="${actionBean.rowid}" />
-            </c:if>
+            <stripes:text class="form-control" name="incident" />
           </div>
         </div>
         <div class="form-group">
-          <label class="col-sm-2 control-label">Maptrip deviceid:</label>
+          <label class="col-sm-2 control-label">Name:</label>
           <div class="col-sm-10">
-            <stripes:text class="form-control" name="maptriplicentie" />
+            <stripes:text class="form-control" name="name" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">URL:</label>
+          <div class="col-sm-10">
+            <stripes:text class="form-control" name="url" />
           </div>
         </div>
       </c:if>
