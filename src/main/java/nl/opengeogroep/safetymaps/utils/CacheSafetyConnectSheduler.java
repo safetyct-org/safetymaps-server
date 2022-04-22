@@ -69,7 +69,7 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
         }
 
         // Build request
-        final String uri = url + "incident?extended=true&kladblokregels=true&excludeTraining=false&daysInPast=&prio=5&includeWithoutUnits=true" + (regioncode == null ? "" : "&regioCode=" + regioncode);
+        final String uri = url + "incident?extended=true&kladblokregels=true&excludeTraining=false&daysInPast=&prio=5&includeWithoutUnits=true" + (regioncode == null || "".equals(regioncode) ? "" : "&regioCode=" + regioncode);
         final HttpUriRequest req = RequestBuilder.get()
           .setUri(uri)
           .addHeader("Authorization", authorization)
