@@ -40,7 +40,7 @@ public class LivestreamActionBean implements ActionBean {
   @Validate
   private String incident;
   private String path;
-  private String vehicle;
+  private String vehicles;
 
   @Override
     public ActionBeanContext getContext() {
@@ -88,16 +88,16 @@ public class LivestreamActionBean implements ActionBean {
       
       if ("set".equals(path)) {
         for(String vehicle: vehicles.split(",")) { 
-          DB.qr().query("insert into safetymaps.live(incident, name, url, vehicle) select ?, ?, case when (username = '') is not false then url else replace(url, 'rtsp://', concat('rtsp://', username, ':', pass, '@')) end, vehicle from safetymaps.live_vehicles where vehicle = ? on conflict do nothing", incident, vehicle, vehicle);
+          DB.qr().update("insert into safetymaps.live(incident, name, url, vehicle) select ?, ?, case when (username = '') is not false then url else replace(url, 'rtsp://', concat('rtsp://', username, ':', pass, '@')) end, vehicle from safetymaps.live_vehicles where vehicle = ? on conflict do nothing", incident, vehicle, vehicle);
         }
       }
 
       if ("del".equals(path)) {
         try {
-          DB.qr().query("delete from safetymaps.live where incident = ? and vehicle not in ?", incident, (String[])vehicles.split(","));
+          DB.qr().update("delete from safetymaps.live where incident = ? and vehicle not in ?", incident, (String[])vehicles.split(","));
         } catch(Exception e) {
           return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
-      }
+        }
       }
 
       return new StreamingResolution("application/json", "");
