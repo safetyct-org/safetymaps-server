@@ -2,8 +2,7 @@ CREATE TABLE safetymaps.live (
 	incident varchar NOT NULL,
 	name varchar NOT NULL,
 	url varchar NOT NULL,
-	username varchar NULL,
-	pass varchar NULL,
+	vehicle varchar NULL,
 	vod bool NULL,
 	disableaudio bool NULL,
 	debug bool NULL,
@@ -15,5 +14,5 @@ CREATE TABLE safetymaps.live_vehicles (
 	url varchar NOT NULL,
 	username varchar NULL,
 	pass varchar NULL,
-	CONSTRAINT live_pkey PRIMARY KEY (vehicle, url)
+	CONSTRAINT live_vehicles_pkey PRIMARY KEY (vehicle, url)
 );

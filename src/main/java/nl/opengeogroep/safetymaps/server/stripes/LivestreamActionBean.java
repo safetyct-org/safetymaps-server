@@ -31,12 +31,16 @@ import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
  * @author Bart Verhaar
  */
 @StrictBinding
-@UrlBinding("/viewer/api/livestream/{incident}.json")
+@UrlBinding("/viewer/api/livestream/{incident}/{path}")
 public class LivestreamActionBean implements ActionBean {
   private ActionBeanContext context;
 
+  static final String ROLE = "smvng_incident_vrh_ags_replica";
+
   @Validate
   private String incident;
+  private String path;
+  private String vehicle;
 
   @Override
     public ActionBeanContext getContext() {
@@ -56,9 +60,47 @@ public class LivestreamActionBean implements ActionBean {
         this.incident = incident;
     }
 
+    public String getPath() {
+      return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getVehicles() {
+      return vehicles;
+    }
+
+    public void setVehicles(String vehicles) {
+        this.vehicles = vehicles;
+    }
+
     @DefaultHandler
     public Resolution defaultHander() throws Exception {
-      return load();
+      if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
+        return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot Livestreams");
+      }
+
+      if ("get".equals(path)) {
+        return load();
+      }
+      
+      if ("set".equals(path)) {
+        for(String vehicle: vehicles.split(",")) { 
+          DB.qr().query("insert into safetymaps.live(incident, name, url, vehicle) select ?, ?, case when (username = '') is not false then url else replace(url, 'rtsp://', concat('rtsp://', username, ':', pass, '@')) end, vehicle from safetymaps.live_vehicles where vehicle = ? on conflict do nothing", incident, vehicle, vehicle);
+        }
+      }
+
+      if ("del".equals(path)) {
+        try {
+          DB.qr().query("delete from safetymaps.live where incident = ? and vehicle not in ?", incident, (String[])vehicles.split(","));
+        } catch(Exception e) {
+          return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
+      }
+      }
+
+      return new StreamingResolution("application/json", "");
     }
 
     public Resolution load() throws Exception {
