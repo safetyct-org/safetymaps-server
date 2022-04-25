@@ -70,6 +70,16 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
   }
 
   @Validate
+  private String vehicleStreamId;
+
+  public String getVehicleStreamId() {
+    return vehicleStreamId;
+  }
+  public void setVehicleStreamId(String vehicleStreamId) {
+    this.vehicleStreamId = vehicleStreamId;
+  }
+
+  @Validate
   private String incident;
 
   public String getIncident() {
@@ -164,14 +174,30 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
   }
 
   public Resolution edit_vs() throws Exception {
+    if (vehicleStreamId != null) {
+      Map<String,Object> data = DB.qr().query("select CONCAT(vehicle, '-', url) as row_id, * from safetymaps.live_vehicles where CONCAT(vehicle, '-', url) = ?", new MapHandler(), vehicleStreamId);
+
+      if(data.get("row_id") != null) {
+        vehicle = data.get("incident").toString();
+        username = data.get("username").toString();
+        password = data.get("pass").toString();
+        urlvs = data.get("url").toString();
+      }
+    }
     return new ForwardResolution(JSP);
   }
 
   public Resolution save_vs() throws Exception {
+    if (vehicleStreamId == null) {
+      DB.qr().update("insert into safetymaps.live_vehicles(vehicle, url, username, pass) values(?, ?, ?)", vehicle, urlvs, username, password);
+    } else {
+      DB.qr().update("update safetymaps.live_vehicles set vehicle = ?, url = ?, username = ?, pass = ? where CONCAT(vehicle, '-', url)=?", vehicle, urlvs, username, password, incidentStreamId);
+    }
     return cancel();
   }
 
   public Resolution delete_vs() throws Exception {
+    DB.qr().update("delete from safetymaps.live_vehicles where CONCAT(vehicle, '-', url) = ?", vehicleStreamId);
     return cancel();
   }
 
