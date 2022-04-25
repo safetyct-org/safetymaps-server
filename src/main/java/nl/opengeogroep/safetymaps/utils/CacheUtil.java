@@ -21,7 +21,7 @@ public class CacheUtil {
     return cache.get(key);
   }
 
-  public static final void Remove(string key) {
+  public static final void Remove(String key) {
     Object cachedItem = cache.get(key);
     if (cachedItem != null) {
       cache.remove(key);
