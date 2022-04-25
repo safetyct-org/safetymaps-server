@@ -53,7 +53,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
       <stripes:form beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" class="form-horizontal">
         <c:set var="event" value="${actionBean.context.eventName}"/>
-        <br>
         <c:if test="${event == 'list'}">
             <stripes:submit name="edit_vs" class="btn btn-primary">Nieuw voertuig</stripes:submit>
         </c:if>
@@ -66,6 +65,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
           <c:if test="${!empty actionBean.vehicleStreamId}">
               <stripes:hidden name="vehicleStreamId" value="${actionBean.vehicleStreamId}"/>
+              <br /><br/>
           </c:if>
           <div class="form-group">
             <label class="col-sm-2 control-label">Voertuig:</label>
@@ -131,7 +131,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
       <stripes:form beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" class="form-horizontal">
         <c:set var="event" value="${actionBean.context.eventName}"/>
-        <br>
         <c:if test="${event == 'list'}">
             <stripes:submit name="edit_is" class="btn btn-primary">Nieuwe livestream</stripes:submit>
         </c:if>
@@ -144,6 +143,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
           <c:if test="${!empty actionBean.incidentStreamId}">
               <stripes:hidden name="incidentStreamId" value="${actionBean.incidentStreamId}"/>
+              <br /><br/>
           </c:if>
           <div class="form-group">
             <label class="col-sm-2 control-label">Incident:</label>
