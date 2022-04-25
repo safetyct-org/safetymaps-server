@@ -76,7 +76,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <div class="form-group">
             <label class="col-sm-2 control-label">URL:</label>
             <div class="col-sm-10">
-              <stripes:text class="form-control" name="urlVs" />
+              <stripes:text class="form-control" name="urlvs" />
             </div>
           </div>
           <div class="form-group">
@@ -160,7 +160,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <div class="form-group">
             <label class="col-sm-2 control-label">URL:</label>
             <div class="col-sm-10">
-              <stripes:text class="form-control" name="urlIs" />
+              <stripes:text class="form-control" name="urlis" />
             </div>
           </div>
         </c:if>

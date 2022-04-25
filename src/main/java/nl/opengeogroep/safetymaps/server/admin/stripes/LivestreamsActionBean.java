@@ -102,10 +102,10 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
   @Validate
   private String urlis;
 
-  public String getUrlIs() {
+  public String getUrlis() {
     return urlis;
   }
-  public void setUrlIs(String urlis) {
+  public void setUrlis(String urlis) {
     this.urlis = urlis;
   }
 
@@ -142,10 +142,10 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
   @Validate
   private String urlvs;
 
-  public String getUrlVs() {
+  public String getUrlvs() {
     return urlvs;
   }
-  public void setUrlVs(String urlvs) {
+  public void setUrlvs(String urlvs) {
     this.urlvs = urlvs;
   }
 
@@ -189,7 +189,7 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
 
   public Resolution save_vs() throws Exception {
     if (vehicleStreamId == null) {
-      DB.qr().update("insert into safetymaps.live_vehicles(vehicle, url, username, pass) values(?, ?, ?)", vehicle, urlvs, username, password);
+      DB.qr().update("insert into safetymaps.live_vehicles(vehicle, url, username, pass) values(?, ?, ?, ?)", vehicle, urlvs, username, password);
     } else {
       DB.qr().update("update safetymaps.live_vehicles set vehicle = ?, url = ?, username = ?, pass = ? where CONCAT(vehicle, '-', url)=?", vehicle, urlvs, username, password, incidentStreamId);
     }
