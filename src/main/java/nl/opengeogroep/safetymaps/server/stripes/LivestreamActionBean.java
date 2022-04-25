@@ -31,13 +31,11 @@ import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
  * @author Bart Verhaar
  */
 @StrictBinding
-@UrlBinding("/viewer/api/livestream/{incident}/{path}")
+@UrlBinding("/viewer/api/livestream/{path}")
 public class LivestreamActionBean implements ActionBean {
   private ActionBeanContext context;
 
-  static final String ROLE = "smvng_incident_vrh_ags_replica";
-
-  @Validate
+    @Validate
   private String incident;
   private String path;
   private String vehicles;
@@ -78,9 +76,9 @@ public class LivestreamActionBean implements ActionBean {
 
     @DefaultHandler
     public Resolution defaultHander() throws Exception {
-      if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
+      /*if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
         return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot Livestreams");
-      }
+      }*/
 
       if ("get".equals(path)) {
         return load();
