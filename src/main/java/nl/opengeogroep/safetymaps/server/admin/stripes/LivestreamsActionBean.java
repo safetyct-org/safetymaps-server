@@ -102,6 +102,7 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
   @Before
   private void loadInfo() throws NamingException, SQLException {
     incidentStreams = DB.qr().query("select CONCAT(incident, '-', name) as row_id, * from safetymaps.live", new MapListHandler());
+    vehicleStreams = DB.qr().query("select CONCAT(vehicle, '-', url) as row_id, * from safetymaps.live_vehicles", new MapListHandler());
   }
 
   @DefaultHandler
@@ -109,7 +110,7 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
     return new ForwardResolution(JSP);
   }
 
-  public Resolution edit() throws SQLException, NamingException {
+  public Resolution edit_is() throws SQLException, NamingException {
     if (incidentStreamId != null) {
       Map<String,Object> data = DB.qr().query("select CONCAT(incident, '-', name) as row_id, * from safetymaps.live where CONCAT(incident, '-', name) = ?", new MapHandler(), incidentStreamId);
 
@@ -122,7 +123,19 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
     return new ForwardResolution(JSP);
   }
 
-  public Resolution save() throws Exception {
+  public Resolution edit_vs() throws Exception {
+    return new ForwardResolution(JSP);
+  }
+
+  public Resolution save_vs() throws Exception {
+    return cancel();
+  }
+
+  public Resolution delete_vs() throws Exception {
+    return cancel();
+  }
+
+  public Resolution save_is() throws Exception {
     if (incidentStreamId == null) {
       DB.qr().update("insert into safetymaps.live(incident, name, url) values(?, ?, ?)", incident, name, url);
     } else {
@@ -131,7 +144,7 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
     return cancel();
   }
 
-  public Resolution delete() throws Exception {
+  public Resolution delete_is() throws Exception {
     DB.qr().update("delete from safetymaps.live where CONCAT(incident, '-', name) = ?", incidentStreamId);
     return cancel();
   }

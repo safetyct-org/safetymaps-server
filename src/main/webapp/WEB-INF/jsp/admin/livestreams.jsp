@@ -17,9 +17,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <stripes:layout-render name="/WEB-INF/jsp/templates/admin.jsp" pageTitle="Livestream beheer" menuitem="livestreams">
   <stripes:layout-component name="content">
 
-    <h1>Active livestreams</h1>
+    <div style="width: 50%; float: left;">
+      <h1>Voertuigen met livestream</h1>
+
+      <table class="table table-bordered table-striped table-fixed-header table-condensed table-hover" id="vehiclestream-table">
+        <thead>
+            <tr>
+                <th>Vehicle</th>
+                <th>URL</th>
+                <th class="table-actions">&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+          <c:forEach var="u" items="${actionBean.vehicleStreams}">
+            <stripes:url var="editLink_vs" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="edit_vs">
+              <stripes:param name="vehicleStreamId" value="${u.row_id}"/>
+            </stripes:url>
+            <tr style="cursor: pointer" class="${actionBean.vehicleStreamId == u.row_id ? 'info' : ''}" onclick="${ 'window.location.href=\''.concat(editLink_vs).concat('\'') }">
+              <td><c:out value="${u.vehicle}"/></td>
+              <td><c:out value="${u.url}"/></td>
+              <td class="table-actions">
+                <stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="edit_vs" title="Bewerken">
+                    <stripes:param name="vehicleStreamId" value="${u.row_id}"/>
+                    <span class="glyphicon glyphicon-pencil"></span>
+                </stripes:link>
+                <stripes:link class="remove-item" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="delete_vs" title="Verwijderen">
+                    <stripes:param name="vehicleStreamId" value="${u.row_id}"/>
+                    <span class="glyphicon glyphicon-remove"></span>
+                </stripes:link>
+              </td>
+            </tr>
+          </c:forEach>
+        </tbody>
+      </table>
+    </div>
 
     <div style="width: 50%; float: left;">
+      <h1>Active livestreams</h1>
+
       <table class="table table-bordered table-striped table-fixed-header table-condensed table-hover" id="livestream-table">
         <thead>
             <tr>
@@ -30,18 +65,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         </thead>
         <tbody>
           <c:forEach var="u" items="${actionBean.incidentStreams}">
-            <stripes:url var="editLink" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="edit">
+            <stripes:url var="editLink_is" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="edit_is">
               <stripes:param name="incidentStreamId" value="${u.row_id}"/>
             </stripes:url>
-            <tr style="cursor: pointer" class="${actionBean.incidentStreamId == u.row_id ? 'info' : ''}" onclick="${ 'window.location.href=\''.concat(editLink).concat('\'') }">
+            <tr style="cursor: pointer" class="${actionBean.incidentStreamId == u.row_id ? 'info' : ''}" onclick="${ 'window.location.href=\''.concat(editLink_is).concat('\'') }">
               <td><c:out value="${u.incident}"/></td>
               <td><c:out value="${u.name}"/></td>
               <td class="table-actions">
-                <stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="edit" title="Bewerken">
+                <stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="edit_is" title="Bewerken">
                     <stripes:param name="incidentStreamId" value="${u.row_id}"/>
                     <span class="glyphicon glyphicon-pencil"></span>
                 </stripes:link>
-                <stripes:link class="remove-item" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="delete" title="Verwijderen">
+                <stripes:link class="remove-item" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" event="delete_is" title="Verwijderen">
                     <stripes:param name="incidentStreamId" value="${u.row_id}"/>
                     <span class="glyphicon glyphicon-remove"></span>
                 </stripes:link>
@@ -55,10 +90,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <c:set var="event" value="${actionBean.context.eventName}"/>
         <br>
         <c:if test="${event == 'list'}">
-            <stripes:submit name="edit" class="btn btn-primary">Nieuwe livestream</stripes:submit>
+            <stripes:submit name="edit_is" class="btn btn-primary">Nieuwe livestream</stripes:submit>
         </c:if>
-        <c:if test="${event == 'edit' || event == 'save'}">
-          <stripes:submit name="save" class="btn btn-primary">Opslaan</stripes:submit>
+        <c:if test="${event == 'edit_is' || event == 'save'}">
+          <stripes:submit name="save_is" class="btn btn-primary">Opslaan</stripes:submit>
           <c:if test="${!empty actionBean.incidentStreamId}">
             <stripes:submit name="delete" class="btn btn-danger remove-item">Verwijderen</stripes:submit>
           </c:if>
@@ -87,9 +122,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           </div>
         </c:if>
       </stripes:form>
-    </div>
-    <div style="width: 50%; float: left;">
-
     </div>
 
   </stripes:layout-component>
