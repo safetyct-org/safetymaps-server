@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <stripes:layout-render name="/WEB-INF/jsp/templates/admin.jsp" pageTitle="Livestream beheer" menuitem="livestreams">
   <stripes:layout-component name="content">
 
-    <div style="width: 50%; float: left;">
+    <div style="width: 49%; float: left; margin-right: 1%;">
       <h1>Voertuigen met livestream</h1>
 
       <table class="table table-bordered table-striped table-fixed-header table-condensed table-hover" id="vehiclestream-table">
@@ -95,7 +95,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       </stripes:form>
     </div>
 
-    <div style="width: 50%; float: left;">
+    <div style="width: 49%; float: left; margin-left: 1%;">
       <h1>Active livestreams</h1>
 
       <table class="table table-bordered table-striped table-fixed-header table-condensed table-hover" id="livestream-table">

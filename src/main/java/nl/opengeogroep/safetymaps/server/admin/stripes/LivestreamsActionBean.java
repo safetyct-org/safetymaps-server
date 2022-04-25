@@ -191,7 +191,7 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
     if (vehicleStreamId == null) {
       DB.qr().update("insert into safetymaps.live_vehicles(vehicle, url, username, pass) values(?, ?, ?, ?)", vehicle, urlvs, username, password);
     } else {
-      DB.qr().update("update safetymaps.live_vehicles set vehicle = ?, url = ?, username = ?, pass = ? where CONCAT(vehicle, '-')=?", vehicle, urlvs, username, password, incidentStreamId);
+      DB.qr().update("update safetymaps.live_vehicles set vehicle = ?, url = ?, username = ?, pass = ? where CONCAT(vehicle, '-')=?", vehicle, urlvs, username, password, vehicleStreamId);
     }
     return cancel();
   }
