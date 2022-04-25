@@ -50,6 +50,49 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           </c:forEach>
         </tbody>
       </table>
+
+      <stripes:form beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean" class="form-horizontal">
+        <c:set var="event" value="${actionBean.context.eventName}"/>
+        <br>
+        <c:if test="${event == 'list'}">
+            <stripes:submit name="edit_vs" class="btn btn-primary">Nieuw voertuig</stripes:submit>
+        </c:if>
+        <c:if test="${event == 'edit_vs' || event == 'save_vs'}">
+          <stripes:submit name="save_vs" class="btn btn-primary">Opslaan</stripes:submit>
+          <c:if test="${!empty actionBean.vehicleStreamId}">
+            <stripes:submit name="delete_vs" class="btn btn-danger remove-item">Verwijderen</stripes:submit>
+          </c:if>
+          <stripes:submit name="cancel" class="btn btn-default">Annuleren</stripes:submit>
+
+          <c:if test="${!empty actionBean.vehicleStreamId}">
+              <stripes:hidden name="vehicleStreamId" value="${actionBean.vehicleStreamId}"/>
+          </c:if>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">Voertuig:</label>
+            <div class="col-sm-10">
+              <stripes:text class="form-control" name="vehicle" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">URL:</label>
+            <div class="col-sm-10">
+              <stripes:text class="form-control" name="urlVs" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">Gebruiker:</label>
+            <div class="col-sm-10">
+              <stripes:text class="form-control" name="username" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">Wachtwoord:</label>
+            <div class="col-sm-10">
+              <stripes:password class="form-control" name="password" />
+            </div>
+          </div>
+        </c:if>
+      </stripes:form>
     </div>
 
     <div style="width: 50%; float: left;">
@@ -92,10 +135,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <c:if test="${event == 'list'}">
             <stripes:submit name="edit_is" class="btn btn-primary">Nieuwe livestream</stripes:submit>
         </c:if>
-        <c:if test="${event == 'edit_is' || event == 'save'}">
+        <c:if test="${event == 'edit_is' || event == 'save_is'}">
           <stripes:submit name="save_is" class="btn btn-primary">Opslaan</stripes:submit>
           <c:if test="${!empty actionBean.incidentStreamId}">
-            <stripes:submit name="delete" class="btn btn-danger remove-item">Verwijderen</stripes:submit>
+            <stripes:submit name="delete_is" class="btn btn-danger remove-item">Verwijderen</stripes:submit>
           </c:if>
           <stripes:submit name="cancel" class="btn btn-default">Annuleren</stripes:submit>
 
@@ -117,7 +160,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <div class="form-group">
             <label class="col-sm-2 control-label">URL:</label>
             <div class="col-sm-10">
-              <stripes:text class="form-control" name="url" />
+              <stripes:text class="form-control" name="urlIs" />
             </div>
           </div>
         </c:if>

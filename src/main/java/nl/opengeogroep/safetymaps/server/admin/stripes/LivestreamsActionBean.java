@@ -90,13 +90,53 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
   }
 
   @Validate
-  private String url;
+  private String urlis;
 
-  public String getUrl() {
-    return url;
+  public String getUrlIs() {
+    return urlis;
   }
-  public void setUrl(String url) {
-    this.url = url;
+  public void setUrlIs(String urlis) {
+    this.urlis = urlis;
+  }
+
+  @Validate
+  private String vehicle;
+
+  public String getVehicle() {
+    return vehicle;
+  }
+  public void setVehicle(String vehicle) {
+    this.vehicle = vehicle;
+  }
+
+  @Validate
+  private String username;
+
+  public String getUsername() {
+    return username;
+  }
+  public void setUsername(String username) {
+    this.username = username;
+  }
+
+  @Validate
+  private String password;
+
+  public String getPassword() {
+    return password;
+  }
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+  @Validate
+  private String urlvs;
+
+  public String getUrlVs() {
+    return urlvs;
+  }
+  public void setUrlVs(String urlvs) {
+    this.urlvs = urlvs;
   }
 
   @Before
@@ -117,7 +157,7 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
       if(data.get("row_id") != null) {
         incident = data.get("incident").toString();
         name = data.get("name").toString();
-        url = data.get("url").toString();
+        urlis = data.get("url").toString();
       }
     }
     return new ForwardResolution(JSP);
@@ -137,9 +177,9 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
 
   public Resolution save_is() throws Exception {
     if (incidentStreamId == null) {
-      DB.qr().update("insert into safetymaps.live(incident, name, url) values(?, ?, ?)", incident, name, url);
+      DB.qr().update("insert into safetymaps.live(incident, name, url) values(?, ?, ?)", incident, name, urlis);
     } else {
-      DB.qr().update("update safetymaps.live set incident = ?, name = ?, url = ? where CONCAT(incident, '-', name)=?", incident, name, url, incidentStreamId);
+      DB.qr().update("update safetymaps.live set incident = ?, name = ?, url = ? where CONCAT(incident, '-', name)=?", incident, name, urlis, incidentStreamId);
     }
     return cancel();
   }
