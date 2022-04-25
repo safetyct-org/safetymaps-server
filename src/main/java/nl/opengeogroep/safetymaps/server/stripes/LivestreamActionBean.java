@@ -30,7 +30,6 @@ import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
  *
  * @author Bart Verhaar
  */
-@StrictBinding
 @UrlBinding("/viewer/api/livestream/{path}")
 public class LivestreamActionBean implements ActionBean {
   private ActionBeanContext context;
@@ -88,6 +87,8 @@ public class LivestreamActionBean implements ActionBean {
         for(String vehicle: vehicles.split(",")) { 
           DB.qr().update("insert into safetymaps.live(incident, name, url, vehicle) select ?, ?, case when (username = '') is not false then url else replace(url, 'rtsp://', concat('rtsp://', username, ':', pass, '@')) end, vehicle from safetymaps.live_vehicles where vehicle = ? on conflict do nothing", incident, vehicle, vehicle);
         }
+
+        return new StreamingResolution("application/json", "");
       }
 
       if ("del".equals(path)) {
@@ -96,9 +97,9 @@ public class LivestreamActionBean implements ActionBean {
         } catch(Exception e) {
           return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
         }
-      }
 
-      return new StreamingResolution("application/json", "");
+        return new StreamingResolution("application/json", "");
+      }
     }
 
     public Resolution load() throws Exception {
