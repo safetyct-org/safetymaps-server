@@ -73,8 +73,7 @@ public class LivestreamActionBean implements ActionBean {
         this.vehicles = vehicles;
     }
 
-    @DefaultHandler
-    public Resolution defaultHander() throws Exception {
+    public Resolution proxy() throws Exception {
       /*if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
         return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot Livestreams");
       }*/
@@ -100,6 +99,8 @@ public class LivestreamActionBean implements ActionBean {
 
         return new StreamingResolution("application/json", "");
       }
+
+      return null;
     }
 
     public Resolution load() throws Exception {
