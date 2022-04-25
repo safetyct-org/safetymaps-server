@@ -20,4 +20,11 @@ public class CacheUtil {
   public static final Object Get(String key) {
     return cache.get(key);
   }
+
+  public static final void Remove(string key) {
+    Object cachedItem = cache.get(key);
+    if (cachedItem != null) {
+      cache.remove(key);
+    }
+  }
 }
