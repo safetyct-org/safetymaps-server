@@ -73,16 +73,17 @@ public class LivestreamActionBean implements ActionBean {
         this.vehicles = vehicles;
     }
 
-    public Resolution proxy() throws Exception {
+    @DefaultHandler
+    public Resolution def() throws Exception {
       /*if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
         return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot Livestreams");
       }*/
 
-      if ("get".equals(path)) {
+      if("get".equals(path)) {
         return load();
       }
       
-      if ("set".equals(path)) {
+      if("set".equals(path)) {
         for(String vehicle: vehicles.split(",")) { 
           DB.qr().update("insert into safetymaps.live(incident, name, url, vehicle) select ?, ?, case when (username = '') is not false then url else replace(url, 'rtsp://', concat('rtsp://', username, ':', pass, '@')) end, vehicle from safetymaps.live_vehicles where vehicle = ? on conflict do nothing", incident, vehicle, vehicle);
         }
@@ -90,7 +91,7 @@ public class LivestreamActionBean implements ActionBean {
         return new StreamingResolution("application/json", "");
       }
 
-      if ("del".equals(path)) {
+      if("del".equals(path)) {
         try {
           DB.qr().update("delete from safetymaps.live where incident = ? and vehicle not in ?", incident, (String[])vehicles.split(","));
         } catch(Exception e) {
