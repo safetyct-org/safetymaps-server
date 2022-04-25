@@ -93,7 +93,7 @@ public class LivestreamActionBean implements ActionBean {
 
       if("del".equals(path)) {
         try {
-          DB.qr().update("delete from safetymaps.live where incident = ? and vehicle not in ?", incident, (String[])vehicles.split(","));
+          DB.qr().update("delete from safetymaps.live where incident = ? and not vehicle = ANY (regexp_split_to_array(?, ','))", incident, vehicles);
         } catch(Exception e) {
           return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
         }
