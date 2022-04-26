@@ -128,9 +128,9 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                                     content.put(incident);
                                 }
                             }
-                            IOUtils.copy(new StringReader(content.toString()), out, "UTF-8");
+                            IOUtils.copy(new StringReader(applyAuthorizationToIncidentContent(content.toString())), out, "UTF-8");
                         } else {
-                            IOUtils.copy(new StringReader(cache.toString()), out, "UTF-8");
+                            IOUtils.copy(new StringReader(applyAuthorizationToIncidentContent(cache.toString())), out, "UTF-8");
                         }
                     }
                     out.flush();
