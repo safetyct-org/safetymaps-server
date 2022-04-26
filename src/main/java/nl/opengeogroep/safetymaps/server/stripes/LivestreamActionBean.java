@@ -75,7 +75,7 @@ public class LivestreamActionBean implements ActionBean {
 
     @DefaultHandler
     public Resolution def() throws Exception {
-      if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole("Livestream")) {
+      if(!context.getRequest().isUserInRole(ROLE_ADMIN) && !context.getRequest().isUserInRole("Livestream")) {
         return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot Livestreams");
       }
 
