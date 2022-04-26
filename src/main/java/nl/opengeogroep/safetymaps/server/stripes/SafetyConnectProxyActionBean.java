@@ -129,9 +129,9 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                                     content.put(incident);
                                 }
                             }
-                            IOUtils.copy(new StringReader(content.toString()), out, "UTF-8");
+                            IOUtils.copy(new StringReader(applyAuthorizationToIncidentContent(content.toString())), out, "UTF-8");
                         } else {
-                            IOUtils.copy(new StringReader(cache.toString()), out, "UTF-8");
+                            IOUtils.copy(new StringReader(applyAuthorizationToIncidentContent(cache.toString())), out, "UTF-8");
                         }
                     }
                     out.flush();
@@ -235,15 +235,15 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     }
 
     private String applyAuthorizationToIncidentContent(String contentFromResponse) throws Exception {
-        return contentFromResponse;
+        //return contentFromResponse;
 
-        /*HttpServletRequest request = context.getRequest();
+        HttpServletRequest request = context.getRequest();
         JSONArray content = new JSONArray(contentFromResponse);
 
         boolean kladblokAlwaysAuthorized = "true".equals(Cfg.getSetting("kladblok_always_authorized", "false"));
-        boolean incidentMonitorKladblokAuthorized = kladblokAlwaysAuthorized || request.isUserInRole(ROLE_ADMIN) || request.isUserInRole(ROLE_INCIDENTMONITOR_KLADBLOK);
-        boolean eigenVoertuignummerAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole(ROLE_EIGEN_VOERTUIGNUMMER);
-        boolean incidentMonitorAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole(ROLE_INCIDENTMONITOR);
+        boolean incidentMonitorKladblokAuthorized = kladblokAlwaysAuthorized || request.isUserInRole(ROLE_ADMIN) || true;
+        boolean eigenVoertuignummerAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
+        boolean incidentMonitorAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
 
         if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
             return content.toString();
@@ -284,7 +284,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             return authorizedContent.toString();
         } catch(Exception e) {
             return defaultError(e);
-        }*/
+        }
     }
 
     // Applies filter to /eenheidLocatie to filter out locations for vehicles not attached to an incident
