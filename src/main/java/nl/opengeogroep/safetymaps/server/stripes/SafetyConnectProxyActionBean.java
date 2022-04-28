@@ -8,6 +8,8 @@ import net.sourceforge.stripes.action.StreamingResolution;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.CacheUtil;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.logging.Log;
@@ -85,7 +87,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             return unAuthorizedResolution();
         }
 
-        if (requestIs(KLADBLOKREGEL_REQUEST) && !context.getRequest().isUserInRole(ROLE_KLADBLOKCHAT_EDITOR_GMS) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
+        if (requestIs(KLADBLOKREGEL_REQUEST) && !context.getRequest().isUserInRole("smvng_incident_logtogms_notepadchat") && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
             return unAuthorizedResolution();
         }
 
@@ -95,6 +97,47 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
         if(authorization == null || url == null) {
             return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");
+        }
+
+        String useRequestCache = Cfg.getSetting("safetyconnect_use_cache", "false");
+        if ("true".equals(useRequestCache) && requestIs(INCIDENT_REQUEST)) {
+            return new Resolution() {
+                @Override
+                public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+                    response.setCharacterEncoding("UTF-8");
+                    response.setContentType("application/json");
+
+                    OutputStream out;
+                    String acceptEncoding = request.getHeader("Accept-Encoding");
+                    if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+                        response.setHeader("Content-Encoding", "gzip");
+                        out = new GZIPOutputStream(response.getOutputStream(), true);
+                    } else {
+                        out = response.getOutputStream();
+                    }
+                    JSONArray cache = (JSONArray)CacheUtil.Get(CacheUtil.INCIDENT_CACHE_KEY);
+                    if (cache == null || cache.toString() == "") {
+                        IOUtils.copy(new StringReader("[]"), out, "UTF-8");
+                    } else {
+                        int idIndex = path.indexOf("/");
+                        if (idIndex != -1) {
+                            JSONArray content = new JSONArray();
+                            String id = path.substring(idIndex + 1);
+                            for(int i=0; i<cache.length(); i++) {
+                                JSONObject incident = (JSONObject)cache.get(i);
+                                if (incident.get("IncidentNummer").toString().equals(id)) {
+                                    content.put(incident);
+                                }
+                            }
+                            IOUtils.copy(new StringReader(applyAuthorizationToIncidentContent(content.toString())), out, "UTF-8");
+                        } else {
+                            IOUtils.copy(new StringReader(applyAuthorizationToIncidentContent(cache.toString())), out, "UTF-8");
+                        }
+                    }
+                    out.flush();
+                    out.close();
+                }
+            };
         }
 
         String qs = context.getRequest().getQueryString();
@@ -192,15 +235,15 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     }
 
     private String applyAuthorizationToIncidentContent(String contentFromResponse) throws Exception {
-        return contentFromResponse;
+        //return contentFromResponse;
 
-        /*HttpServletRequest request = context.getRequest();
+        HttpServletRequest request = context.getRequest();
         JSONArray content = new JSONArray(contentFromResponse);
 
         boolean kladblokAlwaysAuthorized = "true".equals(Cfg.getSetting("kladblok_always_authorized", "false"));
-        boolean incidentMonitorKladblokAuthorized = kladblokAlwaysAuthorized || request.isUserInRole(ROLE_ADMIN) || request.isUserInRole(ROLE_INCIDENTMONITOR_KLADBLOK);
-        boolean eigenVoertuignummerAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole(ROLE_EIGEN_VOERTUIGNUMMER);
-        boolean incidentMonitorAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole(ROLE_INCIDENTMONITOR);
+        boolean incidentMonitorKladblokAuthorized = kladblokAlwaysAuthorized || request.isUserInRole(ROLE_ADMIN) || true;
+        boolean eigenVoertuignummerAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
+        boolean incidentMonitorAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
 
         if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
             return content.toString();
@@ -241,7 +284,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             return authorizedContent.toString();
         } catch(Exception e) {
             return defaultError(e);
-        }*/
+        }
     }
 
     // Applies filter to /eenheidLocatie to filter out locations for vehicles not attached to an incident

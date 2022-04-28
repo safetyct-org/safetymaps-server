@@ -10,6 +10,11 @@
         <description>The class which initializes deleteDrawing schedules</description>
         <listener-class>nl.opengeogroep.safetymaps.utils.DeleteDrawingScheduler</listener-class>
     </listener>
+    <!-- Context listener for safetyconnect -->
+    <listener>
+        <description>The class which initializes CacheSafetyConnectSheduler schedules</description>
+        <listener-class>nl.opengeogroep.safetymaps.utils.CacheSafetyConnectSheduler</listener-class>
+    </listener>
 
     <!-- Localization context voor o.a. de <fmt:message> JSTL tag -->
     <context-param>

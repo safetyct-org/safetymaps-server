@@ -363,13 +363,13 @@ public class ViewerApiActionBean implements ActionBean {
             options.put(prefixSmvng + "earth", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_cyclomedia_earth"));  // SMVNG-306
             options.put(prefixSmvng + "birdview", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_cyclomedia_birdview")); // SMVNG-306
         } else if (isSmvng && "Dbk".equals(name)) {
-            options.put(prefixSmvng + "DefaultHide", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_dbk_defaulthide")); // SMVNG-303
+            options.put(prefixSmvng + "DefaultHide", request.isUserInRole("smvng_dbk_defaulthide")); // SMVNG-303
         } else if (isSmvng && "Photo".equals(name)) {
             options.put(prefixSmvng + "Printscreen", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_photo_printscreen")); // SMVNG-236
             options.put(prefixSmvng + "Drawing", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_photo_drawing")); // SMVNG-236
             options.put(prefixSmvng + "Whitepaper", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_photo_whitepaper")); // SMVNG-236
             options.put(prefixSmvng + "Takephoto", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_photo_takephoto")); // SMVNG-236
-        } 
+        }
 
         return module;
     }
