@@ -339,7 +339,7 @@ public class ViewerApiActionBean implements ActionBean {
             options.put("editAuthorized", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole(ROLE_DRAWING_EDITOR));
         } else if (isSmvng && "Incident".equals(name)) {
             JSONObject details = getUserDetails(request, c);
-            options.put(prefixSmvng + "HideNotepad", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_hidenotepad")); 
+            options.put(prefixSmvng + "HideNotepad", request.isUserInRole("smvng_incident_hidenotepad")); 
             options.put(prefixSmvng + "Show_Notepadchat", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_showchat")); 
             options.put(prefixSmvng + "Add_Notepadchat", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_addchat")); 
             options.put(prefixSmvng + "GoogleNav", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_googlenav")); 
