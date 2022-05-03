@@ -168,6 +168,10 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
         incident = data.get("incident").toString();
         name = data.get("name").toString();
         urlis = data.get("url").toString();
+        String[] urlparts = urlis.split("@");
+        if (urlparts.length > 1) {
+          urlis = "rtsp://" + urlparts[1];
+        }
       }
     }
     return new ForwardResolution(JSP);
@@ -205,7 +209,7 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
     if (incidentStreamId == null) {
       DB.qr().update("insert into safetymaps.live(incident, name, url) values(?, ?, ?)", incident, name, urlis);
     } else {
-      DB.qr().update("update safetymaps.live set incident = ?, name = ?, url = ? where CONCAT(incident, '-', name)=?", incident, name, urlis, incidentStreamId);
+      DB.qr().update("update safetymaps.live set incident = ?, name = ? where CONCAT(incident, '-', name)=?", incident, name, incidentStreamId);
     }
     return cancel();
   }
