@@ -160,10 +160,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <div class="form-group">
             <label class="col-sm-2 control-label">URL:</label>
             <div class="col-sm-10">
-              <c:if test="${!empty actionBean.incidentStreamId}"></c:if>
+              <c:if test="${!empty actionBean.incidentStreamId}">
                 <stripes:text class="form-control" name="urlis" disabled="true" />
               </c:if>
-              <c:if test="${empty actionBean.incidentStreamId}"></c:if>
+              <c:if test="${empty actionBean.incidentStreamId}">
                 <stripes:text class="form-control" name="urlis" disabled="false" />
               </c:if>
             </div>
