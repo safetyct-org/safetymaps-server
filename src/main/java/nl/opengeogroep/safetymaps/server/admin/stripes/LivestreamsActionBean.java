@@ -179,8 +179,8 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
 
       if(data.get("row_id") != null) {
         vehicle = data.get("vehicle").toString();
-        username = data.get("username").toString();
-        password = data.get("pass").toString();
+        username = data.get("username") != null ? data.get("username").toString() : "";
+        password = data.get("pass") != null ? data.get("pass").toString() : "";
         urlvs = data.get("url").toString();
       }
     }
