@@ -34,10 +34,11 @@ import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
 public class LivestreamActionBean implements ActionBean {
   private ActionBeanContext context;
 
-    @Validate
+  @Validate
   private String incident;
   private String path;
   private String vehicles;
+  private String incidents;
 
   @Override
     public ActionBeanContext getContext() {
@@ -73,6 +74,14 @@ public class LivestreamActionBean implements ActionBean {
         this.vehicles = vehicles;
     }
 
+    public String getIncidents() {
+      return incidents;
+    }
+
+    public void setIncidents(String incidents) {
+        this.incidents = incidents;
+    }
+
     @DefaultHandler
     public Resolution def() throws Exception {
       if(!context.getRequest().isUserInRole(ROLE_ADMIN) && !context.getRequest().isUserInRole("Livestream")) {
@@ -90,6 +99,16 @@ public class LivestreamActionBean implements ActionBean {
           for(String vehicle: vehicles.split(",")) { 
             DB.qr().update("insert into safetymaps.live(incident, name, url, vehicle) select ?, ?, case when (username = '') is not false then url else replace(url, 'rtsp://', concat('rtsp://', username, ':', pass, '@')) end, vehicle from safetymaps.live_vehicles where vehicle = ? on conflict do nothing", incident, vehicle, vehicle);
           }
+        } catch(Exception e) {
+          return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
+        }
+
+        return new StreamingResolution("application/json", "");
+      }
+
+      if("clean".equals(path)) {
+        try {
+          DB.qr().update("delete from safetymaps.live where not incident = ANY (regexp_split_to_array(?, ','))", incidents);
         } catch(Exception e) {
           return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
         }
