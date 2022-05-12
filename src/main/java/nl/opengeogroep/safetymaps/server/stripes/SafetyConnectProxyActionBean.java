@@ -103,9 +103,9 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         String urlOpl = Cfg.getSetting("safetyconnect_webservice_url_opl");
         String urlTest = Cfg.getSetting("safetyconnect_webservice_url_test");
 
-        Boolean useProd = context.getRequest().isUserInRole(ROLE_PROD);
-        Boolean useOpl = context.getRequest().isUserInRole(ROLE_OPL);
-        Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST);
+        Boolean useProd = context.getRequest().isUserInRole(ROLE_PROD) || context.getRequest().isUserInRole(ROLE_ADMIN);
+        Boolean useOpl = context.getRequest().isUserInRole(ROLE_OPL) || context.getRequest().isUserInRole(ROLE_ADMIN);
+        Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST) || context.getRequest().isUserInRole(ROLE_ADMIN);
 
         String authorization = useProd ? authorizationProd : useOpl ? authorizationOpl : useTest ? authorizationTest : null;
         String url = useProd ? urlProd : useOpl ? urlOpl : useTest ? urlTest : null;

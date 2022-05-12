@@ -111,7 +111,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                                     <label class="custom-control-label" for="role${status.index}" style="${module.enabled ? '' : 'text-decoration: line-through;'}"><c:out value="${module.description} (${module.name})"/></label>
                                     
                                     <c:forEach var="extraRole" items="${actionBean.allExtraRoles}" varStatus="innerstatus">
-                                        <c:if test="${fn:containsIgnoreCase(extraRole.role, '_'.concat(module.name).concat('_')) && not fn:contains(extraRole.role, extraRole.role.concat('__'))}">
+                                        <c:if test="${fn:containsIgnoreCase(extraRole.role, '_'.concat(module.name).concat('_')) && not fn:containsIgnoreCase(extraRole.role, extraRole.role.concat('__'))}">
                                             <div class="custom-control custom-checkbox" style="margin-left: 32px !important;">
                                                 <c:if test="${not fn:contains(actionBean.modules, module.name)}">
                                                     <stripes:checkbox name="extraRoles" class="custom-control-input ${module.name}_child" value="${extraRole.role}" id="extraRole${module.name}${status.index}" disabled="true"/>
@@ -120,13 +120,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                                                     <stripes:checkbox name="extraRoles" class="custom-control-input ${module.name}_child" value="${extraRole.role}" id="extraRole${module.name}${status.index}" disabled="false"/>
 
                                                     <c:forEach var="innerExtraRole" items="${actionBean.allExtraRoles}" varStatus="deepinnerstatus">
-                                                        <c:if test="${fn:containsIgnoreCase(innerExtraRole.role, concat(extraRole.role).concat('__'))}">
+                                                        <c:if test="${fn:containsIgnoreCase(innerExtraRole.role, extraRole.role.concat('__'))}">
                                                             <div class="custom-control custom-checkbox" style="margin-left: 64px !important;">
                                                                 <c:if test="${not fn:contains(actionBean.extraRoles, extraRole.role)}">
-                                                                    <stripes:checkbox name="extraRoles" lass="custom-control-input ${extraRole.role}_child" value="${innerExtraRole.role}" id="innerExtraRole${extraRole.role}${status.index}" disabled="true"/>
+                                                                    <stripes:checkbox name="extraRoles" class="custom-control-input ${extraRole.role}_child" value="${innerExtraRole.role}" id="innerExtraRole${extraRole.role}${status.index}" disabled="true"/>
                                                                 </c:if>
                                                                 <c:if test="${fn:contains(actionBean.extraRoles, extraRole.role)}">
-                                                                    <stripes:checkbox name="extraRoles" lass="custom-control-input ${extraRole.role}_child" value="${innerExtraRole.role}" id="innerExtraRole${extraRole.role}${status.index}" disabled="false"/>
+                                                                    <stripes:checkbox name="extraRoles" class="custom-control-input ${extraRole.role}_child" value="${innerExtraRole.role}" id="innerExtraRole${extraRole.role}${status.index}" disabled="false"/>
                                                                 </c:if>
                                                                 <label class="custom-control-label" style="font-weight: 300 !important;" for="innerExtraRole${extraRole.role}${deepinnerstatus.index}"><c:out value="${innerExtraRole.description}"/></label>
                                                             </div>

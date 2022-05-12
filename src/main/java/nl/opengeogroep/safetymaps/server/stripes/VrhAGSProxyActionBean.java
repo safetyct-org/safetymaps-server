@@ -83,8 +83,8 @@ public class VrhAGSProxyActionBean implements ActionBean {
         String testincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_test");
         String prodincidentsurl = Cfg.getSetting("vrh_ags_incidents_url");
 
-        Boolean useTestUrl = context.getRequest().isUserInRole(ROLE_TEST);
-        Boolean useProdUrl = context.getRequest().isUserInRole(ROLE_PROD);
+        Boolean useTestUrl = context.getRequest().isUserInRole(ROLE_TEST) || context.getRequest().isUserInRole(ROLE_ADMIN);
+        Boolean useProdUrl = context.getRequest().isUserInRole(ROLE_PROD) || context.getRequest().isUserInRole(ROLE_ADMIN);
         String incidentsurl = useProdUrl ? prodincidentsurl : useTestUrl ? testincidentsurl : "";
 
         if("Token".equals(path)) {
