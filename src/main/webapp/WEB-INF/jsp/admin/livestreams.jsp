@@ -89,6 +89,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <label class="col-sm-2 control-label">Wachtwoord:</label>
             <div class="col-sm-10">
               <stripes:password class="form-control" name="password" />
+              <c:if test="${!empty actionBean.username}">
+                <p class="help-block">Laat leeg om niet te wijzigen.</p>
+              </c:if>
             </div>
           </div>
         </c:if>

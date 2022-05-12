@@ -22,6 +22,7 @@ import nl.opengeogroep.safetymaps.server.db.DB;
 
 import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
 
 /**
  *
@@ -184,7 +185,7 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
       if(data.get("row_id") != null) {
         vehicle = data.get("vehicle").toString();
         username = data.get("username") != null ? data.get("username").toString() : "";
-        password = data.get("pass") != null ? data.get("pass").toString() : "";
+        //password = data.get("pass") != null ? data.get("pass").toString() : "";
         urlvs = data.get("url").toString();
       }
     }
@@ -195,6 +196,9 @@ public class LivestreamsActionBean implements ActionBean, ValidationErrorHandler
     if (vehicleStreamId == null) {
       DB.qr().update("insert into safetymaps.live_vehicles(vehicle, url, username, pass) values(?, ?, ?, ?)", vehicle, urlvs, username, password);
     } else {
+      if (password == null || "".equals(password)) {
+        password = DB.qr().query("select pass from safetymaps.live_vehicles where CONCAT(vehicle, '-') = ?", new ScalarHandler<String>(), vehicleStreamId);
+      }
       DB.qr().update("update safetymaps.live_vehicles set vehicle = ?, url = ?, username = ?, pass = ? where CONCAT(vehicle, '-')=?", vehicle, urlvs, username, password, vehicleStreamId);
     }
     return cancel();
