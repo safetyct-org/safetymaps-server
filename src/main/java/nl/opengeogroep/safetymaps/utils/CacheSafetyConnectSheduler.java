@@ -58,10 +58,10 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
       try {
         regioncode = Cfg.getSetting("safetyconnect_regio_code");
 
-        String authorizationProd = Cfg.getSetting("safetyconnect_webservice_authorization");
+        String authorizationProd = Cfg.getSetting("safetyconnect_webservice_authorization_prod");
         String authorizationOpl = Cfg.getSetting("safetyconnect_webservice_authorization_opl");
         String authorizationTest = Cfg.getSetting("safetyconnect_webservice_authorization_test");
-        String urlProd = Cfg.getSetting("safetyconnect_webservice_url");
+        String urlProd = Cfg.getSetting("safetyconnect_webservice_url_prod");
         String urlOpl = Cfg.getSetting("safetyconnect_webservice_url_opl");
         String urlTest = Cfg.getSetting("safetyconnect_webservice_url_test");
 

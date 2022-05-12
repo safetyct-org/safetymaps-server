@@ -95,21 +95,27 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         }
 
         String regioCode = Cfg.getSetting("safetyconnect_regio_code");
+        String admin = Cfg.getSetting("safetyconnect_webservice_admin"); // new
 
-        String authorizationProd = Cfg.getSetting("safetyconnect_webservice_authorization");
-        String authorizationOpl = Cfg.getSetting("safetyconnect_webservice_authorization_opl");
-        String authorizationTest = Cfg.getSetting("safetyconnect_webservice_authorization_test");
-        String urlProd = Cfg.getSetting("safetyconnect_webservice_url");
-        String urlOpl = Cfg.getSetting("safetyconnect_webservice_url_opl");
-        String urlTest = Cfg.getSetting("safetyconnect_webservice_url_test");
+        String authorizationProd = Cfg.getSetting("safetyconnect_webservice_authorization_prod"); // new
+        String authorizationOpl = Cfg.getSetting("safetyconnect_webservice_authorization_opl"); // new
+        String authorizationTest = Cfg.getSetting("safetyconnect_webservice_authorization_test"); // new
+        String urlProd = Cfg.getSetting("safetyconnect_webservice_url_prod"); // new
+        String urlOpl = Cfg.getSetting("safetyconnect_webservice_url_opl"); // new
+        String urlTest = Cfg.getSetting("safetyconnect_webservice_url_test"); // new
 
-        Boolean useProd = context.getRequest().isUserInRole(ROLE_PROD) || context.getRequest().isUserInRole(ROLE_ADMIN);
-        Boolean useOpl = context.getRequest().isUserInRole(ROLE_OPL) || context.getRequest().isUserInRole(ROLE_ADMIN);
-        Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST) || context.getRequest().isUserInRole(ROLE_ADMIN);
+        Boolean useAdmin = context.getRequest().isUserInRole(ROLE_ADMIN);
+        Boolean useProd = context.getRequest().isUserInRole(ROLE_PROD);
+        Boolean useOpl = context.getRequest().isUserInRole(ROLE_OPL);
+        Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST);
 
-        String authorization = useProd ? authorizationProd : useOpl ? authorizationOpl : useTest ? authorizationTest : null;
-        String url = useProd ? urlProd : useOpl ? urlOpl : useTest ? urlTest : null;
-        String cacheKey = useProd ? CacheUtil.INCIDENT_PROD_CACHE_KEY : useOpl ? CacheUtil.INCIDENT_OPL_CACHE_KEY : useTest ? CacheUtil.INCIDENT_TEST_CACHE_KEY : null;
+        String adminAuth = "prod".equals(admin) ? authorizationProd : "opl".equals(admin) ? authorizationOpl : "test".equals(admin) ? authorizationTest : null;
+        String adminUrl = "prod".equals(admin) ? urlProd : "opl".equals(admin) ? urlOpl : "test".equals(admin) ? urlTest : null;
+        String adminCache = "prod".equals(admin) ? CacheUtil.INCIDENT_PROD_CACHE_KEY  : "opl".equals(admin) ? CacheUtil.INCIDENT_OPL_CACHE_KEY : "test".equals(admin) ? CacheUtil.INCIDENT_TEST_CACHE_KEY : null;
+
+        String authorization = useAdmin ? adminAuth : useProd ? authorizationProd : useOpl ? authorizationOpl : useTest ? authorizationTest : null;
+        String url = useAdmin ? adminUrl : useProd ? urlProd : useOpl ? urlOpl : useTest ? urlTest : null;
+        String cacheKey = useAdmin ? adminCache : useProd ? CacheUtil.INCIDENT_PROD_CACHE_KEY : useOpl ? CacheUtil.INCIDENT_OPL_CACHE_KEY : useTest ? CacheUtil.INCIDENT_TEST_CACHE_KEY : null;
 
         if(authorization == null || url == null) {
             return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");

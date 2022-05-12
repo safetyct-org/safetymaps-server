@@ -80,12 +80,17 @@ public class VrhAGSProxyActionBean implements ActionBean {
         String authorization = Cfg.getSetting("vrh_ags_token_authorization");
         String tokenurl = Cfg.getSetting("vrh_ags_token_url");
         String uniturl = Cfg.getSetting("vrh_ags_eenheden_url");
-        String testincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_test");
-        String prodincidentsurl = Cfg.getSetting("vrh_ags_incidents_url");
+        String admin = Cfg.getSetting("vrh_ags_incidents_admin"); // new
 
-        Boolean useTestUrl = context.getRequest().isUserInRole(ROLE_TEST) || context.getRequest().isUserInRole(ROLE_ADMIN);
-        Boolean useProdUrl = context.getRequest().isUserInRole(ROLE_PROD) || context.getRequest().isUserInRole(ROLE_ADMIN);
-        String incidentsurl = useProdUrl ? prodincidentsurl : useTestUrl ? testincidentsurl : "";
+        Boolean useAdmin = context.getRequest().isUserInRole(ROLE_ADMIN);
+        Boolean useTestUrl = context.getRequest().isUserInRole(ROLE_TEST);
+        Boolean useProdUrl = context.getRequest().isUserInRole(ROLE_PROD);
+
+        String testincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_test"); // new
+        String prodincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_prod"); // new
+        String adminUrl = "prod".equals(admin) ? prodincidentsurl : "test".equals(admin) ? testincidentsurl : null;
+
+        String incidentsurl = useAdmin ? adminUrl : useProdUrl ? prodincidentsurl : useTestUrl ? testincidentsurl : null;
 
         if("Token".equals(path)) {
             if(authorization == null || tokenurl == null) {
