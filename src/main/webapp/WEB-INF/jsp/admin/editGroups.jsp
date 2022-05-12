@@ -128,6 +128,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                                                                 <c:if test="${fn:contains(actionBean.extraRoles, extraRole.role)}">
                                                                     <stripes:checkbox name="extraRoles" lass="custom-control-input ${extraRole.role}_child" value="${innerExtraRole.role}" id="innerExtraRole${extraRole.role}${status.index}" disabled="false"/>
                                                                 </c:if>
+                                                                <label class="custom-control-label" style="font-weight: 300 !important;" for="innerExtraRole${extraRole.role}${deepinnerstatus.index}"><c:out value="${innerExtraRole.description}"/></label>
                                                             </div>
                                                         </c:if>
                                                     </c:forEach>
