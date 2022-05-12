@@ -54,6 +54,9 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     private ActionBeanContext context;
 
     static final String ROLE = "smvng_incident_safetyconnect_webservice";
+    static final String ROLE_PROD = "smvng_incident_safetyconnect_webservice__prod";
+    static final String ROLE_OPL = "smvng_incident_safetyconnect_webservice__opl";
+    static final String ROLE_TEST = "smvng_incident_safetyconnect_webservice__test";
 
     static final String INCIDENT_REQUEST = "incident";
     static final String EENHEIDLOCATIE_REQUEST = "eenheidlocatie";
@@ -83,7 +86,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     }
 
     public Resolution proxy() throws Exception {
-        if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
+        if(!context.getRequest().isUserInRole(ROLE_PROD) && !context.getRequest().isUserInRole(ROLE_OPL) && !context.getRequest().isUserInRole(ROLE_TEST) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
             return unAuthorizedResolution();
         }
 
@@ -91,9 +94,22 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             return unAuthorizedResolution();
         }
 
-        String authorization = Cfg.getSetting("safetyconnect_webservice_authorization");
-        String url = Cfg.getSetting("safetyconnect_webservice_url");
         String regioCode = Cfg.getSetting("safetyconnect_regio_code");
+
+        String authorizationProd = Cfg.getSetting("safetyconnect_webservice_authorization");
+        String authorizationOpl = Cfg.getSetting("safetyconnect_webservice_authorization_opl");
+        String authorizationTest = Cfg.getSetting("safetyconnect_webservice_authorization_test");
+        String urlProd = Cfg.getSetting("safetyconnect_webservice_url");
+        String urlOpl = Cfg.getSetting("safetyconnect_webservice_url_opl");
+        String urlTest = Cfg.getSetting("safetyconnect_webservice_url_test");
+
+        Boolean useProd = context.getRequest().isUserInRole(ROLE_PROD);
+        Boolean useOpl = context.getRequest().isUserInRole(ROLE_OPL);
+        Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST);
+
+        String authorization = useProd ? authorizationProd : useOpl ? authorizationOpl : useTest ? authorizationTest : null;
+        String url = useProd ? urlProd : useOpl ? urlOpl : useTest ? urlTest : null;
+        String cacheKey = useProd ? CacheUtil.INCIDENT_PROD_CACHE_KEY : useOpl ? CacheUtil.INCIDENT_OPL_CACHE_KEY : useTest ? CacheUtil.INCIDENT_TEST_CACHE_KEY : null;
 
         if(authorization == null || url == null) {
             return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");
@@ -115,7 +131,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     } else {
                         out = response.getOutputStream();
                     }
-                    JSONArray cache = (JSONArray)CacheUtil.Get(CacheUtil.INCIDENT_CACHE_KEY);
+                    JSONArray cache = (JSONArray)CacheUtil.Get(cacheKey);
                     if (cache == null || cache.toString() == "") {
                         IOUtils.copy(new StringReader("[]"), out, "UTF-8");
                     } else {
