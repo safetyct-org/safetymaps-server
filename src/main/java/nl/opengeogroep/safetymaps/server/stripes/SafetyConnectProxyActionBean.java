@@ -95,7 +95,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         }
 
         String regioCode = Cfg.getSetting("safetyconnect_regio_code");
-        String admin = Cfg.getSetting("safetyconnect_webservice_admin"); // new
+        String defaultApi = Cfg.getSetting("safetyconnect_webservice_default"); // new
 
         String authorizationProd = Cfg.getSetting("safetyconnect_webservice_authorization_prod"); // new
         String authorizationOpl = Cfg.getSetting("safetyconnect_webservice_authorization_opl"); // new
@@ -109,13 +109,13 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         Boolean useOpl = context.getRequest().isUserInRole(ROLE_OPL);
         Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST);
 
-        String adminAuth = "prod".equals(admin) ? authorizationProd : "opl".equals(admin) ? authorizationOpl : "test".equals(admin) ? authorizationTest : null;
-        String adminUrl = "prod".equals(admin) ? urlProd : "opl".equals(admin) ? urlOpl : "test".equals(admin) ? urlTest : null;
-        String adminCache = "prod".equals(admin) ? CacheUtil.INCIDENT_PROD_CACHE_KEY  : "opl".equals(admin) ? CacheUtil.INCIDENT_OPL_CACHE_KEY : "test".equals(admin) ? CacheUtil.INCIDENT_TEST_CACHE_KEY : null;
+        String defaultAuth = "prod".equals(defaultApi) ? authorizationProd : "opl".equals(defaultApi) ? authorizationOpl : "test".equals(defaultApi) ? authorizationTest : null;
+        String defaultUrl = "prod".equals(defaultApi) ? urlProd : "opl".equals(defaultApi) ? urlOpl : "test".equals(defaultApi) ? urlTest : null;
+        String defaultCache = "prod".equals(defaultApi) ? CacheUtil.INCIDENT_PROD_CACHE_KEY  : "opl".equals(defaultApi) ? CacheUtil.INCIDENT_OPL_CACHE_KEY : "test".equals(defaultApi) ? CacheUtil.INCIDENT_TEST_CACHE_KEY : null;
 
-        String authorization = useAdmin ? adminAuth : useProd ? authorizationProd : useOpl ? authorizationOpl : useTest ? authorizationTest : null;
-        String url = useAdmin ? adminUrl : useProd ? urlProd : useOpl ? urlOpl : useTest ? urlTest : null;
-        String cacheKey = useAdmin ? adminCache : useProd ? CacheUtil.INCIDENT_PROD_CACHE_KEY : useOpl ? CacheUtil.INCIDENT_OPL_CACHE_KEY : useTest ? CacheUtil.INCIDENT_TEST_CACHE_KEY : null;
+        String authorization = useAdmin ? defaultAuth : useProd ? authorizationProd : useOpl ? authorizationOpl : useTest ? authorizationTest : defaultAuth;
+        String url = useAdmin ? defaultUrl : useProd ? urlProd : useOpl ? urlOpl : useTest ? urlTest : defaultUrl;
+        String cacheKey = useAdmin ? defaultCache : useProd ? CacheUtil.INCIDENT_PROD_CACHE_KEY : useOpl ? CacheUtil.INCIDENT_OPL_CACHE_KEY : useTest ? CacheUtil.INCIDENT_TEST_CACHE_KEY : defaultCache;
 
         if(authorization == null || url == null) {
             return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");

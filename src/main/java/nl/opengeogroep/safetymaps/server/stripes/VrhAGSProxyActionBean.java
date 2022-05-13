@@ -80,7 +80,7 @@ public class VrhAGSProxyActionBean implements ActionBean {
         String authorization = Cfg.getSetting("vrh_ags_token_authorization");
         String tokenurl = Cfg.getSetting("vrh_ags_token_url");
         String uniturl = Cfg.getSetting("vrh_ags_eenheden_url");
-        String admin = Cfg.getSetting("vrh_ags_incidents_admin"); // new
+        String defaultApi = Cfg.getSetting("vrh_ags_incidents_default"); // new
 
         Boolean useAdmin = context.getRequest().isUserInRole(ROLE_ADMIN);
         Boolean useTestUrl = context.getRequest().isUserInRole(ROLE_TEST);
@@ -88,9 +88,9 @@ public class VrhAGSProxyActionBean implements ActionBean {
 
         String testincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_test"); // new
         String prodincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_prod"); // new
-        String adminUrl = "prod".equals(admin) ? prodincidentsurl : "test".equals(admin) ? testincidentsurl : null;
+        String defaultUrl = "prod".equals(defaultApi) ? prodincidentsurl : "test".equals(defaultApi) ? testincidentsurl : null;
 
-        String incidentsurl = useAdmin ? adminUrl : useProdUrl ? prodincidentsurl : useTestUrl ? testincidentsurl : null;
+        String incidentsurl = useAdmin ? defaultUrl : useProdUrl ? prodincidentsurl : useTestUrl ? testincidentsurl : defaultUrl;
 
         if("Token".equals(path)) {
             if(authorization == null || tokenurl == null) {
