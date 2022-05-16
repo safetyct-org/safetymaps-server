@@ -54,6 +54,9 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     private ActionBeanContext context;
 
     static final String ROLE = "smvng_incident_safetyconnect_webservice";
+    static final String ROLE_PROD = "smvng_incident_safetyconnect_webservice__prod";
+    static final String ROLE_OPL = "smvng_incident_safetyconnect_webservice__opl";
+    static final String ROLE_TEST = "smvng_incident_safetyconnect_webservice__test";
 
     static final String INCIDENT_REQUEST = "incident";
     static final String EENHEIDLOCATIE_REQUEST = "eenheidlocatie";
@@ -83,7 +86,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     }
 
     public Resolution proxy() throws Exception {
-        if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
+        if(!context.getRequest().isUserInRole(ROLE_PROD) && !context.getRequest().isUserInRole(ROLE_OPL) && !context.getRequest().isUserInRole(ROLE_TEST) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
             return unAuthorizedResolution();
         }
 
@@ -91,9 +94,28 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             return unAuthorizedResolution();
         }
 
-        String authorization = Cfg.getSetting("safetyconnect_webservice_authorization");
-        String url = Cfg.getSetting("safetyconnect_webservice_url");
         String regioCode = Cfg.getSetting("safetyconnect_regio_code");
+        String defaultApi = Cfg.getSetting("safetyconnect_webservice_default"); // new
+
+        String authorizationProd = Cfg.getSetting("safetyconnect_webservice_authorization_prod"); // new
+        String authorizationOpl = Cfg.getSetting("safetyconnect_webservice_authorization_opl"); // new
+        String authorizationTest = Cfg.getSetting("safetyconnect_webservice_authorization_test"); // new
+        String urlProd = Cfg.getSetting("safetyconnect_webservice_url_prod"); // new
+        String urlOpl = Cfg.getSetting("safetyconnect_webservice_url_opl"); // new
+        String urlTest = Cfg.getSetting("safetyconnect_webservice_url_test"); // new
+
+        Boolean useAdmin = context.getRequest().isUserInRole(ROLE_ADMIN);
+        Boolean useProd = context.getRequest().isUserInRole(ROLE_PROD);
+        Boolean useOpl = context.getRequest().isUserInRole(ROLE_OPL);
+        Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST);
+
+        String defaultAuth = "prod".equals(defaultApi) ? authorizationProd : "opl".equals(defaultApi) ? authorizationOpl : "test".equals(defaultApi) ? authorizationTest : null;
+        String defaultUrl = "prod".equals(defaultApi) ? urlProd : "opl".equals(defaultApi) ? urlOpl : "test".equals(defaultApi) ? urlTest : null;
+        String defaultCache = "prod".equals(defaultApi) ? CacheUtil.INCIDENT_PROD_CACHE_KEY  : "opl".equals(defaultApi) ? CacheUtil.INCIDENT_OPL_CACHE_KEY : "test".equals(defaultApi) ? CacheUtil.INCIDENT_TEST_CACHE_KEY : null;
+
+        String authorization = useAdmin ? defaultAuth : useProd ? authorizationProd : useOpl ? authorizationOpl : useTest ? authorizationTest : defaultAuth;
+        String url = useAdmin ? defaultUrl : useProd ? urlProd : useOpl ? urlOpl : useTest ? urlTest : defaultUrl;
+        String cacheKey = useAdmin ? defaultCache : useProd ? CacheUtil.INCIDENT_PROD_CACHE_KEY : useOpl ? CacheUtil.INCIDENT_OPL_CACHE_KEY : useTest ? CacheUtil.INCIDENT_TEST_CACHE_KEY : defaultCache;
 
         if(authorization == null || url == null) {
             return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");
@@ -115,7 +137,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     } else {
                         out = response.getOutputStream();
                     }
-                    JSONArray cache = (JSONArray)CacheUtil.Get(CacheUtil.INCIDENT_CACHE_KEY);
+                    JSONArray cache = (JSONArray)CacheUtil.Get(cacheKey);
                     if (cache == null || cache.toString() == "") {
                         IOUtils.copy(new StringReader("[]"), out, "UTF-8");
                     } else {

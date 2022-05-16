@@ -89,6 +89,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <label class="col-sm-2 control-label">Wachtwoord:</label>
             <div class="col-sm-10">
               <stripes:password class="form-control" name="password" />
+              <c:if test="${!empty actionBean.username}">
+                <p class="help-block">Laat leeg om niet te wijzigen.</p>
+              </c:if>
             </div>
           </div>
         </c:if>
@@ -160,7 +163,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <div class="form-group">
             <label class="col-sm-2 control-label">URL:</label>
             <div class="col-sm-10">
-              <stripes:text class="form-control" name="urlis" />
+              <c:if test="${!empty actionBean.incidentStreamId}">
+                <stripes:text class="form-control" name="urlis" disabled="true" />
+              </c:if>
+              <c:if test="${empty actionBean.incidentStreamId}">
+                <stripes:text class="form-control" name="urlis" disabled="false" />
+              </c:if>
             </div>
           </div>
         </c:if>

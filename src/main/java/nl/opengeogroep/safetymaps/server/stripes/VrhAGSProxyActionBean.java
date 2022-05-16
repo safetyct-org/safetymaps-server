@@ -47,6 +47,8 @@ public class VrhAGSProxyActionBean implements ActionBean {
     private ActionBeanContext context;
 
     static final String ROLE = "smvng_incident_vrh_ags_replica";
+    static final String ROLE_PROD = "smvng_incident_vrh_ags_replica__prod";
+    static final String ROLE_TEST = "smvng_incident_vrh_ags_replica__test";
 
     private String path;
 
@@ -69,34 +71,42 @@ public class VrhAGSProxyActionBean implements ActionBean {
     }
 
     public Resolution proxy() throws Exception {
-        if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
+        if(!context.getRequest().isUserInRole(ROLE_TEST) && !context.getRequest().isUserInRole(ROLE_PROD) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
             return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot VRH AGS!");
         }
 
         RequestBuilder builder;
 
-        if("Token".equals(path)) {
-            String authorization = Cfg.getSetting("vrh_ags_token_authorization");
-            String url = Cfg.getSetting("vrh_ags_token_url");
+        String authorization = Cfg.getSetting("vrh_ags_token_authorization");
+        String tokenurl = Cfg.getSetting("vrh_ags_token_url");
+        String uniturl = Cfg.getSetting("vrh_ags_eenheden_url");
+        String defaultApi = Cfg.getSetting("vrh_ags_incidents_default"); // new
 
-            if(authorization == null || url == null) {
-                return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor VRH ARGS geconfigureerd door beheerder");
+        Boolean useAdmin = context.getRequest().isUserInRole(ROLE_ADMIN);
+        Boolean useTestUrl = context.getRequest().isUserInRole(ROLE_TEST);
+        Boolean useProdUrl = context.getRequest().isUserInRole(ROLE_PROD);
+
+        String testincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_test"); // new
+        String prodincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_prod"); // new
+        String defaultUrl = "prod".equals(defaultApi) ? prodincidentsurl : "test".equals(defaultApi) ? testincidentsurl : null;
+
+        String incidentsurl = useAdmin ? defaultUrl : useProdUrl ? prodincidentsurl : useTestUrl ? testincidentsurl : defaultUrl;
+
+        if("Token".equals(path)) {
+            if(authorization == null || tokenurl == null) {
+                return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor VRH AGS geconfigureerd door beheerder");
             }
 
-            String qs = context.getRequest().getQueryString();
             builder = RequestBuilder.post()
-                    .setUri(url)
+                    .setUri(tokenurl)
                     .addParameter("f", context.getRequest().getParameter("f"))
                     .addParameter("username", authorization.split(":")[0])
                     .addParameter("password", authorization.split(":")[1]);
         } else if(path != null && path.startsWith("Eenheden")) {
-            String url = Cfg.getSetting("vrh_ags_eenheden_url");
-
             path = path.substring("Eenheden".length());
-            builder = buildProxyRequestBuilder(url);
+            builder = buildProxyRequestBuilder(uniturl);
         } else {
-            String url = Cfg.getSetting("vrh_ags_incidents_url");
-            builder = buildProxyRequestBuilder(url);
+            builder = buildProxyRequestBuilder(incidentsurl);
         }
 
         final HttpUriRequest req = builder.build();
