@@ -181,13 +181,10 @@ public class VrhAGSProxyActionBean implements ActionBean {
                     String value = context.getRequest().getParameter(param.getKey());
 
                     if (checkDisc) {
-                        if (allDisc) {
-                            String newValue = value.replace("AND T_IND_DISC_KLADBLOK_REGEL", "");
+                        if (allDisc && "where".equals(param.getKey())) {
+                            String newValue = value.replace("_B_", "%B%");
                             nvps.add(new BasicNameValuePair(param.getKey(), newValue));
-                        } else {
-                            String newValue = value.replace("AND T_IND_DISC_KLADBLOK_REGEL", "AND T_IND_DISC_KLADBLOK_REGEL LIKE '_B_'");
-                            nvps.add(new BasicNameValuePair(param.getKey(), newValue));
-                        }                        
+                        }                      
                     } else {
                         nvps.add(new BasicNameValuePair(param.getKey(), value));
                     }
