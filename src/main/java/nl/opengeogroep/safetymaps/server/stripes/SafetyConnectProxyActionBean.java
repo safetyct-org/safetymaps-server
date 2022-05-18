@@ -86,7 +86,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     }
 
     public Resolution proxy() throws Exception {
-        if(!context.getRequest().isUserInRole(ROLE_PROD) && !context.getRequest().isUserInRole(ROLE_OPL) && !context.getRequest().isUserInRole(ROLE_TEST) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
+        if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
             return unAuthorizedResolution();
         }
 
