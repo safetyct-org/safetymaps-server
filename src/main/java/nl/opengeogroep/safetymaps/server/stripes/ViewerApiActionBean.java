@@ -348,7 +348,7 @@ public class ViewerApiActionBean implements ActionBean {
             options.put(prefixSmvng + "Trainings_Incidents", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_trainingincident")); 
             options.put(prefixSmvng + "Own_Vehiclenumber", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber")); 
             options.put(prefixSmvng + "Incidents_Without_Unit", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_incidentwithoutunit")); 
-            if (request.isUserInRole("smvng_incident_vrh_ags_replica__fullnotepad")) { options.put(prefixSmvng + "Notepad_From_All_Discs", true);
+            options.put(prefixSmvng + "Notepad_From_All_Discs", request.isUserInRole(ROLE_ADMIN) || (request.isUserInRole("smvng_incident_vrh_ags_replica") && request.isUserInRole("smvng_incident_vrh_ags_replica__fullnotepad")) || (!request.isUserInRole("smvng_incident_vrh_ags_replica") && request.isUserInRole("smvng_incident_safetyconnect_webservice")));
             options.put("userVoertuignummer", details.optString("voertuignummer", null));
         } else if (isSmvng && "IncidentMonitor".equals(name)) {
             options.put(prefixSmvng + "LeavingIncidentForLocalVehcile", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incidentmonitor_leaveincident")); 
