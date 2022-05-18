@@ -120,7 +120,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                                                     <stripes:checkbox name="extraRoles" class="custom-control-input ${module.name}_child" value="${extraRole.role}" id="extraRole${module.name}${innerstatus.index}" disabled="false" onclick="javascript:handleChildren(this, '${extraRole.role}');"/>
                                                 </c:if>
                                                 <label class="custom-control-label" style="font-weight: 300 !important;" for="extraRole${module.name}${innerstatus.index}"><c:out value="${extraRole.description}"/></label>
-                                                <c:if test="${fn:contains(actionBean.modules, module.name)}">
+                                                <%--c:if test="${fn:contains(actionBean.modules, module.name)}"--%>
                                                     <c:forEach var="innerExtraRole" items="${actionBean.allExtraRoles}" varStatus="deepinnerstatus">
                                                         <c:if test="${fn:containsIgnoreCase(innerExtraRole.role, extraRole.role.concat('__'))}">
                                                             <div class="custom-control custom-checkbox" style="margin-left: 64px !important;">
@@ -134,7 +134,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                                                             </div>
                                                         </c:if>
                                                     </c:forEach>
-                                                </c:if>
+                                                <%--/c:if--%>
                                             </div>
                                         </c:if>
                                     </c:forEach>

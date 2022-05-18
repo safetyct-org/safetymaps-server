@@ -71,7 +71,7 @@ public class VrhAGSProxyActionBean implements ActionBean {
     }
 
     public Resolution proxy() throws Exception {
-        if(!context.getRequest().isUserInRole(ROLE_TEST) && !context.getRequest().isUserInRole(ROLE_PROD) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
+        if(!context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
             return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot VRH AGS!");
         }
 
