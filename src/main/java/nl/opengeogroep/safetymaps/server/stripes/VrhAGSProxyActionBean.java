@@ -49,6 +49,7 @@ public class VrhAGSProxyActionBean implements ActionBean {
     static final String ROLE = "smvng_incident_vrh_ags_replica";
     static final String ROLE_PROD = "smvng_incident_vrh_ags_replica__prod";
     static final String ROLE_TEST = "smvng_incident_vrh_ags_replica__test";
+    static final String ROLE_ALLNOTEPAD = "smvng_incident_vrh_ags_replica__fullnotepad";
 
     private String path;
 
@@ -85,6 +86,7 @@ public class VrhAGSProxyActionBean implements ActionBean {
         Boolean useAdmin = context.getRequest().isUserInRole(ROLE_ADMIN);
         Boolean useTestUrl = context.getRequest().isUserInRole(ROLE_TEST);
         Boolean useProdUrl = context.getRequest().isUserInRole(ROLE_PROD);
+        Boolean getAllNotepad = context.getRequest().isUserInRole(ROLE_ALLNOTEPAD);
 
         String testincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_test"); // new
         String prodincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_prod"); // new
@@ -106,7 +108,7 @@ public class VrhAGSProxyActionBean implements ActionBean {
             path = path.substring("Eenheden".length());
             builder = buildProxyRequestBuilder(uniturl);
         } else {
-            builder = buildProxyRequestBuilder(incidentsurl);
+            builder = buildProxyRequestBuilder(incidentsurl, true, getAllNotepad);
         }
 
         final HttpUriRequest req = builder.build();
@@ -162,6 +164,10 @@ public class VrhAGSProxyActionBean implements ActionBean {
     }
 
     private RequestBuilder buildProxyRequestBuilder(String url) throws Exception {
+        return buildProxyRequestBuilder(url, false, false);
+    }
+
+    private RequestBuilder buildProxyRequestBuilder(String url, Boolean checkDisc, Boolean allDisc) throws Exception {
         String qs = context.getRequest().getQueryString();
         RequestBuilder builder = RequestBuilder.create(context.getRequest().getMethod())
                 .setUri(url + (path == null ? "" : path) + (qs == null ? "" : "?" + qs));
@@ -172,7 +178,17 @@ public class VrhAGSProxyActionBean implements ActionBean {
 
                 List <NameValuePair> nvps = new ArrayList<>();
                 for(Map.Entry<String,String[]> param: context.getRequest().getParameterMap().entrySet()) {
-                    nvps.add(new BasicNameValuePair(param.getKey(), context.getRequest().getParameter(param.getKey())));
+                    String value = context.getRequest().getParameter(param.getKey());
+
+                    if (checkDisc) {
+                        if (allDisc) {
+                            value = value.replaceAll("AND T_IND_DISC_KLADBLOK_REGEL", "");
+                        } else {
+                            value = value.replaceAll("AND T_IND_DISC_KLADBLOK_REGEL", "AND T_IND_DISC_KLADBLOK_REGEL LIKE '_B_'");
+                        }
+                    }
+                    
+                    nvps.add(new BasicNameValuePair(param.getKey(), value));
                 }
 
                 builder.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
