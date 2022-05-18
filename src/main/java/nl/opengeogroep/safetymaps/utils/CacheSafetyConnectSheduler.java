@@ -58,6 +58,7 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
       try {
         regioncode = Cfg.getSetting("safetyconnect_regio_code");
 
+        String useRequestCache = Cfg.getSetting("safetyconnect_use_cache", "false");
         String authorizationProd = Cfg.getSetting("safetyconnect_webservice_authorization_prod");
         String authorizationOpl = Cfg.getSetting("safetyconnect_webservice_authorization_opl");
         String authorizationTest = Cfg.getSetting("safetyconnect_webservice_authorization_test");
@@ -65,9 +66,11 @@ public class CacheSafetyConnectSheduler implements ServletContextListener {
         String urlOpl = Cfg.getSetting("safetyconnect_webservice_url_opl");
         String urlTest = Cfg.getSetting("safetyconnect_webservice_url_test");
 
-        executeJobDetails(authorizationProd, urlProd, CacheUtil.INCIDENT_PROD_CACHE_KEY);
-        executeJobDetails(authorizationOpl, urlOpl, CacheUtil.INCIDENT_OPL_CACHE_KEY);
-        executeJobDetails(authorizationTest, urlTest, CacheUtil.INCIDENT_TEST_CACHE_KEY);
+        if ("true".equals(useRequestCache)) {
+          executeJobDetails(authorizationProd, urlProd, CacheUtil.INCIDENT_PROD_CACHE_KEY);
+          executeJobDetails(authorizationOpl, urlOpl, CacheUtil.INCIDENT_OPL_CACHE_KEY);
+          executeJobDetails(authorizationTest, urlTest, CacheUtil.INCIDENT_TEST_CACHE_KEY);
+        }
       } catch (Exception e) {
         log.error("Exception getting SETTINGS from DB:", e);
       }
