@@ -182,13 +182,15 @@ public class VrhAGSProxyActionBean implements ActionBean {
 
                     if (checkDisc) {
                         if (allDisc) {
-                            value = value.replaceAll("AND T_IND_DISC_KLADBLOK_REGEL", "");
+                            String newValue = value.replace("AND T_IND_DISC_KLADBLOK_REGEL", "");
+                            nvps.add(new BasicNameValuePair(param.getKey(), newValue));
                         } else {
-                            value = value.replaceAll("AND T_IND_DISC_KLADBLOK_REGEL", "AND T_IND_DISC_KLADBLOK_REGEL LIKE '_B_'");
-                        }
+                            String newValue = value.replace("AND T_IND_DISC_KLADBLOK_REGEL", "AND T_IND_DISC_KLADBLOK_REGEL LIKE '_B_'");
+                            nvps.add(new BasicNameValuePair(param.getKey(), newValue));
+                        }                        
+                    } else {
+                        nvps.add(new BasicNameValuePair(param.getKey(), value));
                     }
-                    
-                    nvps.add(new BasicNameValuePair(param.getKey(), value));
                 }
 
                 builder.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
