@@ -55,6 +55,9 @@ public class FotoFunctionActionBean implements ActionBean {
     private String extraInfo;
 
     @Validate
+    private String location;
+
+    @Validate
     private String voertuigNummer;
 
     @Validate
@@ -93,6 +96,14 @@ public class FotoFunctionActionBean implements ActionBean {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public String getExtraInfo() {
@@ -199,11 +210,12 @@ public class FotoFunctionActionBean implements ActionBean {
             voertuigNummer,
             incidentNummer,
             date,
-            extraInfo
+            extraInfo,
+            location
         };
         try {
             QueryRunner qr = DB.qr();
-            qr.insert("insert into wfs." + TABLE + " (filename, datatype, voertuig_nummer, incident_nummer, date, omschrijving) values(?,?,?,?,?,?)", new MapListHandler(), qparams);
+            qr.insert("insert into wfs." + TABLE + " (filename, datatype, voertuig_nummer, incident_nummer, date, omschrijving, location) values(?,?,?,?,?,?,?)", new MapListHandler(), qparams);
         } catch (Exception e) {
             throw e;
         }
@@ -212,7 +224,7 @@ public class FotoFunctionActionBean implements ActionBean {
     public List<Map<String, Object>> getFromDb() throws Exception {
         QueryRunner qr = DB.qr();
 
-        List<Map<String, Object>> rows = qr.query("SELECT \"filename\", \"omschrijving\" from wfs."+TABLE+" where incident_nummer =?", new MapListHandler(),incidentNummer);
+        List<Map<String, Object>> rows = qr.query("SELECT \"filename\", \"omschrijving\", \"location\" from wfs."+TABLE+" where incident_nummer =?", new MapListHandler(),incidentNummer);
 
         return rows;
     }
