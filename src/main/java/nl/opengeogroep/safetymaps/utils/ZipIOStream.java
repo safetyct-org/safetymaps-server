@@ -28,7 +28,7 @@ public class ZipIOStream {
 
         try{ zipStream = new ZipIOStream(source, target); }
         catch(Throwable e) {
-            e = new RuntimeException("Initializing was failed", e);
+            //e = new RuntimeException("Initializing was failed", e);
             if(b) throw (RuntimeException) e;
             report.put(null, e);
             return false;
