@@ -196,7 +196,7 @@ public class FotoFunctionActionBean implements ActionBean {
                     zipParameters.setEncryptionMethod(EncryptionMethod.AES);
                     zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
 
-                    ZipFile zip = new ZipFile(filePath + ".zip", "".toCharArray());
+                    ZipFile zip = new ZipFile(filePath + ".zip", zipPass.toCharArray());
                     zip.addFile(file, zipParameters);
                     zip.close();
                 } catch (ZipException e) {
