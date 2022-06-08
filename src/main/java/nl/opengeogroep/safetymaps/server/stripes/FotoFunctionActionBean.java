@@ -10,6 +10,7 @@ import net.sourceforge.stripes.validation.Validate;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.ZipIOStream;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
@@ -25,9 +26,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
 
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 
@@ -151,9 +159,14 @@ public class FotoFunctionActionBean implements ActionBean {
             }
             
             fileName = fileName.replace('/','_');
-            final File file = new File(PATH + File.separator + fileName);
+            String filePath = PATH + File.separator + fileName;
+            final File file = new File(filePath);
             picture.save(file);
             insertIntoDb();
+            Path source = Paths.get(filePath);
+            Path target = Paths.get(fileName, ".zip");
+            Map<Path, Throwable> report = new java.util.HashMap<>();
+            ZipIOStream.Zip(source, target, report);
             response.put("message", "Foto is opgeslagen met bestandsnaam: " + fileName);
             response.put("result", true);
         } catch (Exception e) {
