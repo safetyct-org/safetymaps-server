@@ -19,6 +19,15 @@ import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMessage.RecipientType;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletResponse;
@@ -29,13 +38,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.FileOutputStream;
 
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 
@@ -165,15 +170,55 @@ public class FotoFunctionActionBean implements ActionBean {
             picture.save(file);
             insertIntoDb();
 
-            String zipPhoto = Cfg.getSetting("zipFotos");
+            String zipPhoto = Cfg.getSetting("fotofunctie_zip");
             if (zipPhoto != null && "true".equals(zipPhoto)) {
                 Path source = Paths.get(filePath);
                 Path target = Paths.get(filePath + ".zip");
                 Map<Path, Throwable> report = new java.util.HashMap<>();
+                Boolean zipErrored = false;
                 if (!ZipIOStream.Zip(source, target, report)) {
                     for(Map.Entry<Path, Throwable> e : report.entrySet()) {
                         response.put("zipmessage", e.getValue().getMessage());
                     }
+                    zipErrored = true;
+                }
+                Session session = null;
+                String to = null;
+                String from = null;
+                try {
+                    Context ctx = new InitialContext();
+                    session = (Session)ctx.lookup("java:comp/env/mail/session");
+
+                    to = Cfg.getSetting("fotofunctie_mail_to");
+                    from = Cfg.getSetting("fotofunctie_mail_from");
+
+                    if(to == null || from == null) { throw new Exception(); }
+                } catch(Exception e) {
+                    response.put("mailmessage", "Server not configured correctly to send mail. Check context and settings.");
+                }
+                String subject = "Foto/screenshot voor incident " + incidentNummer + " toegevoegd.";
+                String mail = subject + " Bestandsnaam: " + fileName;
+                try {
+                    if(!zipErrored && session != null && to != null && from != null) {
+                        javax.mail.Message msg = new MimeMessage(session);
+                        msg.setFrom(new InternetAddress(from));
+                        msg.addRecipient(RecipientType.TO, new InternetAddress(to));
+                        String sender = context.getRequest().getParameter("email");
+                        if(sender != null) {
+                            msg.addRecipient(RecipientType.CC, new InternetAddress(sender));
+                        }
+                        msg.setSubject(subject);
+                        msg.setSentDate(new Date());
+                        msg.setContent(mail, "text/plain");
+                        msg.setDataHandler(new DataHandler(new FileDataSource(target.toFile())));
+                        msg.setFileName(filePath + ".zip");
+            
+                        Transport.send(msg);
+                    }
+                } catch(Exception e) {
+                    log.error("Error formatting mail", e);
+                    response.put("error", "Server error formatting mail");
+                    return new StreamingResolution("application/json", response.toString());
                 }
             }
             
