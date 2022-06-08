@@ -145,6 +145,7 @@ public class FotoFunctionActionBean implements ActionBean {
         JSONObject response = new JSONObject();
         try {
             PATH = Cfg.getSetting("fotofunctie");
+
             if(PATH == null) {
                 throw new IllegalArgumentException("Fotofunctie serverpad niet geconfigureerd");
             }
@@ -163,10 +164,15 @@ public class FotoFunctionActionBean implements ActionBean {
             final File file = new File(filePath);
             picture.save(file);
             insertIntoDb();
-            Path source = Paths.get(filePath);
-            Path target = Paths.get(fileName, ".zip");
-            Map<Path, Throwable> report = new java.util.HashMap<>();
-            ZipIOStream.Zip(source, target, report);
+
+            String zipPhoto = Cfg.getSetting("zipFotos");
+            if (zipPhoto != null && "true".equals(zipPhoto)) {
+                Path source = Paths.get(filePath);
+                Path target = Paths.get(fileName, ".zip");
+                Map<Path, Throwable> report = new java.util.HashMap<>();
+                ZipIOStream.Zip(source, target, report);
+            }
+            
             response.put("message", "Foto is opgeslagen met bestandsnaam: " + fileName);
             response.put("result", true);
         } catch (Exception e) {
