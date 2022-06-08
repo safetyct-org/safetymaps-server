@@ -168,7 +168,7 @@ public class FotoFunctionActionBean implements ActionBean {
             String zipPhoto = Cfg.getSetting("zipFotos");
             if (zipPhoto != null && "true".equals(zipPhoto)) {
                 Path source = Paths.get(filePath);
-                Path target = Paths.get(fileName, ".zip");
+                Path target = Paths.get(filePath, ".zip");
                 Map<Path, Throwable> report = new java.util.HashMap<>();
                 ZipIOStream.Zip(source, target, report);
             }
