@@ -201,6 +201,7 @@ public class FotoFunctionActionBean implements ActionBean {
                     zip.close();
                 } catch (ZipException e) {
                     zipErrored = true;
+                    response.put("zipmessage", e.getMessage());
                 }
                 Path target = Paths.get(filePath + ".zip");
                 Session session = null;
