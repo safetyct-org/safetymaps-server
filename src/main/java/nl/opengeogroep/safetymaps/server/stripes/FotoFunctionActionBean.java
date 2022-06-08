@@ -42,6 +42,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import java.util.ArrayList;
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.model.enums.*;
+
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 
 /**
@@ -170,18 +176,33 @@ public class FotoFunctionActionBean implements ActionBean {
             picture.save(file);
             insertIntoDb();
 
+            Boolean zipErrored = false;
             String zipPhoto = Cfg.getSetting("fotofunctie_zip");
-            if (zipPhoto != null && "true".equals(zipPhoto)) {
-                Path source = Paths.get(filePath);
-                Path target = Paths.get(filePath + ".zip");
+            String zipPass = Cfg.getSetting("fotofunctie_zipPass");
+            if (zipPhoto != null && "true".equals(zipPhoto) && zipPass != null) {
+                /*Path source = Paths.get(filePath);
                 Map<Path, Throwable> report = new java.util.HashMap<>();
-                Boolean zipErrored = false;
                 if (!ZipIOStream.Zip(source, target, report)) {
                     for(Map.Entry<Path, Throwable> e : report.entrySet()) {
                         response.put("zipmessage", e.getValue().getMessage());
                     }
                     zipErrored = true;
+                }*/
+                try {
+                    ZipParameters zipParameters = new ZipParameters();
+                    zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
+                    zipParameters.setCompressionLevel(CompressionLevel.NORMAL);
+                    zipParameters.setEncryptFiles(true);
+                    zipParameters.setEncryptionMethod(EncryptionMethod.AES);
+                    zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+
+                    ZipFile zip = new ZipFile(filePath + ".zip", "".toCharArray());
+                    zip.addFile(file, zipParameters);
+                    zip.close();
+                } catch (ZipException e) {
+                    zipErrored = true;
                 }
+                Path target = Paths.get(filePath + ".zip");
                 Session session = null;
                 String to = null;
                 String from = null;
@@ -211,13 +232,18 @@ public class FotoFunctionActionBean implements ActionBean {
                         msg.setSentDate(new Date());
                         msg.setContent(mail, "text/plain");
                         msg.setDataHandler(new DataHandler(new FileDataSource(target.toFile())));
-                        msg.setFileName(filePath + ".zip");
+                        msg.setFileName(fileName + ".zip");
             
                         Transport.send(msg);
+
+                        File zipFile = new File(filePath + ".zip");
+                        zipFile.delete();
                     }
                 } catch(Exception e) {
                     response.put("mailmessage", "Could not send mail.");
                 }
+            } else {
+                response.put("zipmessage", "Zip niet (goed) geconfigureerd in settings tabel.");
             }
             
             response.put("message", "Foto is opgeslagen met bestandsnaam: " + fileName);
