@@ -172,7 +172,7 @@ public class FotoFunctionActionBean implements ActionBean {
                 Map<Path, Throwable> report = new java.util.HashMap<>();
                 if (!ZipIOStream.Zip(source, target, report)) {
                     for(Map.Entry<Path, Throwable> e : report.entrySet()) {
-                        response.put(e.getKey().toString(), e.getValue().toString());
+                        response.put("zipmessage", e.getValue().getMessage());
                     }
                 }
             }
