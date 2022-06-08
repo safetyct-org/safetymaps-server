@@ -170,7 +170,11 @@ public class FotoFunctionActionBean implements ActionBean {
                 Path source = Paths.get(filePath);
                 Path target = Paths.get(filePath, ".zip");
                 Map<Path, Throwable> report = new java.util.HashMap<>();
-                ZipIOStream.Zip(source, target, report);
+                if (!ZipIOStream.Zip(source, target, report)) {
+                    for(Map.Entry<Path, Throwable> e : report.entrySet()) {
+                        response.put(e.getKey().toString(), e.getValue().toString());
+                    }
+                }
             }
             
             response.put("message", "Foto is opgeslagen met bestandsnaam: " + fileName);
