@@ -216,9 +216,7 @@ public class FotoFunctionActionBean implements ActionBean {
                         Transport.send(msg);
                     }
                 } catch(Exception e) {
-                    log.error("Error formatting mail", e);
-                    response.put("error", "Server error formatting mail");
-                    return new StreamingResolution("application/json", response.toString());
+                    response.put("mailmessage", "Could not send mail.");
                 }
             }
             
