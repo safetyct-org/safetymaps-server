@@ -10,6 +10,7 @@ import net.sourceforge.stripes.validation.Validate;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.ZipIOStream;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
@@ -18,6 +19,15 @@ import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMessage.RecipientType;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletResponse;
@@ -25,9 +35,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import java.util.ArrayList;
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.model.enums.*;
 
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 
@@ -53,6 +72,9 @@ public class FotoFunctionActionBean implements ActionBean {
 
     @Validate
     private String extraInfo;
+
+    @Validate
+    private String location;
 
     @Validate
     private String voertuigNummer;
@@ -95,6 +117,14 @@ public class FotoFunctionActionBean implements ActionBean {
         this.fileName = fileName;
     }
 
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
     public String getExtraInfo() {
         return extraInfo;
     }
@@ -126,6 +156,7 @@ public class FotoFunctionActionBean implements ActionBean {
         JSONObject response = new JSONObject();
         try {
             PATH = Cfg.getSetting("fotofunctie");
+
             if(PATH == null) {
                 throw new IllegalArgumentException("Fotofunctie serverpad niet geconfigureerd");
             }
@@ -140,9 +171,82 @@ public class FotoFunctionActionBean implements ActionBean {
             }
             
             fileName = fileName.replace('/','_');
-            final File file = new File(PATH + File.separator + fileName);
+            String filePath = PATH + File.separator + fileName;
+            final File file = new File(filePath);
             picture.save(file);
             insertIntoDb();
+
+            Boolean zipErrored = false;
+            String zipPhoto = Cfg.getSetting("fotofunctie_zip");
+            String zipPass = Cfg.getSetting("fotofunctie_zipPass");
+            if (zipPhoto != null && "true".equals(zipPhoto) && zipPass != null) {
+                /*Path source = Paths.get(filePath);
+                Map<Path, Throwable> report = new java.util.HashMap<>();
+                if (!ZipIOStream.Zip(source, target, report)) {
+                    for(Map.Entry<Path, Throwable> e : report.entrySet()) {
+                        response.put("zipmessage", e.getValue().getMessage());
+                    }
+                    zipErrored = true;
+                }*/
+                try {
+                    ZipParameters zipParameters = new ZipParameters();
+                    zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
+                    zipParameters.setCompressionLevel(CompressionLevel.NORMAL);
+                    zipParameters.setEncryptFiles(true);
+                    zipParameters.setEncryptionMethod(EncryptionMethod.AES);
+                    zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+
+                    ZipFile zip = new ZipFile(filePath + ".zip", zipPass.toCharArray());
+                    zip.addFile(file, zipParameters);
+                    zip.close();
+                } catch (ZipException e) {
+                    zipErrored = true;
+                    response.put("zipmessage", e.getMessage());
+                }
+                Path target = Paths.get(filePath + ".zip");
+                Session session = null;
+                String to = null;
+                String from = null;
+                try {
+                    Context ctx = new InitialContext();
+                    session = (Session)ctx.lookup("java:comp/env/mail/session");
+
+                    to = Cfg.getSetting("fotofunctie_mail_to");
+                    from = Cfg.getSetting("fotofunctie_mail_from");
+
+                    if(to == null || from == null) { throw new Exception(); }
+                } catch(Exception e) {
+                    response.put("mailmessage", "Server not configured correctly to send mail. Check context and settings.");
+                }
+                String subject = "Foto/screenshot voor incident " + incidentNummer + " toegevoegd.";
+                String mail = subject + " Bestandsnaam: " + fileName;
+                try {
+                    if(!zipErrored && session != null && to != null && from != null) {
+                        javax.mail.Message msg = new MimeMessage(session);
+                        msg.setFrom(new InternetAddress(from));
+                        msg.addRecipient(RecipientType.TO, new InternetAddress(to));
+                        String sender = context.getRequest().getParameter("email");
+                        if(sender != null) {
+                            msg.addRecipient(RecipientType.CC, new InternetAddress(sender));
+                        }
+                        msg.setSubject(subject);
+                        msg.setSentDate(new Date());
+                        msg.setContent(mail, "text/plain");
+                        msg.setDataHandler(new DataHandler(new FileDataSource(target.toFile())));
+                        msg.setFileName(fileName + ".zip");
+            
+                        Transport.send(msg);
+
+                        File zipFile = new File(filePath + ".zip");
+                        zipFile.delete();
+                    }
+                } catch(Exception e) {
+                    response.put("mailmessage", "Could not send mail.");
+                }
+            } else {
+                response.put("zipmessage", "Zip niet (goed) geconfigureerd in settings tabel.");
+            }
+            
             response.put("message", "Foto is opgeslagen met bestandsnaam: " + fileName);
             response.put("result", true);
         } catch (Exception e) {
@@ -199,11 +303,12 @@ public class FotoFunctionActionBean implements ActionBean {
             voertuigNummer,
             incidentNummer,
             date,
-            extraInfo
+            extraInfo,
+            location
         };
         try {
             QueryRunner qr = DB.qr();
-            qr.insert("insert into wfs." + TABLE + " (filename, datatype, voertuig_nummer, incident_nummer, date, omschrijving) values(?,?,?,?,?,?)", new MapListHandler(), qparams);
+            qr.insert("insert into wfs." + TABLE + " (filename, datatype, voertuig_nummer, incident_nummer, date, omschrijving, location) values(?,?,?,?,?,?,?)", new MapListHandler(), qparams);
         } catch (Exception e) {
             throw e;
         }
@@ -212,7 +317,7 @@ public class FotoFunctionActionBean implements ActionBean {
     public List<Map<String, Object>> getFromDb() throws Exception {
         QueryRunner qr = DB.qr();
 
-        List<Map<String, Object>> rows = qr.query("SELECT \"filename\", \"omschrijving\" from wfs."+TABLE+" where incident_nummer =?", new MapListHandler(),incidentNummer);
+        List<Map<String, Object>> rows = qr.query("SELECT \"filename\", \"omschrijving\", \"location\" from wfs."+TABLE+" where incident_nummer =?", new MapListHandler(),incidentNummer);
 
         return rows;
     }
