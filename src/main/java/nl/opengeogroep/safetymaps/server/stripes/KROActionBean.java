@@ -1,15 +1,12 @@
 package nl.opengeogroep.safetymaps.server.stripes;
 
-import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
-
-import org.apache.commons.dbutils.handlers.ScalarHandler;
+import nl.opengeogroep.safetymaps.server.db.Cfg;
+import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.b3p.web.stripes.ErrorMessageResolution;
 
 import java.sql.SQLException;
-import java.text.Normalizer;
-import java.text.Normalizer.Form;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -24,9 +21,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import net.sourceforge.stripes.action.*;
-import nl.b3p.web.stripes.ErrorMessageResolution;
-import nl.opengeogroep.safetymaps.server.db.Cfg;
-import nl.opengeogroep.safetymaps.server.db.DB;
 
 /**
  * @author bartv
@@ -43,7 +37,6 @@ public class KROActionBean implements ActionBean {
     static final String DEFAULT_DELIM = "|";
     static final String OBJECTTYPEPERADRESS_DELIM = ";;";
     static final String OBJECTTYPEISCOMPANYNAME_DELIM = "**";
-    static final String VIEW_OBJECTINFO = "oovkro.object_info";
     static final String TABLE_OBJECTTYPES = "oovkro.objecttypering_type";
     static final String TABLE_AANZIEN = "oovkro.aanzien";
     static final String TABLE_GEBRUIK = "oovkro.gebruik";
@@ -204,11 +197,20 @@ public class KROActionBean implements ActionBean {
 
     private Boolean isNotAuthorized() {
         return false;
-    } 
+    }
+
+    private String getViewObjectInfo() throws NamingException, SQLException  {
+        String viewSuffix = Cfg.getSetting("kro_view_suffix");
+        String defaultView = "oovkro.object_info";
+
+        if (viewSuffix == null) { return defaultView; }
+
+        return defaultView + "_" + viewSuffix;
+    }
 
     private List<Map<String, Object>> getKroFromDb() throws NamingException, SQLException {
         QueryRunner qr = DB.kroQr();
-        String sql = "select * from " + VIEW_OBJECTINFO + " where ";
+        String sql = "select * from " + getViewObjectInfo() + " where ";
         Object[] qparams;
         if (useBagId()) {
             sql += COLUMN_BAGVBID + "=?";
@@ -271,7 +273,7 @@ public class KROActionBean implements ActionBean {
 
     private List<Map<String, Object>> getKroAddressesFromDb() throws NamingException, SQLException {
         QueryRunner qr = DB.kroQr();
-        String sql = "select * from " + VIEW_OBJECTINFO + " where ";
+        String sql = "select * from " + getViewObjectInfo() + " where ";
         Object[] qparams;
 
         sql += COLUMN_BAGPANDID + "=?";
@@ -290,7 +292,7 @@ public class KROActionBean implements ActionBean {
                 "then concat(adres_objecttypering, '||', aanzien_objecttypering::text) " +
                 "else null::text " +
                 "end as " + COLUMN_OBJECTTYPERING + " " +
-            "from " + VIEW_OBJECTINFO + " " +
+            "from " + getViewObjectInfo() + " " +
             "where " + COLUMN_BAGPANDID + " = ? " +
             "group by adres, adres_objecttypering, aanzien_objecttypering";
         Object[] qparams;
