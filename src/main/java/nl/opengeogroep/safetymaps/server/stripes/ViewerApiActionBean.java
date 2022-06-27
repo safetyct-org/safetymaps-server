@@ -256,48 +256,51 @@ public class ViewerApiActionBean implements ActionBean {
         JSONObject organisation = new JSONObject(org.toString());
         organisation.put("integrated", true);
         organisation.put("username", request.getRemoteUser());
+
+        List<Map<String,Object>> roles = new QueryRunner().query(c, "select role, modules, coalesce(wms, '') as wms, coalesce(defaultwms, '') as defaultwms from " + ROLE_TABLE + " where modules is not null", new MapListHandler());
+        Set<String> authorizedModules = new HashSet();
+        Set<String> authorizedLayers = new HashSet();
+        Set<String> defaultLayers = new HashSet();
+        for(Map<String,Object> role: roles) {
+            if(request.isUserInRole(role.get("role").toString()) || request.isUserInRole(ROLE_ADMIN)) {
+                String modules = (String)role.get("modules");
+                authorizedModules.addAll(Arrays.asList(modules.split(", ")));
+                String layers = (String)role.get("wms");
+                authorizedLayers.addAll(Arrays.asList(layers.toLowerCase().split(", ")));
+                String dlayers = (String)role.get("defaultwms");
+                defaultLayers.addAll(Arrays.asList(dlayers.toLowerCase().split(", ")));
+            }
+        }
+        JSONArray modules = organisation.getJSONArray("modules");
+        JSONArray jaAuthorizedModules = new JSONArray();
+        for(int i = 0; i < modules.length(); i++) {
+            JSONObject module = modules.getJSONObject(i);
+            if(authorizedModules.contains(module.getString("name"))) {
+                checkModuleAuthorizations(request, c, module, isSmvng);
+                jaAuthorizedModules.put(module);
+            }
+        }
+        JSONArray layers = organisation.getJSONArray("layers");
+        JSONArray jaAuthorizedLayers = new JSONArray();
+        for(int i = 0; i < layers.length(); i++) {
+            JSONObject layer = layers.getJSONObject(i);
+            if(authorizedLayers.contains(layer.getString("uid"))) {
+                if(!layer.getBoolean("defaultEnabled")) {
+                    layer.put("defaultEnabled", defaultLayers.contains((layer.getString("uid"))));
+                }
+                jaAuthorizedLayers.put(layer);
+            }
+        }
+
+        organisation.put("layers", jaAuthorizedLayers);
+
         if(!request.isUserInRole(ROLE_ADMIN)) {
-            List<Map<String,Object>> roles = new QueryRunner().query(c, "select role, modules, coalesce(wms, '') as wms, coalesce(defaultwms, '') as defaultwms from " + ROLE_TABLE + " where modules is not null", new MapListHandler());
-            Set<String> authorizedModules = new HashSet();
-            Set<String> authorizedLayers = new HashSet();
-            Set<String> defaultLayers = new HashSet();
-            for(Map<String,Object> role: roles) {
-                if(request.isUserInRole(role.get("role").toString())) {
-                    String modules = (String)role.get("modules");
-                    authorizedModules.addAll(Arrays.asList(modules.split(", ")));
-                    String layers = (String)role.get("wms");
-                    authorizedLayers.addAll(Arrays.asList(layers.toLowerCase().split(", ")));
-                    String dlayers = (String)role.get("defaultwms");
-                    defaultLayers.addAll(Arrays.asList(dlayers.toLowerCase().split(", ")));
-                }
-            }
-            JSONArray modules = organisation.getJSONArray("modules");
-            JSONArray jaAuthorizedModules = new JSONArray();
-            for(int i = 0; i < modules.length(); i++) {
-                JSONObject module = modules.getJSONObject(i);
-                if(authorizedModules.contains(module.getString("name"))) {
-                    checkModuleAuthorizations(request, c, module, isSmvng);
-                    jaAuthorizedModules.put(module);
-                }
-            }
             organisation.put("modules", jaAuthorizedModules);
-            JSONArray layers = organisation.getJSONArray("layers");
-            JSONArray jaAuthorizedLayers = new JSONArray();
-            for(int i = 0; i < layers.length(); i++) {
-                JSONObject layer = layers.getJSONObject(i);
-                if(authorizedLayers.contains(layer.getString("uid"))) {
-                    if(!layer.getBoolean("defaultEnabled")) {
-                        layer.put("defaultEnabled", defaultLayers.contains((layer.getString("uid"))));
-                    }
-                    jaAuthorizedLayers.put(layer);
-                }
-            }
-            organisation.put("layers", jaAuthorizedLayers);
         } else {
-            JSONArray modules = organisation.getJSONArray("modules");
-            for(int i = 0; i < modules.length(); i++) {
+            JSONArray adminModules = organisation.getJSONArray("modules");
+            for(int i = 0; i < adminModules.length(); i++) {
                 // Add settings to options for admin
-                checkModuleAuthorizations(request, c, modules.getJSONObject(i), isSmvng);
+                checkModuleAuthorizations(request, c, adminModules.getJSONObject(i), isSmvng);
             }
         }
         
