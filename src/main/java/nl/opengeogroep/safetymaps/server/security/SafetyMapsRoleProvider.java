@@ -24,7 +24,7 @@ public class SafetyMapsRoleProvider implements RoleProvider {
     @Override
     public Collection<String> getRoles(String username) {
         try {
-            return qr().query("select role from safetymaps.user_roles where username = ? union select trim(unnest(string_to_array(r.modules, ','))) as role from safetymaps.user_roles ur inner join safetymaps.role r on ur.role = r.role and coalesce(r.role, '') <> '' where ur.username = ?", new ColumnListHandler<String>(), username, username);
+            return qr().query("select role from safetymaps.user_roles where username = ? union select trim(unnest(string_to_array(r.modules, ','))) as role from safetymaps.user_roles ur inner join safetymaps.role r on ur.role = r.role and coalesce(r.role, '') <> '' where ur.username = ? union select trim(unnest(string_to_array(r.roles, ','))) as role from safetymaps.user_roles ur inner join safetymaps.role r on ur.role = r.role and coalesce(r.role, '') <> '' where ur.username = ?", new ColumnListHandler<String>(), username, username, username);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -34,7 +34,7 @@ public class SafetyMapsRoleProvider implements RoleProvider {
     public Map<String, Collection<String>> getAllRolesByUsername() {
 
         try {
-            List<Map<String,Object>> rows = qr().query("select role, username from safetymaps.user_roles union select trim(unnest(string_to_array(r.modules, ','))) as role, ur.username from safetymaps.user_roles ur inner join safetymaps.role r on ur.role = r.role and coalesce(r.role, '') <> ''", new MapListHandler());
+            List<Map<String,Object>> rows = qr().query("select role, username from safetymaps.user_roles union select trim(unnest(string_to_array(r.modules, ','))) as role, ur.username from safetymaps.user_roles ur inner join safetymaps.role r on ur.role = r.role and coalesce(r.role, '') <> '' union select trim(unnest(string_to_array(r.roles, ','))) as role from safetymaps.user_roles ur inner join safetymaps.role r on ur.role = r.role and coalesce(r.role, '') <> ''", new MapListHandler());
 
             Map<String,Collection<String>> rolesByUsername = new HashMap();
 
