@@ -256,6 +256,7 @@ public class ViewerApiActionBean implements ActionBean {
         JSONObject organisation = new JSONObject(org.toString());
         organisation.put("integrated", true);
         organisation.put("username", request.getRemoteUser());
+        organisation.put("helpUrl", Cfg.getSetting("help_url"));
 
         List<Map<String,Object>> roles = new QueryRunner().query(c, "select role, modules, coalesce(wms, '') as wms, coalesce(defaultwms, '') as defaultwms from " + ROLE_TABLE + " where modules is not null", new MapListHandler());
         Set<String> authorizedModules = new HashSet();
