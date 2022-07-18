@@ -199,9 +199,8 @@ public class KROActionBean implements ActionBean {
         return false;
     }
 
-    private String getViewObjectInfo() throws NamingException, SQLException  {
+    private String getViewObjectInfo(String defaultView) throws NamingException, SQLException  {
         String viewSuffix = Cfg.getSetting("kro_view_suffix");
-        String defaultView = "oovkro.object_info";
 
         if (viewSuffix == null) { return defaultView; }
 
@@ -210,7 +209,7 @@ public class KROActionBean implements ActionBean {
 
     private List<Map<String, Object>> getKroFromDb() throws NamingException, SQLException {
         QueryRunner qr = DB.kroQr();
-        String sql = "select * from " + getViewObjectInfo() + " where ";
+        String sql = "select * from " + getViewObjectInfo("oovkro.object_info") + " where ";
         Object[] qparams;
         if (useBagId()) {
             sql += COLUMN_BAGVBID + "=?";
@@ -230,7 +229,7 @@ public class KROActionBean implements ActionBean {
 
     private List<Map<String, Object>> getObjectTypesOrderedPerScoreFromDb() throws NamingException, SQLException {
         QueryRunner qr = DB.kroQr();
-        return qr.query("select code, omschrijving_aangepast, risico_score from oovkro.objecttypering_type ot " +
+        return qr.query("select code, omschrijving_aangepast, risico_score from " + getViewObjectInfo("oovkro.objecttypering_type") + " ot " +
             "union select 'woonfunctie' as code, 'woonfunctie' as omschrijving_aangepast, -1 as risico_score " +
             "union select 'bijeenkomstfunctie' as code, 'bijeenkomstfunctie' as omschrijving_aangepast, -1 as risico_score " +
             "union select 'celfunctie' as code, 'celfunctie' as omschrijving_aangepast, -1 as risico_score " +
@@ -273,7 +272,7 @@ public class KROActionBean implements ActionBean {
 
     private List<Map<String, Object>> getKroAddressesFromDb() throws NamingException, SQLException {
         QueryRunner qr = DB.kroQr();
-        String sql = "select * from " + getViewObjectInfo() + " where ";
+        String sql = "select * from " + getViewObjectInfo("oovkro.object_info") + " where ";
         Object[] qparams;
 
         sql += COLUMN_BAGPANDID + "=?";
@@ -292,7 +291,7 @@ public class KROActionBean implements ActionBean {
                 "then concat(adres_objecttypering, '||', aanzien_objecttypering::text) " +
                 "else null::text " +
                 "end as " + COLUMN_OBJECTTYPERING + " " +
-            "from " + getViewObjectInfo() + " " +
+            "from " + getViewObjectInfo("oovkro.object_info") + " " +
             "where " + COLUMN_BAGPANDID + " = ? " +
             "group by adres, adres_objecttypering, aanzien_objecttypering";
         Object[] qparams;
