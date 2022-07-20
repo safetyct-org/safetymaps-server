@@ -49,6 +49,7 @@ public class VrhAGSProxyActionBean implements ActionBean {
     static final String ROLE = "smvng_incident_vrh_ags_replica";
     static final String ROLE_PROD = "smvng_incident_vrh_ags_replica__prod";
     static final String ROLE_TEST = "smvng_incident_vrh_ags_replica__test";
+    static final String ROLE_FULLNOTEPAD = "smvng_incident_vrh_ags_replica__fullnotepad";
 
     private String path;
 
@@ -83,14 +84,15 @@ public class VrhAGSProxyActionBean implements ActionBean {
         String defaultApi = Cfg.getSetting("vrh_ags_incidents_default"); // new
 
         Boolean useAdmin = context.getRequest().isUserInRole(ROLE_ADMIN);
-        Boolean useTestUrl = context.getRequest().isUserInRole(ROLE_TEST);
+        Boolean useFullNotepad = context.getRequest().isUserInRole(ROLE_FULLNOTEPAD);
+        Boolean useTestUrl = context.getRequest().isUserInRole(ROLE_TEST) || useFullNotepad;
         Boolean useProdUrl = context.getRequest().isUserInRole(ROLE_PROD);
 
         String testincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_test"); // new
         String prodincidentsurl = Cfg.getSetting("vrh_ags_incidents_url_prod"); // new
         String defaultUrl = "prod".equals(defaultApi) ? prodincidentsurl : "test".equals(defaultApi) ? testincidentsurl : null;
 
-        String incidentsurl = useAdmin ? defaultUrl : useProdUrl ? prodincidentsurl : useTestUrl ? testincidentsurl : defaultUrl;
+        String incidentsurl = useAdmin ? defaultUrl : useTestUrl ? testincidentsurl : useProdUrl ? prodincidentsurl : defaultUrl;
 
         if("Token".equals(path)) {
             if(authorization == null || tokenurl == null) {
