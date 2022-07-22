@@ -322,7 +322,8 @@ public class MellonHeaderAuthenticationFilter implements Filter {
                     roles.addAll(rolenames);
                 }
 
-                log.info("Authenticated user from header [prefix]" + userHeader + ": " + user + ", roles: " + roles);
+                log.info("Authenticated user from header [prefix]" + userHeader + ": " + user + ", AZURE-roles: " + r);
+                log.info("Authenticated user from header [prefix]" + userHeader + ": " + user + ", NG-roles: " + roles);
 
                 session.setAttribute(ATTR_PRINCIPAL, new HeaderAuthenticatedPrincipal(user, roles));
 
