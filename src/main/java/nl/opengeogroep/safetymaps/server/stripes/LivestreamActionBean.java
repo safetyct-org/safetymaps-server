@@ -124,7 +124,7 @@ public class LivestreamActionBean implements ActionBean {
       JSONArray response = new JSONArray();
 
       try {
-        List<Map<String,Object>> results = DB.qr().query("SELECT CONCAT(incident, '-', name) as name from safetymaps.live where incident = ?", new MapListHandler(), incident);
+        List<Map<String,Object>> results = DB.qr().query("SELECT CONCAT(incident, '-', name) as name, url from safetymaps.live where incident = ?", new MapListHandler(), incident);
 
         for (Map<String, Object> resultRow : results) {
             response.put(rowToJson(resultRow, false, false));
