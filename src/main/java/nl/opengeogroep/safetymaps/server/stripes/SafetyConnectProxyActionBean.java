@@ -4,12 +4,11 @@ import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.UrlBinding;
-import net.sourceforge.stripes.action.StreamingResolution;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
-import nl.opengeogroep.safetymaps.utils.CacheUtil;
 
+import org.apache.commons.dbutils.handlers.ColumnListHandler;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.logging.Log;
@@ -36,12 +35,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
-import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_INCIDENTMONITOR_KLADBLOK;
-import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_KLADBLOKCHAT_EDITOR_GMS;
-import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_EIGEN_VOERTUIGNUMMER;
-import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_INCIDENTMONITOR;
 import static nl.opengeogroep.safetymaps.server.db.DB.getUserDetails;
-import static nl.opengeogroep.safetymaps.server.db.JsonExceptionUtils.*;
 
 /**
  *
@@ -109,20 +103,21 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         Boolean useOpl = context.getRequest().isUserInRole(ROLE_OPL);
         Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST);
 
+        String useRabbitMq = Cfg.getSetting("safetyconnect_rq", "false");
+        String rabbitMqSourceDefault = "prod".equals(defaultApi) ? "production" : "opl".equals(defaultApi) ? "opleiding" : "test".equals(defaultApi) ? "test" : null;
+        String rabbitMqSource = useAdmin ? rabbitMqSourceDefault : useProd ?  "production" : useOpl ? "opleiding" : useTest ? "test" : rabbitMqSourceDefault;
+
         String defaultAuth = "prod".equals(defaultApi) ? authorizationProd : "opl".equals(defaultApi) ? authorizationOpl : "test".equals(defaultApi) ? authorizationTest : null;
         String defaultUrl = "prod".equals(defaultApi) ? urlProd : "opl".equals(defaultApi) ? urlOpl : "test".equals(defaultApi) ? urlTest : null;
-        String defaultCache = "prod".equals(defaultApi) ? CacheUtil.INCIDENT_PROD_CACHE_KEY  : "opl".equals(defaultApi) ? CacheUtil.INCIDENT_OPL_CACHE_KEY : "test".equals(defaultApi) ? CacheUtil.INCIDENT_TEST_CACHE_KEY : null;
 
         String authorization = useAdmin ? defaultAuth : useProd ? authorizationProd : useOpl ? authorizationOpl : useTest ? authorizationTest : defaultAuth;
         String url = useAdmin ? defaultUrl : useProd ? urlProd : useOpl ? urlOpl : useTest ? urlTest : defaultUrl;
-        String cacheKey = useAdmin ? defaultCache : useProd ? CacheUtil.INCIDENT_PROD_CACHE_KEY : useOpl ? CacheUtil.INCIDENT_OPL_CACHE_KEY : useTest ? CacheUtil.INCIDENT_TEST_CACHE_KEY : defaultCache;
 
-        if(authorization == null || url == null) {
+        if("false".equals(useRabbitMq) && (authorization == null || url == null)) {
             return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");
         }
 
-        String useRequestCache = Cfg.getSetting("safetyconnect_use_cache", "false");
-        if ("true".equals(useRequestCache) && requestIs(INCIDENT_REQUEST)) {
+        if ("true".equals(useRabbitMq) && requestIs(INCIDENT_REQUEST)) {
             return new Resolution() {
                 @Override
                 public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -137,25 +132,14 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     } else {
                         out = response.getOutputStream();
                     }
-                    JSONArray cache = (JSONArray)CacheUtil.Get(cacheKey);
-                    if (cache == null || cache.toString() == "") {
-                        IOUtils.copy(new StringReader("[]"), out, "UTF-8");
-                    } else {
-                        int idIndex = path.indexOf("/");
-                        if (idIndex != -1) {
-                            JSONArray content = new JSONArray();
-                            String id = path.substring(idIndex + 1);
-                            for(int i=0; i<cache.length(); i++) {
-                                JSONObject incident = (JSONObject)cache.get(i);
-                                if (incident.get("IncidentNummer").toString().equals(id)) {
-                                    content.put(incident);
-                                }
-                            }
-                            IOUtils.copy(new StringReader(applyAuthorizationToIncidentContent(content.toString())), out, "UTF-8");
-                        } else {
-                            IOUtils.copy(new StringReader(applyAuthorizationToIncidentContent(cache.toString())), out, "UTF-8");
-                        }
+
+                    JSONArray incidents = new JSONArray();
+                    List<String> results = DB.qr().query("select details from safetymaps.incidents where source='sc' and sourceenv=?", new ColumnListHandler<String>(), rabbitMqSource);
+                    for (String incident : results) {
+                      incidents.put(new JSONObject(incident));
                     }
+                    IOUtils.copy(new StringReader(applyAuthorizationToIncidentContent(incidents.toString())), out, "UTF-8");
+
                     out.flush();
                     out.close();
                 }

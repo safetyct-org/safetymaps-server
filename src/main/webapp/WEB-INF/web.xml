@@ -12,8 +12,8 @@
     </listener>
     <!-- Context listener for safetyconnect -->
     <listener>
-        <description>The class which initializes CacheSafetyConnectSheduler schedules</description>
-        <listener-class>nl.opengeogroep.safetymaps.utils.CacheSafetyConnectSheduler</listener-class>
+        <description>The class which initializes SafetyConnectMessageReceiver</description>
+        <listener-class>nl.opengeogroep.safetymaps.utils.SafetyConnectMessageReceiver</listener-class>
     </listener>
 
     <!-- Localization context voor o.a. de <fmt:message> JSTL tag -->
