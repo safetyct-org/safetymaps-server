@@ -289,7 +289,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
             return authorizedContent.toString();
         } catch(Exception e) {
-            return defaultError(e);
+            return new JSONObject().toString();
+            //return defaultError(e);
         }
     }
 

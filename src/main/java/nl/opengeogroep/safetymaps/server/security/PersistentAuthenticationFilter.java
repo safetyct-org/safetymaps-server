@@ -254,7 +254,7 @@ public class PersistentAuthenticationFilter implements Filter {
                 // session
                 if(data == null) {
                     if(log.isTraceEnabled()) {
-                        log.trace(request.getRequestURI() + ": Request authenticated but not creating persistent session because could not find username " + dbUsername + " in db");
+                        log.trace(request.getRequestURI() + ": Request authenticated but not creating persistent session because could not find username " + checkUsername + " in db");
                     }
                     chain.doFilter(request, response);
                     return;
@@ -279,7 +279,7 @@ public class PersistentAuthenticationFilter implements Filter {
                     c.add(EXPIRY_DEFAULT_UNIT, EXPIRY_DEFAULT);
                 }
                 String loginSource = DEFAULT_LOGIN_SOURCE;
-                if(!dbUsername.equals(request.getRemoteUser())) {
+                if(!checkUsername.equals(request.getRemoteUser())) {
                     loginSource = dbUsername;
                 }
                 String id = PersistentSessionManager.createPersistentSession(request, loginSource, c.getTime());
