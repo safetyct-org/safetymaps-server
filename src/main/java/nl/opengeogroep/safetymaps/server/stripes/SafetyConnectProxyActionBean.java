@@ -186,7 +186,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             final String content;
             // Filter response from the webservice to remove any data that the user is not authorized for
             if (requestIs(INCIDENT_REQUEST)) {
-                content = applyAuthorizationToIncidentContent(responseContent);
+                content = responseContent; //applyAuthorizationToIncidentContent(responseContent);
             } else if (requestIs(EENHEIDLOCATIE_REQUEST)) {
                 content = applyFilterToEenheidLocatieContent(responseContent);
             } else if (requestIs(KLADBLOKREGEL_REQUEST)) {
@@ -289,8 +289,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
             return authorizedContent.toString();
         } catch(Exception e) {
-            return new JSONObject().toString();
-            //return defaultError(e);
+            //return new JSONObject().toString();
+            return defaultError(e);
         }
     }
 
