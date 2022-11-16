@@ -138,12 +138,100 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     for (String incident : results) {
                       incidents.put(new JSONObject(incident));
                     }
-                    IOUtils.copy(new StringReader(applyAuthorizationToIncidentContent(incidents.toString())), out, "UTF-8");
+                    IOUtils.copy(new StringReader(incidents.toString()), out, "UTF-8");
 
                     out.flush();
                     out.close();
                 }
             };
+        }
+
+        if ("true".equals(useRabbitMq) && requestIs(EENHEIDSTATUS_REQUEST)) {
+          String unitId = context.getRequest().getQueryString().replaceAll("id=", "");
+          
+          return new Resolution() {
+              @Override
+              public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+                  response.setCharacterEncoding("UTF-8");
+                  response.setContentType("application/json");
+
+                  OutputStream out;
+                  String acceptEncoding = request.getHeader("Accept-Encoding");
+                  if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+                      response.setHeader("Content-Encoding", "gzip");
+                      out = new GZIPOutputStream(response.getOutputStream(), true);
+                  } else {
+                      out = response.getOutputStream();
+                  }
+
+                  JSONArray units = new JSONArray();
+                  List<String> results = DB.qr().query("select details from safetymaps.units where source='sc' and sourceenv=?", new ColumnListHandler<String>(), rabbitMqSource);
+                  for (String dbUnit : results) {
+                    JSONObject unit = new JSONObject(dbUnit);
+
+                    if (unitId.equals(unit.getString("roepnaam"))) {
+                      units.put(unit);
+                    }
+                  }
+                  
+                  IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
+
+                  out.flush();
+                  out.close();
+              }
+          };
+       }
+
+        if ("true".equals(useRabbitMq) && requestIs(EENHEIDLOCATIE_REQUEST)) {
+          return new Resolution() {
+              @Override
+              public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+                  response.setCharacterEncoding("UTF-8");
+                  response.setContentType("application/json");
+
+                  OutputStream out;
+                  String acceptEncoding = request.getHeader("Accept-Encoding");
+                  if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+                      response.setHeader("Content-Encoding", "gzip");
+                      out = new GZIPOutputStream(response.getOutputStream(), true);
+                  } else {
+                      out = response.getOutputStream();
+                  }
+
+                  JSONArray incidents = new JSONArray();
+                  List<String> results = DB.qr().query("select details from safetymaps.incidents where source='sc' and sourceenv=?", new ColumnListHandler<String>(), rabbitMqSource);
+                  for (String incident : results) {
+                    incidents.put(new JSONObject(incident));
+                  }
+
+                  JSONArray unitlocations = new JSONArray();
+                  results = DB.qr().query("select details from safetymaps.unitlocations where source='sc' and sourceenv=?", new ColumnListHandler<String>(), rabbitMqSource);
+                  for (String dbUnitlocation : results) {
+                    JSONObject unitlocation = new JSONObject(dbUnitlocation);
+                    String unit = unitlocation.getString("unit");
+
+                    for (int ii=0; ii<incidents.length(); ii++) {
+                      JSONObject incident = incidents.getJSONObject(ii);
+                      JSONArray attachedunits = incident.has("bertokkenEenheden") ? incident.getJSONArray("bertokkenEenheden") : new JSONArray();
+                      
+                      for (int aui=0; aui<attachedunits.length(); aui++) {
+                        JSONObject attachedunit = attachedunits.getJSONObject(aui);
+                        if (attachedunit.getString("roepnaam") == unit) {
+                         unitlocation.put("incidentId", incident.getString("incidentId"));
+                         if (attachedunit.has("inzetRol")) { unitlocation.put("inzetRol", attachedunit.getString("inzetRol")); }
+                        }
+                      }
+                    }
+
+                    unitlocations.put(unitlocation);
+                  }
+
+                  IOUtils.copy(new StringReader(unitlocations.toString()), out, "UTF-8");
+
+                  out.flush();
+                  out.close();
+              }
+          };
         }
 
         String qs = context.getRequest().getQueryString();

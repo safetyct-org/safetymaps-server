@@ -205,23 +205,23 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       JSONObject dbUnit = new JSONObject(dbUnitString);
 
       if (dbUnit != null && (kic == "updated" || kic == "synchronisatie")) {
-        if (unit.has("discipline") && !unit.getString("discipline").equals(dbUnit.getString("discipline"))) { 
+        if (unit.has("discipline") && (!dbUnit.has("discipline") || !unit.getString("discipline").equals(dbUnit.getString("discipline")))) { 
           dbUnit.put("discipline", unit.getString("discipline")); 
         }
 
-        if (unit.has("gmsStatusCode") && !(unit.getInt("gmsStatusCode") == dbUnit.getInt("gmsStatusCode"))) { 
+        if (unit.has("gmsStatusCode") && (!dbUnit.has("gmsStatusCode") || (unit.getInt("gmsStatusCode") != dbUnit.getInt("gmsStatusCode")))) { 
           dbUnit.put("gmsStatusCode", unit.getInt("gmsStatusCode")); 
         }
 
-        if (unit.has("standplaatsKazerne") && !unit.getString("standplaatsKazerne").equals(dbUnit.getString("standplaatsKazerne"))) { 
+        if (unit.has("standplaatsKazerne") && (!dbUnit.has("standplaatsKazerne") || !unit.getString("standplaatsKazerne").equals(dbUnit.getString("standplaatsKazerne")))) { 
           dbUnit.put("standplaatsKazerne", unit.getString("standplaatsKazerne")); 
         }
 
-        if (unit.has("standplaatsKazerneCode") && !unit.getString("standplaatsKazerneCode").equals(dbUnit.getString("standplaatsKazerneCode"))) { 
+        if (unit.has("standplaatsKazerneCode") && (!dbUnit.has("standplaatsKazerneCode") || !unit.getString("standplaatsKazerneCode").equals(dbUnit.getString("standplaatsKazerneCode")))) { 
           dbUnit.put("standplaatsKazerneCode", unit.getString("standplaatsKazerneCode")); 
         }
 
-        if (unit.has("primaireVoertuigSoort") && !unit.getString("primaireVoertuigSoort").equals(dbUnit.getString("primaireVoertuigSoort"))) { 
+        if (unit.has("primaireVoertuigSoort") && (!dbUnit.has("primaireVoertuigSoort") || !unit.getString("primaireVoertuigSoort").equals(dbUnit.getString("primaireVoertuigSoort")))) { 
           dbUnit.put("primaireVoertuigSoort", unit.getString("primaireVoertuigSoort")); 
         }
 
@@ -251,27 +251,27 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       JSONObject dbIncident = new JSONObject(dbIncidentString);
 
       if (dbIncident != null && (kic == "updated" || kic == "synchronisatie")) {
-        if (incident.has("status") && !incident.getString("status").equals(dbIncident.getString("status"))) { 
+        if (incident.has("status") && (!dbIncident.has("status") || !incident.getString("status").equals(dbIncident.getString("status")))) { 
           dbIncident.put("status", incident.getString("status")); 
         }
 
-        if (incident.has("brwDisciplineGegevens") && !incident.getJSONObject("brwDisciplineGegevens").toString().equals(dbIncident.getJSONObject("brwDisciplineGegevens").toString())) { 
+        if (incident.has("brwDisciplineGegevens") && (!dbIncident.has("brwDisciplineGegevens") || !incident.getJSONObject("brwDisciplineGegevens").toString().equals(dbIncident.getJSONObject("brwDisciplineGegevens").toString()))) { 
           dbIncident.put("brwDisciplineGegevens", incident.getJSONObject("brwDisciplineGegevens")); 
         }
 
-        if (incident.has("incidentLocatie") && !incident.getJSONObject("incidentLocatie").toString().equals(dbIncident.getJSONObject("incidentLocatie").toString())) { 
+        if (incident.has("incidentLocatie") && (!dbIncident.has("incidentLocatie") || !incident.getJSONObject("incidentLocatie").toString().equals(dbIncident.getJSONObject("incidentLocatie").toString()))) { 
           dbIncident.put("incidentLocatie", incident.getJSONObject("incidentLocatie")); 
         }
 
-        if (incident.has("kladblokregels") && !incident.getJSONArray("kladblokregels").toString().equals(dbIncident.getJSONArray("kladblokregels").toString())) { 
+        if (incident.has("kladblokregels") && (!dbIncident.has("kladblokregels") || !incident.getJSONArray("kladblokregels").toString().equals(dbIncident.getJSONArray("kladblokregels").toString()))) { 
           dbIncident.put("kladblokregels", incident.getJSONArray("kladblokregels")); 
         }
 
-        if (incident.has("betrokkenEenheden") && !incident.getJSONArray("betrokkenEenheden").toString().equals(dbIncident.getJSONArray("betrokkenEenheden").toString())) { 
+        if (incident.has("betrokkenEenheden") && (!dbIncident.has("betrokkenEenheden") || !incident.getJSONArray("betrokkenEenheden").toString().equals(dbIncident.getJSONArray("betrokkenEenheden").toString()))) { 
           dbIncident.put("betrokkenEenheden", incident.getJSONArray("betrokkenEenheden")); 
         }
 
-        if (incident.has("karakteristieken") && !incident.getJSONArray("karakteristieken").toString().equals(dbIncident.getJSONArray("karakteristieken").toString())) { 
+        if (incident.has("karakteristieken") && (!dbIncident.has("karakteristieken") || !incident.getJSONArray("karakteristieken").toString().equals(dbIncident.getJSONArray("karakteristieken").toString()))) { 
           dbIncident.put("karakteristieken", incident.getJSONArray("karakteristieken")); 
         }
 
