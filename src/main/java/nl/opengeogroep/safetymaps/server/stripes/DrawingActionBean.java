@@ -90,10 +90,61 @@ public class DrawingActionBean  implements ActionBean {
     public Resolution defaultHandler() throws Exception {
 
         if("POST".equals(context.getRequest().getMethod())) {
-            return save();
+            return save_v2();
         } else {
-            return load();
+            return load_v2();
         }
+    }
+
+    public Resolution load_v2() throws Exception {
+      try {
+        String theFeatures = DB.qr().query("select features from safetymaps.drawing where incident = ?", new ScalarHandler<String>(), incident);
+
+        if (theFeatures == null) {
+          return new ErrorMessageResolution(HttpServletResponse.SC_OK, "No drawings found");
+        }
+
+        return new Resolution() {
+          @Override
+          public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+              String encoding = "UTF-8";
+              response.setCharacterEncoding(encoding);
+              response.setContentType("application/json");
+
+              OutputStream out;
+              String acceptEncoding = request.getHeader("Accept-Encoding");
+              if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+                  response.setHeader("Content-Encoding", "gzip");
+                  out = new GZIPOutputStream(response.getOutputStream(), true);
+              } else {
+                  out = response.getOutputStream();
+              }
+              IOUtils.copy(new StringReader(theFeatures), out, encoding);
+              out.flush();
+              out.close();
+          }
+        };
+      } catch(Exception e) {
+        log.error("Error loading drawing", e);
+        return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
+    }
+    }
+
+    public Resolution save_v2() throws Exception {
+      HttpServletRequest request = getContext().getRequest();
+
+      if(!request.isUserInRole(ROLE_ADMIN) && !request.isUserInRole(ROLE_DRAWING_EDITOR) && !request.isUserInRole("smvng_drawing_crud")) {
+          return new ErrorResolution(HttpServletResponse.SC_FORBIDDEN);
+      }
+
+      String theFeatures = DB.qr().query("select features from safetymaps.drawing where incident = ?", new ScalarHandler<String>(), incident);
+
+      if (theFeatures == null) {
+        DB.qr().update("insert into safetymaps.drawing(incident, features, last_modified, modified_by) values (?, ?, ?, ?)", incident, features, new Timestamp((new Date()).getTime()), getContext().getRequest().getRemoteUser());
+      } else {
+        DB.qr().update("update safetymaps.drawing set features = ?, last_modified = ?, modified_by = ? where incident = ?", features, new Timestamp((new Date()).getTime()), getContext().getRequest().getRemoteUser(), incident);
+      }
+      return new ErrorMessageResolution(HttpServletResponse.SC_OK, "");
     }
 
     public Resolution load() throws Exception {
