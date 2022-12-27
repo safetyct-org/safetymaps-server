@@ -1,10 +1,15 @@
 package nl.opengeogroep.safetymaps.server.admin.stripes;
 
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import javax.ejb.Local;
 import javax.naming.NamingException;
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
@@ -72,22 +77,22 @@ public class MessagesActionBean implements ActionBean, ValidationErrorHandler {
   }
 
   @Validate
-  private Date dtgstart;
+  private LocalDateTime dtgstart;
 
-  public Date getDtgstart() {
+  public LocalDateTime getDtgstart() {
     return dtgstart;
   }
-  public void setDtgstart(Date dtgstart) {
+  public void setDtgstart(LocalDateTime dtgstart) {
     this.dtgstart = dtgstart;
   }
 
   @Validate
-  private Date dtgend;
+  private LocalDateTime dtgend;
 
-  public Date getDtgend() {
+  public LocalDateTime getDtgend() {
     return dtgend;
   }
-  public void setDtgend(Date dtgend) {
+  public void setDtgend(LocalDateTime dtgend) {
     this.dtgend = dtgend;
   }
 
@@ -131,14 +136,19 @@ public class MessagesActionBean implements ActionBean, ValidationErrorHandler {
    */
   public Resolution edit() throws NamingException, SQLException {
     if (id > 0) {
-      Map<String,Object> data = DB.qr().query("SELECT * FROM safetymaps.messages WHERE id=?", new MapHandler(), id);
+      Map<String,Object> data = DB.qr().query("SELECT id, subject, description, username, to_char(dtgstart, 'YYYY-MM-DD HH24:MI') as dtgstart, to_char(dtgend, 'YYYY-MM-DD HH24:MI') as dtgend,  FROM safetymaps.messages WHERE id=?", new MapHandler(), id);
 
       if(data.get("id") != null) {
-        dtgstart = (Date)data.get("dtgstart");
-        dtgend = (Date)data.get("dtgend");
+        dtgstart = (LocalDateTime)data.get("dtgstart");
+        dtgend = (LocalDateTime)data.get("dtgend");
         subject = data.get("subject").toString();
         description = data.get("description").toString();
       }
+    } else {
+      DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+      
+      dtgstart = LocalDateTime.now();
+      dtgend = LocalDateTime.now();
     }
 
     return list();
@@ -155,10 +165,10 @@ public class MessagesActionBean implements ActionBean, ValidationErrorHandler {
 
     if (id > 0) {
       DB.qr().update("UPDATE safetymaps.messages SET dtgstart=?, dtgend=?, subject=?, description=?, username=? WHERE id=?", 
-      dtgstart, dtgend, subject, description, username, id);
+        new java.sql.Timestamp(dtgstart.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()), new java.sql.Timestamp(dtgend.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()), subject, description, username, id);
     } else {
       DB.qr().update("INSERT INTO safetymaps.messages(dtgstart, dtgend, subject, description, username) VALUES(?, ?, ?, ?, ?)",
-        dtgstart, dtgend, subject, description, username);
+        new java.sql.Timestamp(dtgstart.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()), new java.sql.Timestamp(dtgend.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()), subject, description, username);
     }
 
     return cancel();
