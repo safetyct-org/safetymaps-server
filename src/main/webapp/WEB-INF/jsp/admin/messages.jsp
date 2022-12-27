@@ -59,39 +59,40 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       </c:if>
       <c:if test="${event == 'edit' || event == 'save'}">
         <stripes:submit name="save" class="btn btn-primary">Opslaan</stripes:submit>
-      <c:if test="${!empty actionBean.id}">
-        <stripes:submit name="delete" class="btn btn-danger remove-item">Verwijderen</stripes:submit>
-      </c:if>
-      <stripes:submit name="cancel" class="btn btn-default">Annuleren</stripes:submit>
-      <c:if test="${!empty actionBean.id}">
-        <stripes:hidden name="id" value="${actionBean.id}"/>
-        <br /><br/>
-      </c:if>
+        <c:if test="${!empty actionBean.id}">
+          <stripes:submit name="delete" class="btn btn-danger remove-item">Verwijderen</stripes:submit>
+        </c:if>
+        <stripes:submit name="cancel" class="btn btn-default">Annuleren</stripes:submit>
+        <c:if test="${!empty actionBean.id}">
+          <stripes:hidden name="id" value="${actionBean.id}"/>
+          <br /><br/>
+        </c:if>
 
-      <div class="form-group">
-        <label class="col-sm-2 control-label">Onderwerp:</label>
-        <div class="col-sm-10">
-          <stripes:text class="form-control" name="subject" />
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Onderwerp:</label>
+          <div class="col-sm-10">
+            <stripes:text class="form-control" name="subject" />
+          </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="col-sm-2 control-label">Van:</label>
-        <div class="col-sm-10">
-          <stripes:text class="form-control" name="dtgstart" />
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Van:</label>
+          <div class="col-sm-10">
+            <stripes:text class="form-control" name="dtgstart" />
+          </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="col-sm-2 control-label">Tot:</label>
-        <div class="col-sm-10">
-          <stripes:text class="form-control" name="dtgend" />
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Tot:</label>
+          <div class="col-sm-10">
+            <stripes:text class="form-control" name="dtgend" />
+          </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="col-sm-2 control-label">Bericht:</label>
-        <div class="col-sm-10">
-          <stripes:text class="form-control" name="description" />
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Bericht:</label>
+          <div class="col-sm-10">
+            <stripes:text class="form-control" name="description" />
+          </div>
         </div>
-      </div>
+      </c:if>
     </stripes:form>
 
   </stripes:layout-component>
