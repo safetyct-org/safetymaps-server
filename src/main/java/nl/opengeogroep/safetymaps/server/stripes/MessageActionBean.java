@@ -75,7 +75,7 @@ public class MessageActionBean implements ActionBean {
       }
 
       if("active".equals(path)) {
-        List<Map<String,Object>> results = DB.qr().query("SELECT * FROM safetymaps.messages WHERE dtgstart<=? AND dtgend >?", new MapListHandler(), now, now);
+        List<Map<String,Object>> results = DB.qr().query("SELECT * FROM safetymaps.messages WHERE dtgstart<=? AND dtgend >?", new MapListHandler(), new java.sql.Timestamp(now.getTime()), new java.sql.Timestamp(now.getTime()));
         for (Map<String, Object> resultRow : results) {
           response.put(rowToJson(resultRow, false, false));
         }
