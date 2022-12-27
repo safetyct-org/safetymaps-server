@@ -77,22 +77,22 @@ public class MessagesActionBean implements ActionBean, ValidationErrorHandler {
   }
 
   @Validate
-  private LocalDateTime dtgstart;
+  private String dtgstart;
 
-  public LocalDateTime getDtgstart() {
+  public String getDtgstart() {
     return dtgstart;
   }
-  public void setDtgstart(LocalDateTime dtgstart) {
+  public void setDtgstart(String dtgstart) {
     this.dtgstart = dtgstart;
   }
 
   @Validate
-  private LocalDateTime dtgend;
+  private String dtgend;
 
-  public LocalDateTime getDtgend() {
+  public String getDtgend() {
     return dtgend;
   }
-  public void setDtgend(LocalDateTime dtgend) {
+  public void setDtgend(String dtgend) {
     this.dtgend = dtgend;
   }
 
@@ -139,16 +139,18 @@ public class MessagesActionBean implements ActionBean, ValidationErrorHandler {
       Map<String,Object> data = DB.qr().query("SELECT id, subject, description, username, to_char(dtgstart, 'YYYY-MM-DD HH24:MI') as dtgstart, to_char(dtgend, 'YYYY-MM-DD HH24:MI') as dtgend,  FROM safetymaps.messages WHERE id=?", new MapHandler(), id);
 
       if(data.get("id") != null) {
-        dtgstart = (LocalDateTime)data.get("dtgstart");
-        dtgend = (LocalDateTime)data.get("dtgend");
+        dtgstart = data.get("dtgstart").toString();
+        dtgend = data.get("dtgend").toString();
         subject = data.get("subject").toString();
         description = data.get("description").toString();
       }
     } else {
       DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-      
-      dtgstart = LocalDateTime.now();
-      dtgend = LocalDateTime.now();
+      LocalDateTime myDateObj = LocalDateTime.now();
+      String formattedNow = myFormatObj.format(myDateObj);
+
+      dtgstart = formattedNow;
+      dtgend = formattedNow;
     }
 
     return list();
@@ -162,13 +164,15 @@ public class MessagesActionBean implements ActionBean, ValidationErrorHandler {
    */
   public Resolution save() throws Exception {
     String username = context.getRequest().getRemoteUser();
+    Date start = new Date(dtgstart);
+    Date end = new Date(dtgend);
 
     if (id > 0) {
       DB.qr().update("UPDATE safetymaps.messages SET dtgstart=?, dtgend=?, subject=?, description=?, username=? WHERE id=?", 
-        new java.sql.Timestamp(dtgstart.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()), new java.sql.Timestamp(dtgend.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()), subject, description, username, id);
+        new java.sql.Timestamp(start.getTime()), new java.sql.Timestamp(end.getTime()), subject, description, username, id);
     } else {
       DB.qr().update("INSERT INTO safetymaps.messages(dtgstart, dtgend, subject, description, username) VALUES(?, ?, ?, ?, ?)",
-        new java.sql.Timestamp(dtgstart.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()), new java.sql.Timestamp(dtgend.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()), subject, description, username);
+        new java.sql.Timestamp(start.getTime()), new java.sql.Timestamp(end.getTime()), subject, description, username);
     }
 
     return cancel();
