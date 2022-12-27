@@ -1,6 +1,7 @@
 package nl.opengeogroep.safetymaps.server.admin.stripes;
 
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -164,8 +165,9 @@ public class MessagesActionBean implements ActionBean, ValidationErrorHandler {
    */
   public Resolution save() throws Exception {
     String username = context.getRequest().getRemoteUser();
-    Date start = new Date(dtgstart);
-    Date end = new Date(dtgend);
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    Date start = sdf.parse(dtgstart);
+    Date end = sdf.parse(dtgend);
 
     if (id > 0) {
       DB.qr().update("UPDATE safetymaps.messages SET dtgstart=?, dtgend=?, subject=?, description=?, username=? WHERE id=?", 
