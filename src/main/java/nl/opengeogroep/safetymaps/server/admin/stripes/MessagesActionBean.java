@@ -137,7 +137,7 @@ public class MessagesActionBean implements ActionBean, ValidationErrorHandler {
    */
   public Resolution edit() throws NamingException, SQLException {
     if (id > 0) {
-      Map<String,Object> data = DB.qr().query("SELECT id, subject, description, username, to_char(dtgstart, 'YYYY-MM-DD HH24:MI') as dtgstart, to_char(dtgend, 'YYYY-MM-DD HH24:MI') as dtgend,  FROM safetymaps.messages WHERE id=?", new MapHandler(), id);
+      Map<String,Object> data = DB.qr().query("SELECT id, subject, description, username, to_char(dtgstart, 'YYYY-MM-DD HH24:MI') as dtgstart, to_char(dtgend, 'YYYY-MM-DD HH24:MI') as dtgend FROM safetymaps.messages WHERE id=?", new MapHandler(), id);
 
       if(data.get("id") != null) {
         dtgstart = data.get("dtgstart").toString();
