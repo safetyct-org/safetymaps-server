@@ -135,19 +135,19 @@ public class PersistentAuthenticationFilter implements Filter {
     private void chainWithPrincipal(final HttpServletRequest request, HttpServletResponse response, FilterChain chain, final AuthenticatedPrincipal principal) throws IOException, ServletException {
         chain.doFilter(new HttpServletRequestWrapper(request) {
             @Override
-            public String getRemoteUser() {
-                return principal.getName();
+            public String getRemoteUser() {              
+              return principal.getName();
             }
 
             @Override
             public Principal getUserPrincipal() {
-                return principal;
+              return principal;
             }
 
             @Override
             public boolean isUserInRole(String role) {
-                return request.isUserInRole(role) || principal.isUserInRole(role);
-            }
+              return request.isUserInRole(role) || principal.isUserInRole(role);
+            } 
         }, response);
     }
 

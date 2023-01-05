@@ -3,6 +3,7 @@ package nl.opengeogroep.safetymaps.server.stripes;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -342,7 +343,8 @@ public class ViewerApiActionBean implements ActionBean {
         } else if(!isSmvng && "drawing".equals(name)) {
             options.put("editAuthorized", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole(ROLE_DRAWING_EDITOR));
         } else if (isSmvng && "Incident".equals(name)) {
-            JSONObject details = getUserDetails(request, c);
+            //JSONObject details = getUserDetails(request, c);
+            JSONObject details = getLocalUserObject(request, c);
             options.put(prefixSmvng + "HideNotepad", request.isUserInRole("smvng_incident_hidenotepad")); 
             options.put(prefixSmvng + "Show_Notepadchat", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_showchat")); 
             options.put(prefixSmvng + "Add_Notepadchat", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_addchat")); 
@@ -379,6 +381,28 @@ public class ViewerApiActionBean implements ActionBean {
 
         return module;
     }
+
+    private static JSONObject getLocalUserObject(HttpServletRequest request, Connection c) throws Exception {
+      JSONObject defaultUser = getUserDetails(request, c);
+
+      try {
+        JSONObject localUser = defaultUser;
+        String[] externalRolesAsUsersForGroupMembership = Cfg.getSetting("external_roles_as_users_for_group_membership", "").split(",");
+
+        for(int i = 0; i < externalRolesAsUsersForGroupMembership.length; i++) {
+            String possibleUsername = externalRolesAsUsersForGroupMembership[i].trim();
+
+            if (possibleUsername.startsWith("AZURE_") && request.isUserInRole(possibleUsername)) {
+              localUser = getUserDetails(possibleUsername, c);
+              break;
+            }
+        }
+
+        return localUser;
+      } catch(Exception e) {
+        return defaultUser;
+      }
+  }
 
     private Resolution organisation(Connection c, boolean isSmvng) throws Exception {
         return new StreamingResolution("application/json", getOrganisationWithAuthorizedModulesAndLayers(getContext().getRequest(), c, srid, isSmvng).toString(indent));
