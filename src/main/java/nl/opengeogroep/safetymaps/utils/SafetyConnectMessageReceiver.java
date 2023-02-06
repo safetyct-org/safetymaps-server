@@ -112,6 +112,12 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         log.error("Exception on 'RQ_CONNECTIONS.get(" + key + ").close()'", e);
       }
     });
+
+    try {
+      DB.qr().update("DELETE FROM safetymaps.rq");
+    } catch (Exception e) {
+      log.error("Exception while cleaning up after contextDestroyed: ", e);
+    }
   }
 
   private void getConfigFromDb() throws Exception {
@@ -252,44 +258,41 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     
     try {
       List<Map<String, Object>> dbIncidents = DB.qr().query("SELECT * FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
+      JSONObject dbIncident = dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidents.get(0)) : new JSONObject();
       
-      for (Map<String, Object> dbIncidentMap : dbIncidents) {
-        JSONObject dbIncident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidentMap);
-        
-        Integer number = incident.getInt("incidentNummer");
-        String status = incident.getString("status");
-        String sender = incident.getString("afzender");
-        JSONArray notes = incident.has("kladblokregels") 
-          ? incident.getJSONArray("kladblokregels") 
-          : dbIncident.has("notes") 
-            ? dbIncident.getJSONArray("notes") 
-            : new JSONArray();
-        JSONArray units = incident.has("betrokkenEenheden") 
-          ? incident.getJSONArray("betrokkenEenheden") 
-          : dbIncident.has("units") 
-            ? dbIncident.getJSONArray("units") 
-            : new JSONArray();
-        JSONArray characts = incident.has("karakteristieken") 
-          ? incident.getJSONArray("karakteristieken") 
-          : dbIncident.has("characts") 
-            ? dbIncident.getJSONArray("characts") 
-            : new JSONArray();
-        JSONObject location = incident.has("incidentLocatie") 
-          ? incident.getJSONObject("incidentLocatie") 
-          : dbIncident.has("location") 
-            ? dbIncident.getJSONObject("location") 
-            : new JSONObject();
-        JSONObject discipline = incident.has("brwDisciplineGegevens") 
-          ? incident.getJSONObject("brwDisciplineGegevens") 
-          : dbIncident.has("discipline") 
-            ? dbIncident.getJSONObject("discipline") 
-            : new JSONObject();
+      Integer number = incident.getInt("incidentNummer");
+      String status = incident.getString("status");
+      String sender = incident.getString("afzender");
+      JSONArray notes = incident.has("kladblokregels") 
+        ? incident.getJSONArray("kladblokregels") 
+        : dbIncident.has("notes") 
+          ? dbIncident.getJSONArray("notes") 
+          : new JSONArray();
+      JSONArray units = incident.has("betrokkenEenheden") 
+        ? incident.getJSONArray("betrokkenEenheden") 
+        : dbIncident.has("units") 
+          ? dbIncident.getJSONArray("units") 
+          : new JSONArray();
+      JSONArray characts = incident.has("karakteristieken") 
+        ? incident.getJSONArray("karakteristieken") 
+        : dbIncident.has("characts") 
+          ? dbIncident.getJSONArray("characts") 
+          : new JSONArray();
+      JSONObject location = incident.has("incidentLocatie") 
+        ? incident.getJSONObject("incidentLocatie") 
+        : dbIncident.has("location") 
+          ? dbIncident.getJSONObject("location") 
+          : new JSONObject();
+      JSONObject discipline = incident.has("brwDisciplineGegevens") 
+        ? incident.getJSONObject("brwDisciplineGegevens") 
+        : dbIncident.has("discipline") 
+          ? dbIncident.getJSONObject("discipline") 
+          : new JSONObject();
 
-        DB.qr().update("INSERT INTO safetymaps.incidents " + 
-          "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-          " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?", 
-          vhost, incidentId, envId, status, sender, number, notes, units, characts, location, discipline, status, notes, units, characts, location, discipline);
-      }
+      DB.qr().update("INSERT INTO safetymaps.incidents " + 
+        "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+        " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?", 
+        vhost, incidentId, envId, status, sender, number, notes, units, characts, location, discipline, status, notes, units, characts, location, discipline);
     } catch (Exception e) {
       log.error("Exception while upserting incident(" + envId + ") in database: ", e);
     }
