@@ -8,9 +8,9 @@ import org.json.JSONObject;
 public class SafetyConnectMessageUtil {
   public static JSONObject MapIncidentDbRowAllColumnsAsJSONObject(Map<String, Object> incidentDbRow) {
     JSONObject incident = new JSONObject();
-    JSONArray notes = (JSONArray)incidentDbRow.get("notes") != null ? (JSONArray)incidentDbRow.get("notes") : new JSONArray();
-    JSONArray units = (JSONArray)incidentDbRow.get("units") != null ? (JSONArray)incidentDbRow.get("units") : new JSONArray();
-    JSONArray characts = (JSONArray)incidentDbRow.get("characts") != null ? (JSONArray)incidentDbRow.get("characts") : new JSONArray();
+    JSONArray notes = incidentDbRow.get("notes") != null ? new JSONArray(incidentDbRow.get("notes")) : new JSONArray();
+    JSONArray units = incidentDbRow.get("units") != null ? new JSONArray(incidentDbRow.get("units")) : new JSONArray();
+    JSONArray characts = incidentDbRow.get("characts") != null ? new JSONArray(incidentDbRow.get("characts")): new JSONArray();
 
     incident.put("incidentNummer", (Integer)incidentDbRow.get("number"));
     incident.put("incidentId", (String)incidentDbRow.get("sourceid"));
