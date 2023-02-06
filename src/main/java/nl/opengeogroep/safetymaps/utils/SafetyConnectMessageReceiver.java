@@ -249,9 +249,9 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     String envId = vhost + '-' + incidentId;
     
     try {
-      List<Map<String, Object>> dbIncidents = DB.qr().query("SELECT * FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
+      //List<Map<String, Object>> dbIncidents = DB.qr().query("SELECT * FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
       
-      for (Map<String, Object> dbIncidentMap : dbIncidents) {
+      //for (Map<String, Object> dbIncidentMap : dbIncidents) {
         JSONObject dbIncident = /*dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidentMap) :*/ new JSONObject();
         
         Integer number = incident.getInt("incidentNummer");
@@ -287,7 +287,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
           " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?", 
           vhost, incidentId, envId, status, sender, number, notes, units, characts, location, discipline, status, notes, units, characts, location, discipline);
-      }
+      //}
     } catch (Exception e) {
       log.error("Exception while upserting incident(" + envId + ") in database: ", e);
     }
