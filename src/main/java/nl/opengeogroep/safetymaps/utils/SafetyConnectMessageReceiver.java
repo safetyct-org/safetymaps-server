@@ -246,8 +246,6 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private void handleIncidentChangedMessage(String vhost, String msgBody) {
     JSONObject incident = extractObjectFromMessage(msgBody);
     
-    log.info(msgBody);
-
     if (messageIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == false) {
       return;
     }
@@ -290,7 +288,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           : new JSONObject();
 
       DB.qr().update("INSERT INTO safetymaps.incidents " + 
-        "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+        "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
         " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?", 
         vhost, incidentId, envId, status, sender, number, notes, units, characts, location, discipline, status, notes, units, characts, location, discipline);
     } catch (Exception e) {
