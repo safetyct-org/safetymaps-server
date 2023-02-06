@@ -3,17 +3,20 @@ package nl.opengeogroep.safetymaps.utils;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.commons.dbutils.handlers.ColumnListHandler;
+import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.rabbitmq.client.Channel;
@@ -247,12 +250,21 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     String envId = vhost + '-' + incidentId;
     
     try {
-      String dbIncidentString = DB.qr().query("SELECT details FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new ScalarHandler<String>(), envId);
-      JSONObject dbIncident = new JSONObject(dbIncidentString);
+      Map<String, Object> dbIncidentMap = DB.qr().query("SELECT details FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapHandler(), envId);
+      JSONObject dbIncident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidentMap);
+
+      Integer number = 0;
+      String status = "";
+      JSONArray notes = new JSONArray();
+      JSONArray units = new JSONArray();
+      JSONArray characts = new JSONArray();
+      JSONObject location = new JSONObject();
+      JSONObject discipline = new JSONObject();
 
       if (dbIncident != null && (kic == "updated" || kic == "synchronisatie")) {
         if (incident.has("status") && (!dbIncident.has("status") || !incident.getString("status").equals(dbIncident.getString("status")))) { 
-          dbIncident.put("status", incident.getString("status")); 
+          status = incident.getString("status");
+          dbIncident.put("status", status); 
         }
 
         if (incident.has("brwDisciplineGegevens") && (!dbIncident.has("brwDisciplineGegevens") || !incident.getJSONObject("brwDisciplineGegevens").toString().equals(dbIncident.getJSONObject("brwDisciplineGegevens").toString()))) { 

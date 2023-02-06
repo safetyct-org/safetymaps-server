@@ -7,8 +7,10 @@ import net.sourceforge.stripes.action.UrlBinding;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.SafetyConnectMessageUtil;
 
 import org.apache.commons.dbutils.handlers.ColumnListHandler;
+import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.logging.Log;
@@ -29,6 +31,7 @@ import java.io.StringReader;
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 import org.json.JSONArray;
@@ -134,10 +137,12 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     }
 
                     JSONArray incidents = new JSONArray();
-                    List<String> results = DB.qr().query("select details from safetymaps.incidents where source='sc' and sourceenv=?", new ColumnListHandler<String>(), rabbitMqSource);
-                    for (String incident : results) {
-                      incidents.put(new JSONObject(incident));
+                    List<Map<String, Object>> results = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
+
+                    for (Map<String, Object> res : results) {
+                      incidents.put(SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res));
                     }
+
                     IOUtils.copy(new StringReader(incidents.toString()), out, "UTF-8");
 
                     out.flush();
