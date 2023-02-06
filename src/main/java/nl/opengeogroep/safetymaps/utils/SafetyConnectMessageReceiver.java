@@ -250,8 +250,9 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     String envId = vhost + '-' + incidentId;
     
     try {
-      Map<String, Object> dbIncidentMap = DB.qr().query("SELECT details FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapHandler(), envId);
-      JSONObject dbIncident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidentMap);
+      //Map<String, Object> dbIncidentMap = DB.qr().query("SELECT details FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapHandler(), envId);
+      //JSONObject dbIncident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidentMap);
+      JSONObject dbIncident = new JSONObject();
 
       Integer number = 0;
       String status = "";
