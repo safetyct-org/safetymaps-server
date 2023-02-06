@@ -240,6 +240,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private void handleIncidentChangedMessage(String vhost, String msgBody) {
     JSONObject incident = extractObjectFromMessage(msgBody);
     
+    log.info(msgBody);
+
     if (messageIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == false) {
       return;
     }
