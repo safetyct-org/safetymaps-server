@@ -252,7 +252,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       List<Map<String, Object>> dbIncidents = DB.qr().query("SELECT * FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
       
       for (Map<String, Object> dbIncidentMap : dbIncidents) {
-        JSONObject dbIncident = dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidentMap) : new JSONObject();
+        JSONObject dbIncident = /*dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidentMap) :*/ new JSONObject();
         
         Integer number = incident.getInt("incidentNummer");
         String status = incident.getString("status");
