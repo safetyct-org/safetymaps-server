@@ -290,7 +290,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       DB.qr().update("INSERT INTO safetymaps.incidents " + 
         "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
         " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?", 
-        vhost, incidentId, envId, status, sender, number, notes, units, characts, location, discipline, status, notes, units, characts, location, discipline);
+        vhost, incidentId, envId, status, sender, number, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), status, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString());
     } catch (Exception e) {
       log.error("Exception while upserting incident(" + envId + ") in database: ", e);
     }
