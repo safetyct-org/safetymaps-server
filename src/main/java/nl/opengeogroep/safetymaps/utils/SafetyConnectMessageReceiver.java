@@ -42,8 +42,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private static final String RQ_MB_INCIDENT_CHANGED = "SafetyConnect.Messages.IncidentChanged:IIncidentChangedEvent";
   private static final String RQ_MB_UNIT_CHANGED = "SafetyConnect.Messages.EenheidChanged:IEenheidChangedEvent";
-  private static final String RQ_MB_UNIT_MOVED = "SafetyConnect.Messages.EenheidMoved:IEenheidMovedEvent";
-  private static final String RQ_MB_ETA_RECEIVED = "SafetyConnect.Messages.EtaReceived:IEtaReceivedEvent";
+  private static final String RQ_MB_UNIT_MOVED = "SafetyConnect.Messages.EenheidMoved:IPositionReceivedEvent";
 
   @Override
   public void contextInitialized(ServletContextEvent sce) {
@@ -181,7 +180,6 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private void handleUnitMovedMessage(String vhost, String msgBody) {
     JSONObject move = extractObjectFromMessage(msgBody);
-    JSONObject moveToSave = move;
 
     if (messageIsForMe(move, "unit", getUnits()) == false) {
       return;
@@ -191,53 +189,53 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     String envId = vhost + '-' + moveId;
 
     try {
-      DB.qr().update("INSERT INTO safetymaps.unitlocations (source, sourceEnv, sourceId, sourceEnvId, details) VALUES ('sc', ?, ?, ?, ?) ON CONFLICT (sourceEnvId) DO UPDATE SET details = ?", vhost, moveId, envId, moveToSave.toString(), moveToSave.toString());
+      List<Map<String, Object>> dbUnits = DB.qr().query("SELECT * FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
+      JSONObject dbUnit = dbUnits.size() > 0 ? SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnits.get(0)) : new JSONObject();
+
+      if (dbUnits.size() > 0) {
+        JSONObject position = dbUnit.has("positie") 
+          ? dbUnit.getJSONObject("positie") 
+          : new JSONObject();
+
+        position.put("lon", move.getDouble("lon"));
+        position.put("lat", move.getDouble("lat"));
+        if (move.has("speed")) { position.put("speed", move.getInt("speed")); }
+        if (move.has("heading")) { position.put("heading", move.getInt("heading")); }
+        if (move.has("eta")) { position.put("eta", move.getInt("eta")); }
+
+        DB.qr().update("UPDATE safetymaps.units SET position = ? WHERE sourceEnvId = ?", position.toString(), envId);
+      }
     } catch (Exception e) {
-      log.error("Exception while upserting unitlocations(" + envId + ") in database: ", e);
+      log.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
     }
   }
 
   private void handleUnitChangedMessage(String vhost, String msgBody) {
     JSONObject unit = extractObjectFromMessage(msgBody);
-    JSONObject unitToSave = unit;
 
     if (messageIsForMe(unit, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == false) {
       return;
     }
 
-    String kic = unit.getString("kindOfChange"); // updated, synchronisatie, created, deleted
+    //String kic = unit.getString("kindOfChange"); // updated, synchronisatie, created, deleted
     String unitId = unit.getString("roepnaam");
     String envId = vhost + '-' + unitId;
 
     try {
-      String dbUnitString = DB.qr().query("SELECT details FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new ScalarHandler<String>(), envId);
-      JSONObject dbUnit = new JSONObject(dbUnitString);
+      List<Map<String, Object>> dbUnits = DB.qr().query("SELECT * FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
+      JSONObject dbUnit = dbUnits.size() > 0 ? SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnits.get(0)) : new JSONObject();
 
-      if (dbUnit != null && (kic == "updated" || kic == "synchronisatie")) {
-        if (unit.has("discipline") && (!dbUnit.has("discipline") || !unit.getString("discipline").equals(dbUnit.getString("discipline")))) { 
-          dbUnit.put("discipline", unit.getString("discipline")); 
-        }
+      Integer gmsStatusCode = unit.getInt("gmsStatusCode");
+      String sender = unit.getString("afzender");
+      String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
+      JSONObject position = dbUnit.has("positie") 
+          ? dbUnit.getJSONObject("positie") 
+          : new JSONObject();
 
-        if (unit.has("gmsStatusCode") && (!dbUnit.has("gmsStatusCode") || (unit.getInt("gmsStatusCode") != dbUnit.getInt("gmsStatusCode")))) { 
-          dbUnit.put("gmsStatusCode", unit.getInt("gmsStatusCode")); 
-        }
-
-        if (unit.has("standplaatsKazerne") && (!dbUnit.has("standplaatsKazerne") || !unit.getString("standplaatsKazerne").equals(dbUnit.getString("standplaatsKazerne")))) { 
-          dbUnit.put("standplaatsKazerne", unit.getString("standplaatsKazerne")); 
-        }
-
-        if (unit.has("standplaatsKazerneCode") && (!dbUnit.has("standplaatsKazerneCode") || !unit.getString("standplaatsKazerneCode").equals(dbUnit.getString("standplaatsKazerneCode")))) { 
-          dbUnit.put("standplaatsKazerneCode", unit.getString("standplaatsKazerneCode")); 
-        }
-
-        if (unit.has("primaireVoertuigSoort") && (!dbUnit.has("primaireVoertuigSoort") || !unit.getString("primaireVoertuigSoort").equals(dbUnit.getString("primaireVoertuigSoort")))) { 
-          dbUnit.put("primaireVoertuigSoort", unit.getString("primaireVoertuigSoort")); 
-        }
-
-        unitToSave = dbUnit;
-      }
-
-      DB.qr().update("INSERT INTO safetymaps.units (source, sourceEnv, sourceId, sourceEnvId, details) VALUES ('sc', ?, ?, ?, ?) ON CONFLICT (sourceEnvId) DO UPDATE SET details = ?", vhost, unitId, envId, unitToSave.toString(), unitToSave.toString());
+      DB.qr().update("INSERT INTO safetymaps.units " +
+        "(source, sourceEnv, sourceId, sourceEnvId, position, gmsstatuscode, sender, primairevoertuigsoort) VALUES('sc', ?, ?, ?, ?, ?, ?, ?) " +
+        " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?",
+        vhost, unitId, envId, position.toString(), gmsStatusCode, sender, primairevoertuigsoort, gmsStatusCode, primairevoertuigsoort);
     } catch (Exception e) {
       log.error("Exception while upserting unit(" + envId + ") in database: ", e);
     }
@@ -250,7 +248,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       return;
     }
 
-    String kic = incident.getString("kindOfChange"); // updated, synchronisatie, created
+    //String kic = incident.getString("kindOfChange"); // updated, synchronisatie, created
     String incidentId = incident.getString("incidentId");
     String envId = vhost + '-' + incidentId;
     
@@ -337,7 +335,6 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private boolean messageIsForMe(JSONObject object, String key, List<String> valuesToCheck) {
     boolean matched = false;
     String keyValue = object.getString(key);
-    //List<String> senders = Arrays.asList(valuesToCheck.split(","));
 
     matched = valuesToCheck.contains(keyValue);
     

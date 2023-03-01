@@ -170,13 +170,11 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   }
 
                   JSONArray units = new JSONArray();
-                  List<String> results = DB.qr().query("select details from safetymaps.units where source='sc' and sourceenv=?", new ColumnListHandler<String>(), rabbitMqSource);
-                  for (String dbUnit : results) {
-                    JSONObject unit = new JSONObject(dbUnit);
-
-                    if (unitId.equals(unit.getString("roepnaam"))) {
-                      units.put(unit);
-                    }
+                  List<Map<String, Object>> results = DB.qr().query("select * from safetymaps.units where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
+                  
+                  for (Map<String, Object> res : results) {
+                    JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(res);
+                    if (unitId.equals(unit.getString("roepnaam"))) { units.put(unit); }
                   }
                   
                   IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
@@ -187,7 +185,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           };
        }
 
-        if ("true".equals(useRabbitMq) && requestIs(EENHEIDLOCATIE_REQUEST)) {
+       /* if ("true".equals(useRabbitMq) && requestIs(EENHEIDLOCATIE_REQUEST)) {
           return new Resolution() {
               @Override
               public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -217,7 +215,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
                     for (int ii=0; ii<incidents.length(); ii++) {
                       JSONObject incident = incidents.getJSONObject(ii);
-                      JSONArray attachedunits = incident.has("bertokkenEenheden") ? incident.getJSONArray("bertokkenEenheden") : new JSONArray();
+                      JSONArray attachedunits = incident.has("betrokkenEenheden") ? incident.getJSONArray("betrokkenEenheden") : new JSONArray();
                       
                       for (int aui=0; aui<attachedunits.length(); aui++) {
                         JSONObject attachedunit = attachedunits.getJSONObject(aui);
@@ -237,7 +235,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   out.close();
               }
           };
-        }
+        } */
 
         String qs = context.getRequest().getQueryString();
         String uri = url + "/" + path + (regioCode == null ? (qs == null ? "" : "?") : "?regioCode=" + regioCode + (qs == null ? "" : "&")) + qs;

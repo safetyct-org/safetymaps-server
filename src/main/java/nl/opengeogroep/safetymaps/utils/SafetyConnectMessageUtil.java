@@ -8,6 +8,7 @@ import org.json.JSONObject;
 public class SafetyConnectMessageUtil {
   public static JSONObject MapIncidentDbRowAllColumnsAsJSONObject(Map<String, Object> incidentDbRow) {
     JSONObject incident = new JSONObject();
+
     String notesString = (String)incidentDbRow.get("notes");
     String unitsString = (String)incidentDbRow.get("units");
     String charactsString = (String)incidentDbRow.get("characts");
@@ -25,6 +26,20 @@ public class SafetyConnectMessageUtil {
     incident.put("karakteristieken", characts);
     incident.put("incidentLocatie", new JSONObject(locationString));
     incident.put("brwDisciplineGegevens", new JSONObject(discString));
+
     return incident;
+  }
+
+  public static JSONObject MapUnitDbRowAllColumnsAsJSONObject(Map<String, Object> unitDbRow) {
+    JSONObject unit = new JSONObject();
+
+    String positionString = (String)unitDbRow.get("position");
+
+    unit.put("roepnaam", (String)unitDbRow.get("sourceid"));
+    unit.put("gmsStatusCode", (String)unitDbRow.get("gmsstatuscode"));
+    unit.put("primaireVoertuigSoort", (String)unitDbRow.get("primairevoertuigsoort"));
+    unit.put("positie", new JSONObject(positionString));
+
+    return unit;
   }
 }
