@@ -337,9 +337,11 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         HttpServletRequest request = context.getRequest();
         JSONArray content = new JSONArray(contentFromResponse);
 
+        String verbergKladblokTerm = Cfg.getSetting("kladblok_hidden_on_term", "#&*^@&^#&*&HGDGJFGS8F778ASDxcvsdfdfsdfsd");
         boolean kladblokAlwaysAuthorized = "true".equals(Cfg.getSetting("kladblok_always_authorized", "false"));
         boolean incidentMonitorKladblokAuthorized = kladblokAlwaysAuthorized || request.isUserInRole(ROLE_ADMIN) || true;
         boolean eigenVoertuignummerAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
+        boolean zonderEenhedenAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_incidentwithoutunit");
         boolean incidentMonitorAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
 
         if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
@@ -354,6 +356,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             for(int i=0; i<content.length(); i++) {
                 JSONObject incident = (JSONObject)content.get(i);
                 
+                // Incident voor eigen voertuig?
                 JSONArray attachedVehicles;
                 if (incident.has("BetrokkenEenheden")) {
                     attachedVehicles = (JSONArray)incident.get("BetrokkenEenheden");
@@ -369,11 +372,27 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     }
                 }
 
-                if(!incidentForUserVehicle && !eigenVoertuignummerAuthorized && !incidentMonitorKladblokAuthorized) {
+                // Kladblok met verbergregel erin?
+                JSONArray notepad;
+                if (incident.has("Kladblokregels")) {
+                  notepad = (JSONArray)incident.get("Kladblokregels");
+                } else {
+                  notepad = new JSONArray();
+                }
+
+                boolean hideNotepad = false;
+                for(int v=0; v<notepad.length(); v++) {
+                    JSONObject notepadrule = (JSONObject)notepad.get(v);
+                    if (notepadrule.getString("Inhoud").contains(verbergKladblokTerm)) {
+                      hideNotepad = true;
+                    }
+                }
+
+                if(hideNotepad || (!incidentForUserVehicle && !eigenVoertuignummerAuthorized && !incidentMonitorKladblokAuthorized)) {
                     incident.put("Kladblokregels", new JSONArray());
                 }
 
-                if(incidentForUserVehicle || eigenVoertuignummerAuthorized || incidentMonitorAuthorized) {
+                if((incidentForUserVehicle || eigenVoertuignummerAuthorized || incidentMonitorAuthorized) && ((zonderEenhedenAuthorized && attachedVehicles.length() == 0) || attachedVehicles.length() > 0)) {
                     authorizedContent.put(incident);
                 }
             }
