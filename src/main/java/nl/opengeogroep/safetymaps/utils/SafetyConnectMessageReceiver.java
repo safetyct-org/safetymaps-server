@@ -199,7 +199,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       Integer eta = move.has("eta") ? move.getInt("eta") : 0;
 
       DB.qr().update(
-        "INSERT INTO safetymaps.units (source, sourceEnv, sourceId, sourceEnvId, lon, lat, heading, eta, geom) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (sourceEnvId) DO UPDATE safetymaps.units SET lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)",
+        "INSERT INTO safetymaps.units (source, sourceEnv, sourceId, sourceEnvId, lon, lat, heading, eta, geom) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (sourceEnvId) DO UPDATE SET lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)",
         vhost, moveId, envId, lon, lat, speed, heading, eta, lon, lat, lon, lat, speed, heading, eta, lon, lat
       );
     } catch (Exception e) {
