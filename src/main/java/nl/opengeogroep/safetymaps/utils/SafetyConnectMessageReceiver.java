@@ -192,17 +192,16 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         return;
       }
 
-      List<Map<String, Object>> dbUnits = DB.qr().query("SELECT * FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
+      Double lon = move.getDouble("lon");
+      Double lat = move.getDouble("lat");
+      Integer speed = move.has("speed") ? move.getInt("speed") : 0;
+      Integer heading = move.has("heading") ? move.getInt("heading") : 0;
+      Integer eta = move.has("eta") ? move.getInt("eta") : 0;
 
-      if (dbUnits.size() > 0) {
-        Double lon = move.getDouble("lon");
-        Double lat = move.getDouble("lat");
-        Integer speed = move.has("speed") ? move.getInt("speed") : 0;
-        Integer heading = move.has("heading") ? move.getInt("heading") : 0;
-        Integer eta = move.has("eta") ? move.getInt("eta") : 0;
-
-        DB.qr().update("UPDATE safetymaps.units SET lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326) WHERE sourceEnvId = ?", lon, lat, speed, heading, eta, lon, lat, envId);
-      }
+      DB.qr().update(
+        "INSERT INTO safetymaps.units (source, sourceEnv, sourceId, sourceEnvId, lon, lat, heading, eta, geom) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (sourceEnvId) DO UPDATE safetymaps.units SET lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)",
+        vhost, moveId, envId, lon, lat, speed, heading, eta, lon, lat, lon, lat, speed, heading, eta, lon, lat
+      );
     } catch (Exception e) {
       log.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
     }
