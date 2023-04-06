@@ -181,18 +181,18 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private void handleUnitMovedMessage(String vhost, String msgBody) {
     JSONObject move = extractObjectFromMessage(msgBody);
     
-    List<String> dbUnitsToCheck = getUnits();
-
-    if (messageIsForMe(move, "unit", dbUnitsToCheck) == false) {
-      return;
-    }
-
     String moveId = move.getString("unit");
     String envId = vhost + '-' + moveId;
 
     try {
+      String regioCode = Cfg.getSetting("safetyconnect_regio_code", "089u2!3hjrb");
+      
+      // Is message for me
+      if (!moveId.startsWith(regioCode)) {
+        return;
+      }
+
       List<Map<String, Object>> dbUnits = DB.qr().query("SELECT * FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
-      JSONObject dbUnit = dbUnits.size() > 0 ? SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnits.get(0)) : new JSONObject();
 
       if (dbUnits.size() > 0) {
         Double lon = move.getDouble("lon");
@@ -211,18 +211,24 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private void handleUnitChangedMessage(String vhost, String msgBody) {
     JSONObject unit = extractObjectFromMessage(msgBody);
 
-    if (messageIsForMe(unit, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == false) {
-      return;
-    }
-
-    //String kic = unit.getString("kindOfChange"); // updated, synchronisatie, created, deleted
     String unitId = unit.getString("roepnaam");
     String envId = vhost + '-' + unitId;
-    Integer gmsStatusCode = unit.getInt("gmsStatusCode");
-    String sender = unit.getString("afzender");
-    String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
 
-    addOrUpdateDbUnit(vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort);
+    try {
+      String regioCode = Cfg.getSetting("safetyconnect_regio_code", "089u2!3hjrb");
+      
+      // Is message for me
+      if (!unitId.startsWith(regioCode)) {
+        return;
+      }
+
+      Integer gmsStatusCode = unit.getInt("gmsStatusCode");
+      String sender = unit.getString("afzender");
+      String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
+  
+      addOrUpdateDbUnit(vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort);
+    } catch(Exception e) {
+    }
   }
 
   private void addOrUpdateDbUnit(String vhost, String unitId, String envId, Integer gmsStatusCode, String sender, String primairevoertuigsoort) {
@@ -243,7 +249,6 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       return;
     }
 
-    //String kic = incident.getString("kindOfChange"); // updated, synchronisatie, created
     String incidentId = incident.getString("incidentId");
     String envId = vhost + '-' + incidentId;
     
