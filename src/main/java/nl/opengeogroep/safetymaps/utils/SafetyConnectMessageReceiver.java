@@ -216,15 +216,15 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     //String kic = unit.getString("kindOfChange"); // updated, synchronisatie, created, deleted
     String unitId = unit.getString("roepnaam");
     String envId = vhost + '-' + unitId;
+    Integer gmsStatusCode = unit.getInt("gmsStatusCode");
+    String sender = unit.getString("afzender");
+    String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
 
+    addOrUpdateDbUnit(vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort);
+  }
+
+  private void addOrUpdateDbUnit(String vhost, String unitId, String envId, Integer gmsStatusCode, String sender, String primairevoertuigsoort) {
     try {
-      List<Map<String, Object>> dbUnits = DB.qr().query("SELECT * FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
-      JSONObject dbUnit = dbUnits.size() > 0 ? SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnits.get(0)) : new JSONObject();
-
-      Integer gmsStatusCode = unit.getInt("gmsStatusCode");
-      String sender = unit.getString("afzender");
-      String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
-
       DB.qr().update("INSERT INTO safetymaps.units " +
         "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort) VALUES('sc', ?, ?, ?, ?, ?, ?) " +
         " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?",
@@ -282,6 +282,17 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
         " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?", 
         vhost, incidentId, envId, status, sender, number, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), status, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString());
+
+      for(int i=0; i<units.length(); i++) {
+        JSONObject unit = (JSONObject)units.get(i);
+
+        String unitId = unit.getString("roepnaam");
+        String unitEnvId = vhost + '-' + unitId;
+        Integer gmsStatusCode = unit.getInt("statusCode");
+        String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
+
+        addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort);
+      }
     } catch (Exception e) {
       log.error("Exception while upserting incident(" + envId + ") in database: ", e);
     }
