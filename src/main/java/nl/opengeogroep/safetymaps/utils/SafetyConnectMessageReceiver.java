@@ -171,6 +171,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         case RQ_MB_UNIT_CHANGED:
           handleUnitChangedMessage(vhost, msgBody);
         case RQ_MB_UNIT_MOVED:
+          log.info("Position received '" + vhost + "', '" + msgBody + "'");
           handleUnitMovedMessage(vhost, msgBody);
         default:
           break;
