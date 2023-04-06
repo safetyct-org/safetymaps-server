@@ -33,12 +33,14 @@ public class SafetyConnectMessageUtil {
   public static JSONObject MapUnitDbRowAllColumnsAsJSONObject(Map<String, Object> unitDbRow) {
     JSONObject unit = new JSONObject();
 
-    String positionString = (String)unitDbRow.get("position");
-
     unit.put("roepnaam", (String)unitDbRow.get("sourceid"));
     unit.put("gmsStatusCode", (String)unitDbRow.get("gmsstatuscode"));
     unit.put("primaireVoertuigSoort", (String)unitDbRow.get("primairevoertuigsoort"));
-    unit.put("positie", new JSONObject(positionString));
+    unit.put("lon", (Double)unitDbRow.get("lon"));
+    unit.put("lat", (Double)unitDbRow.get("lat"));
+    unit.put("speed", (Integer)unitDbRow.get("speed"));
+    unit.put("heading", (Integer)unitDbRow.get("heading"));
+    unit.put("eta", (Integer)unitDbRow.get("eta"));
 
     return unit;
   }

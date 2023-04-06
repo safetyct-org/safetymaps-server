@@ -106,7 +106,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         Boolean useOpl = context.getRequest().isUserInRole(ROLE_OPL);
         Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST);
 
-        String useRabbitMq = Cfg.getSetting("safetyconnect_rq", "false");
+        String useRabbitMq = "false"; //Cfg.getSetting("safetyconnect_rq", "false");
         String rabbitMqSourceDefault = "prod".equals(defaultApi) ? "production" : "opl".equals(defaultApi) ? "opleiding" : "test".equals(defaultApi) ? "test" : null;
         String rabbitMqSource = useAdmin ? rabbitMqSourceDefault : useProd ?  "production" : useOpl ? "opleiding" : useTest ? "test" : rabbitMqSourceDefault;
 
@@ -183,59 +183,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   out.close();
               }
           };
-       }
-
-       /* if ("true".equals(useRabbitMq) && requestIs(EENHEIDLOCATIE_REQUEST)) {
-          return new Resolution() {
-              @Override
-              public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
-                  response.setCharacterEncoding("UTF-8");
-                  response.setContentType("application/json");
-
-                  OutputStream out;
-                  String acceptEncoding = request.getHeader("Accept-Encoding");
-                  if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
-                      response.setHeader("Content-Encoding", "gzip");
-                      out = new GZIPOutputStream(response.getOutputStream(), true);
-                  } else {
-                      out = response.getOutputStream();
-                  }
-
-                  JSONArray incidents = new JSONArray();
-                  List<String> results = DB.qr().query("select details from safetymaps.incidents where source='sc' and sourceenv=?", new ColumnListHandler<String>(), rabbitMqSource);
-                  for (String incident : results) {
-                    incidents.put(new JSONObject(incident));
-                  }
-
-                  JSONArray unitlocations = new JSONArray();
-                  results = DB.qr().query("select details from safetymaps.unitlocations where source='sc' and sourceenv=?", new ColumnListHandler<String>(), rabbitMqSource);
-                  for (String dbUnitlocation : results) {
-                    JSONObject unitlocation = new JSONObject(dbUnitlocation);
-                    String unit = unitlocation.getString("unit");
-
-                    for (int ii=0; ii<incidents.length(); ii++) {
-                      JSONObject incident = incidents.getJSONObject(ii);
-                      JSONArray attachedunits = incident.has("betrokkenEenheden") ? incident.getJSONArray("betrokkenEenheden") : new JSONArray();
-                      
-                      for (int aui=0; aui<attachedunits.length(); aui++) {
-                        JSONObject attachedunit = attachedunits.getJSONObject(aui);
-                        if (attachedunit.getString("roepnaam") == unit) {
-                         unitlocation.put("incidentId", incident.getString("incidentId"));
-                         if (attachedunit.has("inzetRol")) { unitlocation.put("inzetRol", attachedunit.getString("inzetRol")); }
-                        }
-                      }
-                    }
-
-                    unitlocations.put(unitlocation);
-                  }
-
-                  IOUtils.copy(new StringReader(unitlocations.toString()), out, "UTF-8");
-
-                  out.flush();
-                  out.close();
-              }
-          };
-        } */
+       }      
 
         String qs = context.getRequest().getQueryString();
         String uri = url + "/" + path + (regioCode == null ? (qs == null ? "" : "?") : "?regioCode=" + regioCode + (qs == null ? "" : "&")) + qs;

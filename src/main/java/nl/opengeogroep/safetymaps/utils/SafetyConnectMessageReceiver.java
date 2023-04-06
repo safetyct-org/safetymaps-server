@@ -193,17 +193,13 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       JSONObject dbUnit = dbUnits.size() > 0 ? SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnits.get(0)) : new JSONObject();
 
       if (dbUnits.size() > 0) {
-        JSONObject position = dbUnit.has("positie") 
-          ? dbUnit.getJSONObject("positie") 
-          : new JSONObject();
+        Double lon = move.getDouble("lon");
+        Double lat = move.getDouble("lat");
+        Integer speed = move.has("speed") ? move.getInt("speed") : 0;
+        Integer heading = move.has("heading") ? move.getInt("heading") : 0;
+        Integer eta = move.has("eta") ? move.getInt("eta") : 0;
 
-        position.put("lon", move.getDouble("lon"));
-        position.put("lat", move.getDouble("lat"));
-        if (move.has("speed")) { position.put("speed", move.getInt("speed")); }
-        if (move.has("heading")) { position.put("heading", move.getInt("heading")); }
-        if (move.has("eta")) { position.put("eta", move.getInt("eta")); }
-
-        DB.qr().update("UPDATE safetymaps.units SET position = ? WHERE sourceEnvId = ?", position.toString(), envId);
+        DB.qr().update("UPDATE safetymaps.units SET lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326) WHERE sourceEnvId = ?", lon, lat, speed, heading, eta, lon, lat, envId);
       }
     } catch (Exception e) {
       log.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
@@ -228,14 +224,11 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       Integer gmsStatusCode = unit.getInt("gmsStatusCode");
       String sender = unit.getString("afzender");
       String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
-      JSONObject position = dbUnit.has("positie") 
-          ? dbUnit.getJSONObject("positie") 
-          : new JSONObject();
 
       DB.qr().update("INSERT INTO safetymaps.units " +
-        "(source, sourceEnv, sourceId, sourceEnvId, position, gmsstatuscode, sender, primairevoertuigsoort) VALUES('sc', ?, ?, ?, ?, ?, ?, ?) " +
+        "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort) VALUES('sc', ?, ?, ?, ?, ?, ?) " +
         " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?",
-        vhost, unitId, envId, position.toString(), gmsStatusCode, sender, primairevoertuigsoort, gmsStatusCode, primairevoertuigsoort);
+        vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, gmsStatusCode, primairevoertuigsoort);
     } catch (Exception e) {
       log.error("Exception while upserting unit(" + envId + ") in database: ", e);
     }
