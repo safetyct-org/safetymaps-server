@@ -171,7 +171,6 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         case RQ_MB_UNIT_CHANGED:
           handleUnitChangedMessage(vhost, msgBody);
         case RQ_MB_UNIT_MOVED:
-          log.info("Position received '" + vhost + "', '" + msgBody + "'");
           handleUnitMovedMessage(vhost, msgBody);
         default:
           break;
@@ -181,8 +180,10 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private void handleUnitMovedMessage(String vhost, String msgBody) {
     JSONObject move = extractObjectFromMessage(msgBody);
+    
+    List<String> dbUnitsToCheck = getUnits();
 
-    if (messageIsForMe(move, "unit", getUnits()) == false) {
+    if (messageIsForMe(move, "unit", dbUnitsToCheck) == false) {
       return;
     }
 
