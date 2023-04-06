@@ -170,8 +170,10 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           break;
         case RQ_MB_UNIT_CHANGED:
           handleUnitChangedMessage(vhost, msgBody);
+          break;
         case RQ_MB_UNIT_MOVED:
           handleUnitMovedMessage(vhost, msgBody);
+          break;
         default:
           break;
       }
@@ -301,14 +303,6 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       }
     } catch (Exception e) {
       log.error("Exception while upserting incident(" + envId + ") in database: ", e);
-    }
-  }
-
-  private List<String> getUnits() {
-    try {
-      return DB.qr().query("SELECT sourceid FROM safetymaps.units WHERE source = 'sc'", new ColumnListHandler<String>());
-    } catch (Exception e) {
-      return Arrays.asList("".split(","));
     }
   }
 
