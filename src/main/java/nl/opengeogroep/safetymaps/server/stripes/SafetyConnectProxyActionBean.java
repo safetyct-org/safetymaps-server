@@ -55,7 +55,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     static final String ROLE_OPL = "smvng_incident_safetyconnect_webservice__opl";
     static final String ROLE_TEST = "smvng_incident_safetyconnect_webservice__test";
 
-    static final String INCIDENT_REQUEST = "incident";
+    static final String INCIDENT_REQUEST = "incident/";
     static final String EENHEIDLOCATIE_REQUEST = "eenheidlocatie";
     static final String KLADBLOKREGEL_REQUEST = "kladblokregel";
     static final String EENHEID_REQUEST = "eenheid";
@@ -292,9 +292,9 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         boolean zonderEenhedenAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_incidentwithoutunit");
         boolean incidentMonitorAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
 
-        if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
+        /*if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
             return content.toString();
-        }
+        }*/
 
         try(Connection c = DB.getConnection()) {            
             JSONArray authorizedContent = new JSONArray();
