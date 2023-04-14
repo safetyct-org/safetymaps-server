@@ -268,8 +268,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     }
 
     private String defaultError(Exception e) {
-        return e.getStackTrace().toString();
-        //return "Error on " + path;
+        return "Error on " + path;
     }
 
     private boolean keepRequestUnmodified() {
@@ -293,7 +292,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         boolean zonderEenhedenAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_incidentwithoutunit");
         boolean incidentMonitorAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
 
-        if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized && verbergKladblokTerm == "#&*^@&^#&*&HGDGJFGS8F778ASDxcvsdfdfsdfsd") {
+        if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
             return content.toString();
         }
 
