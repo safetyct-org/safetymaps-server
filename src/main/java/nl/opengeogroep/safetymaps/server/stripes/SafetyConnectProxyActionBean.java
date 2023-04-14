@@ -331,7 +331,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                 boolean hideNotepad = false;
                 for(int v=0; v<notepad.length(); v++) {
                     JSONObject notepadrule = (JSONObject)notepad.get(v);
-                    if (notepadrule.getString("Inhoud").contains(verbergKladblokTerm)) {
+                    String inhoud = notepadrule.getString("Inhoud");
+                    if (inhoud.toLowerCase().startsWith(verbergKladblokTerm.toLowerCase())) {
                       hideNotepad = true;
                     }
                 }
