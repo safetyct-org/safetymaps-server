@@ -306,7 +306,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                 
                 // Incident voor eigen voertuig?
                 JSONArray attachedVehicles;
-                if (incident.has("BetrokkenEenheden")) {
+                if (incident.has("BetrokkenEenheden") && incident.get("BetrokkenEenheden") != null) {
                     attachedVehicles = (JSONArray)incident.get("BetrokkenEenheden");
                 } else {
                     attachedVehicles = new JSONArray();
