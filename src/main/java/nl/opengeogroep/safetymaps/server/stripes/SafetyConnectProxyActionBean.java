@@ -292,16 +292,13 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         boolean zonderEenhedenAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_incidentwithoutunit");
         boolean incidentMonitorAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
 
-        if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
-            return content.toString();
-        }
-
         try(Connection c = DB.getConnection()) {            
             JSONArray authorizedContent = new JSONArray();
             JSONObject details = getUserDetails(request, c);
             List<String> userVehicleList = Arrays.asList(details.optString("voertuignummer", "-").replaceAll("\\s", ",").split(","));
 
             for(int i=0; i<content.length(); i++) {
+                JSONObject unchangedIncident = (JSONObject)content.get(i);
                 JSONObject incident = (JSONObject)content.get(i);
                 
                 // Incident voor eigen voertuig?
@@ -337,12 +334,21 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     }
                 }
 
-                if(hideNotepad || (!incidentForUserVehicle && !eigenVoertuignummerAuthorized && !incidentMonitorKladblokAuthorized)) {
-                    incident.put("Kladblokregels", new JSONArray());
+                if (hideNotepad) {
+                  unchangedIncident.put("Kladblokregels", new JSONArray());
                 }
 
-                if((incidentForUserVehicle || eigenVoertuignummerAuthorized || incidentMonitorAuthorized) && ((zonderEenhedenAuthorized && attachedVehicles.length() == 0) || attachedVehicles.length() > 0)) {
-                    authorizedContent.put(incident);
+                
+                if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
+                  authorizedContent.put(unchangedIncident);
+                } else {
+                  if(hideNotepad || (!incidentForUserVehicle && !eigenVoertuignummerAuthorized && !incidentMonitorKladblokAuthorized)) {
+                    incident.put("Kladblokregels", new JSONArray());
+                  }
+
+                  if((incidentForUserVehicle || eigenVoertuignummerAuthorized || incidentMonitorAuthorized) && ((zonderEenhedenAuthorized && attachedVehicles.length() == 0) || attachedVehicles.length() > 0)) {
+                      authorizedContent.put(incident);
+                  }
                 }
             }
 
