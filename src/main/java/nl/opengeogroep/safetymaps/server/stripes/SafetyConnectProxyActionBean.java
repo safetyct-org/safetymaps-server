@@ -334,11 +334,10 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     }
                 }
 
-                if (hideNotepad) {
+                if (hideNotepad && unchangedIncident.has("Kladblokregels")) {
                   unchangedIncident.put("Kladblokregels", new JSONArray());
                 }
 
-                
                 if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
                   authorizedContent.put(unchangedIncident);
                 } else {
