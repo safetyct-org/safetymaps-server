@@ -268,7 +268,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     }
 
     private String defaultError(Exception e) {
-        return e.getMessage();
+        return e.getStackTrace().toString();
         //return "Error on " + path;
     }
 
