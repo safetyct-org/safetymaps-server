@@ -307,7 +307,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                 
                 // Incident voor eigen voertuig?
                 JSONArray attachedVehicles;
-                if (incident.has("BetrokkenEenheden") && incident.get("BetrokkenEenheden") != null) {
+                if (incident.has("BetrokkenEenheden") && !JSONObject.NULL.equals(incident.get("BetrokkenEenheden"))) {
                     attachedVehicles = (JSONArray)incident.get("BetrokkenEenheden");
                 } else {
                     attachedVehicles = new JSONArray();
@@ -323,7 +323,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
                 // Kladblok met verbergregel erin?
                 JSONArray notepad;
-                if (incident.has("Kladblokregels") && incident.get("Kladblokregels") != null) {
+                if (incident.has("Kladblokregels") && !JSONObject.NULL.equals(incident.get("Kladblokregels"))) {
                   notepad = (JSONArray)incident.get("Kladblokregels");
                 } else {
                   notepad = new JSONArray();
