@@ -292,11 +292,12 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         boolean zonderEenhedenAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_incidentwithoutunit");
         boolean incidentMonitorAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
 
-        if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
+        /*if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
             return content.toString();
-        }
+        }*/
 
-        try(Connection c = DB.getConnection()) {            
+        //try(Connection c = DB.getConnection()) {        
+            Connection c = DB.getConnection();    
             JSONArray authorizedContent = new JSONArray();
             JSONObject details = getUserDetails(request, c);
             List<String> userVehicleList = Arrays.asList(details.optString("voertuignummer", "-").replaceAll("\\s", ",").split(","));
@@ -347,10 +348,10 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             }
 
             return authorizedContent.toString();
-        } catch(Exception e) {
+        //} catch(Exception e) {
             //return new JSONObject().toString();
-            return defaultError(e);
-        }
+            //return defaultError(e);
+       // }
     }
 
     // Applies filter to /eenheidLocatie to filter out locations for vehicles not attached to an incident
