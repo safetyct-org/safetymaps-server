@@ -296,8 +296,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             return content.toString();
         }*/
 
-        //try(Connection c = DB.getConnection()) {        
-            Connection c = DB.getConnection();    
+        try(Connection c = DB.getConnection()) {        
+            //Connection c = DB.getConnection();    
             JSONArray authorizedContent = new JSONArray();
             JSONObject details = getUserDetails(request, c);
             List<String> userVehicleList = Arrays.asList(details.optString("voertuignummer", "-").replaceAll("\\s", ",").split(","));
@@ -348,10 +348,10 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             }
 
             return authorizedContent.toString();
-        //} catch(Exception e) {
+        } catch(Exception e) {
             //return new JSONObject().toString();
-            //return defaultError(e);
-       // }
+            return defaultError(e);
+        }
     }
 
     // Applies filter to /eenheidLocatie to filter out locations for vehicles not attached to an incident
