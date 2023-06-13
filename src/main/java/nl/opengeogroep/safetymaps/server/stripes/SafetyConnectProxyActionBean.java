@@ -268,7 +268,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     }
 
     private String defaultError(Exception e) {
-        return "Error on " + path;
+      return e.getMessage();
+      //return "Error on " + path;
     }
 
     private boolean keepRequestUnmodified() {
