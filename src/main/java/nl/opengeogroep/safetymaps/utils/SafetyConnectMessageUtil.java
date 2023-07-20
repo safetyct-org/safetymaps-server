@@ -1,11 +1,34 @@
 package nl.opengeogroep.safetymaps.utils;
 
+import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class SafetyConnectMessageUtil {
+  public static JSONObject IncidentDbRowHasActiveUnit(List<Map<String, Object>> dbIncidents, String unitSourceId) {
+    JSONObject activeUnitFound = null;
+
+    for (Map<String, Object> incidentDbRow : dbIncidents) {
+      String incidentId = (String)incidentDbRow.get("sourceid");
+      String unitsString = (String)incidentDbRow.get("units");
+      JSONArray units = incidentDbRow.get("units") != null ? new JSONArray(unitsString) : new JSONArray();
+
+      for(int i=0; i<units.length(); i++) {
+        JSONObject unit = (JSONObject)units.get(i);
+
+        if (unit.has("roepnaam") && unit.get("roepnaam") == unitSourceId && !unit.has("eindeActieDtg")) {
+          activeUnitFound = unit;
+          activeUnitFound.put("incidentId", incidentId);
+          activeUnitFound.put("incidentRol", unit.has("voertuigSoort") ? unit.get("voertuigSoort") : "");
+        }
+      }
+    }
+
+    return activeUnitFound;
+  }
+
   public static JSONObject MapIncidentDbRowAllColumnsAsJSONObject(Map<String, Object> incidentDbRow) {
     JSONObject incident = new JSONObject();
 
