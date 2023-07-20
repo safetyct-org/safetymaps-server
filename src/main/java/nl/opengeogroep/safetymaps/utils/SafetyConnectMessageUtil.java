@@ -2,6 +2,7 @@ package nl.opengeogroep.safetymaps.utils;
 
 import java.util.List;
 import java.util.Map;
+import java.math.BigDecimal;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
