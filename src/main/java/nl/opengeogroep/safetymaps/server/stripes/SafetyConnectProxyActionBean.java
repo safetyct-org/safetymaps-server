@@ -162,7 +162,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     boolean isauthfor_prio45 = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_prio45");
                     boolean isauthfor_trainingincident = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_trainingincident");
                     boolean isauthfor_im = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
-                    boolean isauthfor_incident = incidentIsForUserVehicle(incident) || isauthfor_im ||  isauthfor_ownvehiclenumber;
+                    boolean isauthfor_incident = incidentIsForUserVehicle(incident) != "" || isauthfor_im ||  isauthfor_ownvehiclenumber;
 
                     if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { 
                       JSONObject discipline = incident.has("brwDisciplineGegevens") ? (JSONObject)incident.get("brwDisciplineGegevens") : null;
@@ -275,7 +275,13 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     } else if (isauthfor_maplocations && unit.has("incidentId")) {
                       units.put(unit);
                     } else if (isauthfor_incidentlocations && unit.has("incidentId")) {
-                      // TODO: Add check for only 1 incident
+                      for (Map<String, Object> dbIncident : dbIncidents) {
+                        JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncident);
+                        String incidentId = incidentIsForUserVehicle(incident);
+                        if (incidentId == unit.get("incidentId")) {
+                          units.put(unit);
+                        }
+                      }
                     }
                   }
                   
@@ -365,7 +371,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         }
     }
 
-    private boolean incidentIsForUserVehicle(JSONObject incident) {
+    private String incidentIsForUserVehicle(JSONObject incident) {
       // Incident voor eigen voertuig?
       JSONArray units;
       if (incident.has("betrokkenEenheden") && !JSONObject.NULL.equals(incident.get("betrokkenEenheden"))) {
@@ -374,11 +380,11 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           units = new JSONArray();
       }
 
-      boolean incidentForUserVehicle = false;
+      String incidentForUserVehicle = "";
       for(int v=0; v<units.length(); v++) {
           JSONObject vehicle = (JSONObject)units.get(v);
-          if (getUserVehicleList().contains(vehicle.get("roepnaam"))) {
-              incidentForUserVehicle = true;
+          if (incidentForUserVehicle == "" && getUserVehicleList().contains(vehicle.get("roepnaam"))) {
+              incidentForUserVehicle = (String)incident.get("incidentId");
           }
       }
 
