@@ -121,33 +121,43 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         }
 
         if ("true".equals(useRabbitMq) && requestIs(INCIDENT_REQUEST)) {
-            return new Resolution() {
-                @Override
-                public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
-                    response.setCharacterEncoding("UTF-8");
-                    response.setContentType("application/json");
+          String numString = path.substring(path.lastIndexOf('/') + 1);
+          Integer number = 0;
 
-                    OutputStream out;
-                    String acceptEncoding = request.getHeader("Accept-Encoding");
-                    if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
-                        response.setHeader("Content-Encoding", "gzip");
-                        out = new GZIPOutputStream(response.getOutputStream(), true);
-                    } else {
-                        out = response.getOutputStream();
-                    }
+          if (numString != "incident") {
+            number = Integer.parseInt(numString);
+          }
 
-                    JSONArray incidents = new JSONArray();
-                    List<Map<String, Object>> results = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
+          final Integer incidentNummer = number;
 
-                    for (Map<String, Object> res : results) {
-                      incidents.put(SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res));
-                    }
+          return new Resolution() {
+              @Override
+              public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+                  response.setCharacterEncoding("UTF-8");
+                  response.setContentType("application/json");
 
-                    IOUtils.copy(new StringReader(incidents.toString()), out, "UTF-8");
+                  OutputStream out;
+                  String acceptEncoding = request.getHeader("Accept-Encoding");
+                  if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+                      response.setHeader("Content-Encoding", "gzip");
+                      out = new GZIPOutputStream(response.getOutputStream(), true);
+                  } else {
+                      out = response.getOutputStream();
+                  }
 
-                    out.flush();
-                    out.close();
-                }
+                  JSONArray incidents = new JSONArray();
+                  List<Map<String, Object>> results = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
+                  
+                  for (Map<String, Object> res : results) {
+                    JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res);
+                    if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { incidents.put(incident); }
+                  }
+
+                  IOUtils.copy(new StringReader(incidents.toString()), out, "UTF-8");
+
+                  out.flush();
+                  out.close();
+              }
             };
         }
 
@@ -207,7 +217,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   
                   for (Map<String, Object> dbUnit : dbUnits) {
                     JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnit);
-                    JSONObject unitOnIncident = SafetyConnectMessageUtil.IncidentDbRowHasActiveUnit(dbIncidents, unit.getString("sourceid"));
+                    JSONObject unitOnIncident = SafetyConnectMessageUtil.IncidentDbRowHasActiveUnit(dbIncidents, unit.getString("roepnaam"));
 
                     if (unitOnIncident != null) {
                       unit.put("incidentId", unitOnIncident.get("incidentId"));
