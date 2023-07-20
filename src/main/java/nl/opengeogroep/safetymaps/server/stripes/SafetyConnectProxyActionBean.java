@@ -124,7 +124,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           String numString = path.substring(path.lastIndexOf('/') + 1);
           Integer number = 0;
 
-          if (numString != "incident") {
+          if (numString.equals("incident") == false) {
             number = Integer.parseInt(numString);
           }
 
