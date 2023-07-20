@@ -57,7 +57,7 @@ public class SafetyConnectMessageUtil {
     JSONObject unit = new JSONObject();
 
     unit.put("roepnaam", (String)unitDbRow.get("sourceid"));
-    unit.put("gmsStatusCode", (String)unitDbRow.get("gmsstatuscode"));
+    unit.put("gmsStatusCode", (Integer)unitDbRow.get("gmsstatuscode"));
     unit.put("primaireVoertuigSoort", (String)unitDbRow.get("primairevoertuigsoort"));
     unit.put("lon", (Double)unitDbRow.get("lon"));
     unit.put("lat", (Double)unitDbRow.get("lat"));
