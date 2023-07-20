@@ -150,7 +150,37 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   
                   for (Map<String, Object> res : results) {
                     JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res);
-                    if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { incidents.put(incident); }
+
+                    /*
+                    * smvng_incident_hidenotepad	Kladblok verbergen
+                    * smvng_incident_ownvehiclenumber	Gebruiker mag eigen voertuignummer wijzigen.
+                    * smvng_incident_prio45	Toon incidenten met prio 4 of 5 en koppel voertuigen aan deze incidenten.
+                    * smvng_incident_trainingincident	Toon training incidenten en koppel voertuigen aan deze incidenten.
+                    */
+                    boolean isauthfor_hidenotepad = request.isUserInRole("smvng_incident_hidenotepad");
+                    boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
+                    boolean isauthfor_prio45 = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_prio45");
+                    boolean isauthfor_trainingincident = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_trainingincident");
+                    boolean isauthfor_im = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
+                    boolean isauthfor_incident = incidentIsForUserVehicle(incident) || isauthfor_im ||  isauthfor_ownvehiclenumber;
+
+                    if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { 
+                      JSONObject discipline = incident.has("brwDisciplineGegevens") ? (JSONObject)incident.get("brwDisciplineGegevens") : null;
+
+                      if (isauthfor_hidenotepad || incidentNummer == 0 ) { 
+                        incident.put("kladblokregels", new JSONArray()); 
+                      }
+
+                      if (isauthfor_incident && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
+                        incidents.put(incident); 
+                      } else if (isauthfor_incident && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
+                        incidents.put(incident); 
+                      } else if (isauthfor_incident && isauthfor_trainingincident == false && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
+                        incidents.put(incident); 
+                      } else if (isauthfor_incident && isauthfor_trainingincident == false && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
+                        incidents.put(incident); 
+                      }
+                    }
                   }
 
                   IOUtils.copy(new StringReader(incidents.toString()), out, "UTF-8");
@@ -184,7 +214,14 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   
                   for (Map<String, Object> res : results) {
                     JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(res);
-                    if (unitId.equals(unit.getString("roepnaam"))) { units.put(unit); }
+
+                    /*
+                     * smvng_incident_ownvehiclenumber	Gebruiker mag eigen voertuignummer wijzigen.
+                     */
+                    boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
+
+                    if (isauthfor_ownvehiclenumber && unitId.equals(unit.getString("roepnaam"))) { units.put(unit); }
+                    else if (getUserVehicleList().contains(unitId)) { units.put(unit); }
                   }
                   
                   IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
@@ -224,7 +261,22 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                       unit.put("incidentRol", unitOnIncident.get("incidentRol"));
                     }
 
-                    units.put(unit);
+                    /*
+                     * smvng_vehicleinfo_unasigned	Toon locaties van alle voertuigen die niet aan een incident gekoppeld zijn.
+                     * smvng_vehicleinfo_maplocations	Toon locaties van alle voertuigen die aan een incident gekoppeld zijn.
+                     * smvng_vehicleinfo_incidentlocations	Toon locaties van betrokken voertuigen wanner het incident is geopend.
+                     */
+                    boolean isauthfor_unasigned = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_unasigned");
+                    boolean isauthfor_maplocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_maplocations");
+                    boolean isauthfor_incidentlocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations");
+
+                    if (isauthfor_unasigned && !unit.has("incidentId")) {
+                      units.put(unit);
+                    } else if (isauthfor_maplocations && unit.has("incidentId")) {
+                      units.put(unit);
+                    } else if (isauthfor_incidentlocations && unit.has("incidentId")) {
+                      // TODO: Add check for only 1 incident
+                    }
                   }
                   
                   IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
@@ -311,6 +363,37 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             log.error("Failed to write output:", e);
             return null;
         }
+    }
+
+    private boolean incidentIsForUserVehicle(JSONObject incident) {
+      // Incident voor eigen voertuig?
+      JSONArray units;
+      if (incident.has("betrokkenEenheden") && !JSONObject.NULL.equals(incident.get("betrokkenEenheden"))) {
+          units = (JSONArray)incident.get("betrokkenEenheden");
+      } else {
+          units = new JSONArray();
+      }
+
+      boolean incidentForUserVehicle = false;
+      for(int v=0; v<units.length(); v++) {
+          JSONObject vehicle = (JSONObject)units.get(v);
+          if (getUserVehicleList().contains(vehicle.get("roepnaam"))) {
+              incidentForUserVehicle = true;
+          }
+      }
+
+      return incidentForUserVehicle;
+    }
+
+    private List<String> getUserVehicleList() {
+      HttpServletRequest request = context.getRequest();
+
+      try(Connection c = DB.getConnection()) {
+        JSONObject details = getUserDetails(request, c);   
+        return Arrays.asList(details.optString("voertuignummer", "-").replaceAll("\\s", ",").replaceAll("-", "").split(","));
+      } catch(Exception e) {
+        return null;
+      }
     }
 
     private Resolution unAuthorizedResolution() {
