@@ -12,7 +12,7 @@ public class SafetyConnectMessageUtil {
     JSONObject activeUnitFound = null;
 
     for (Map<String, Object> incidentDbRow : dbIncidents) {
-      String incidentId = (String)incidentDbRow.get("number");
+      Integer incidentId = (Integer)incidentDbRow.get("number");
       String unitsString = (String)incidentDbRow.get("units");
       JSONArray units = incidentDbRow.get("units") != null ? new JSONArray(unitsString) : new JSONArray();
 
