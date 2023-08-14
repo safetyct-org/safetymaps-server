@@ -175,9 +175,9 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                         incidents.put(incident); 
                       } else if (isauthfor_incident && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
                         incidents.put(incident); 
-                      } else if (isauthfor_incident && isauthfor_trainingincident == false && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
+                      } else if (isauthfor_incident && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
                         incidents.put(incident); 
-                      } else if (isauthfor_incident && isauthfor_trainingincident == false && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
+                      } else if (isauthfor_incident && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
                         incidents.put(incident); 
                       }
                     }
