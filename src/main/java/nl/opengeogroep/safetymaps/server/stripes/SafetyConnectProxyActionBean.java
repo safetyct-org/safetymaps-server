@@ -270,7 +270,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     boolean isauthfor_maplocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_maplocations");
                     boolean isauthfor_incidentlocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations");
 
-                    if (isauthfor_unasigned && !unit.has("incidentId")) {
+                    if (isauthfor_unasigned && unit.has("incidentId") == false) {
                       units.put(unit);
                     } else if (isauthfor_maplocations && unit.has("incidentId")) {
                       units.put(unit);
