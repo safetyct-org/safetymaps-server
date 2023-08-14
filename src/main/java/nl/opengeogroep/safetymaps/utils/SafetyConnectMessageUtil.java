@@ -19,7 +19,7 @@ public class SafetyConnectMessageUtil {
       for(int i=0; i<units.length(); i++) {
         JSONObject unit = (JSONObject)units.get(i);
 
-        if (unit.has("roepnaam") && unit.getString("roepnaam") == unitSourceId) {
+        if (unit.has("roepnaam") && unitSourceId.equals(unit.getString("roepnaam"))) {
           activeUnitFound = unit;
           activeUnitFound.put("incidentId", incidentId);
           activeUnitFound.put("incidentRol", unit.has("voertuigSoort") ? unit.get("voertuigSoort") : "");
