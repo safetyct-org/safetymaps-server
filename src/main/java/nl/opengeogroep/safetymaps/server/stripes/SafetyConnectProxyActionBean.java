@@ -177,7 +177,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                       JSONObject discipline = incident.has("brwDisciplineGegevens") ? (JSONObject)incident.get("brwDisciplineGegevens") : null;
                       SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                       Date checkDate = DateUtils.addDays(new Date(), (-1 * Integer.parseInt(daysInPast)));
-                      Date startDtg = discipline.has("startDtg") ? sdf.parse(discipline.getString("startDtg").replaceAll("T", "")) : checkDate;
+                      Date startDtg = discipline.has("startDtg") ? sdf.parse(discipline.getString("startDtg").replaceAll("T", " ")) : checkDate;
 
                       if (isauthfor_hidenotepad || incidentNummer == 0) { 
                         incident.put("kladblokregels", new JSONArray()); 
