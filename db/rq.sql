@@ -19,6 +19,7 @@ CREATE TABLE safetymaps.incidents (
 	sender varchar NULL,
 	"number" int4 NULL,
 	characts varchar NULL,
+  tenantid varchar NULL,
 	CONSTRAINT incidents_pkey PRIMARY KEY (id),
 	CONSTRAINT incidents_sourceenvid_key UNIQUE (sourceenvid)
 );
@@ -51,3 +52,4 @@ union select 'safetyconnect_rq_pass', 'okp6VLjjJ2H22B2r'
 union select 'safetyconnect_rq_senders', ''
 union select 'safetyconnect_rq_user', 'safetyconnect'
 union select 'safetyconnect_rq_vhost', 'test'
+union select 'safetyconnect_rq_tenants', ''

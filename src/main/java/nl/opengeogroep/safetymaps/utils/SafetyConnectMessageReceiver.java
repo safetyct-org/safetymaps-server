@@ -32,6 +32,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private ServletContext CONTEXT;
   private String RQ_SENDERS;
+  private String RQ_TENANTS;
   private String RQ_HOST;
   private String RQ_VHOSTS;
   private String RQ_USER;
@@ -125,6 +126,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     RQ_USER = Cfg.getSetting("safetyconnect_rq_user");
     RQ_PASS = Cfg.getSetting("safetyconnect_rq_pass");
     RQ_SENDERS = Cfg.getSetting("safetyconnect_rq_senders", "");
+    RQ_TENANTS = Cfg.getSetting("safetyconnect_rq_tenants", "");
 
     if (RQ_HOST == null || RQ_USER == null || RQ_PASS == null) {
       throw new Exception("One or more required 'safetyconnect_rq' settings are empty.");
@@ -216,28 +218,27 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     String envId = vhost + '-' + unitId;
 
     try {
-      String regioCode = Cfg.getSetting("safetyconnect_regio_code", "089u2!3hjrb");
-      
       // Is message for me
-      if (!unitId.startsWith(regioCode)) {
+      if (unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(","))) == false) {
         return;
       }
 
       Integer gmsStatusCode = unit.getInt("gmsStatusCode");
       String sender = unit.getString("afzender");
       String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
+      JSONArray abbs = unit.getJSONArray("meldkamerStatusAbonnementen");
   
-      addOrUpdateDbUnit(vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort);
+      addOrUpdateDbUnit(vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString());
     } catch(Exception e) {
     }
   }
 
-  private void addOrUpdateDbUnit(String vhost, String unitId, String envId, Integer gmsStatusCode, String sender, String primairevoertuigsoort) {
+  private void addOrUpdateDbUnit(String vhost, String unitId, String envId, Integer gmsStatusCode, String sender, String primairevoertuigsoort, String abbs) {
     try {
       DB.qr().update("INSERT INTO safetymaps.units " +
-        "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort) VALUES('sc', ?, ?, ?, ?, ?, ?) " +
-        " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?",
-        vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, gmsStatusCode, primairevoertuigsoort);
+        "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs) VALUES('sc', ?, ?, ?, ?, ?, ?, ?) " +
+        " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?",
+        vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, gmsStatusCode, primairevoertuigsoort, abbs);
     } catch (Exception e) {
       log.error("Exception while upserting unit(" + envId + ") in database: ", e);
     }
@@ -246,8 +247,10 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private void handleIncidentChangedMessage(String vhost, String msgBody) {
     JSONObject incident = extractObjectFromMessage(msgBody);
     
-    if (messageIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == false) {
-      return;
+    if (
+      incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == false ||
+      incidentIsForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == false) {
+        return;
     }
 
     String incidentId = incident.getString("incidentId");
@@ -258,6 +261,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       JSONObject dbIncident = dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidents.get(0)) : new JSONObject();
       
       Integer number = incident.getInt("incidentNummer");
+      String tenantId = incident.getString("tenantIndentifier");
       String status = incident.getString("status");
       String sender = incident.getString("afzender");
       JSONArray notes = incident.has("kladblokregels") 
@@ -287,9 +291,9 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           : new JSONObject();
 
       DB.qr().update("INSERT INTO safetymaps.incidents " + 
-        "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-        " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?", 
-        vhost, incidentId, envId, status, sender, number, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), status, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString());
+        "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+        " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?, tenantId = ?", 
+        vhost, incidentId, envId, status, sender, number, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId, status, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId);
 
       for(int i=0; i<units.length(); i++) {
         JSONObject unit = (JSONObject)units.get(i);
@@ -298,8 +302,9 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         String unitEnvId = vhost + '-' + unitId;
         Integer gmsStatusCode = unit.getInt("statusCode");
         String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
+        JSONArray abbs = unit.getJSONArray("meldkamerStatusAbonnementen");
 
-        addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort);
+        addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString());
       }
     } catch (Exception e) {
       log.error("Exception while upserting incident(" + envId + ") in database: ", e);
@@ -336,11 +341,26 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     return vhost + "-" + rqMb;
   }
 
-  private boolean messageIsForMe(JSONObject object, String key, List<String> valuesToCheck) {
+  private boolean incidentIsForMe(JSONObject object, String key, List<String> valuesToCheck) {
     boolean matched = false;
     String keyValue = object.getString(key);
 
     matched = valuesToCheck.contains(keyValue);
+    
+    return matched;
+  }
+
+  private boolean unitIsForMe(JSONObject object, String key, List<String> valuesToCheck) {
+    boolean matched = false;
+    String keyValueString = object.getString(key);
+    JSONArray keyValues = new JSONArray(keyValueString);
+
+    for(int i=0; i<keyValues.length(); i++) {
+      boolean found = valuesToCheck.contains(keyValues.get(i));
+      if (found) { 
+        matched = true;
+      }
+    }
     
     return matched;
   }

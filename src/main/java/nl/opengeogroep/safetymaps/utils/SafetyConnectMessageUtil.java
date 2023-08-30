@@ -45,6 +45,7 @@ public class SafetyConnectMessageUtil {
     incident.put("incidentNummer", (Integer)incidentDbRow.get("number"));
     incident.put("incidentId", (String)incidentDbRow.get("sourceid"));
     incident.put("status", (String)incidentDbRow.get("status"));
+    incident.put("tenantId", (String)incidentDbRow.get("tenantid"));
     incident.put("kladblokregels", notes);
     incident.put("betrokkenEenheden", units);
     incident.put("karakteristieken", characts);
@@ -57,6 +58,9 @@ public class SafetyConnectMessageUtil {
   public static JSONObject MapUnitDbRowAllColumnsAsJSONObject(Map<String, Object> unitDbRow) {
     JSONObject unit = new JSONObject();
 
+    String abbsString = (String)unitDbRow.get("abbs");
+    JSONArray abbs = unitDbRow.get("abbs") != null ? new JSONArray(abbsString) : new JSONArray();
+
     unit.put("roepnaam", (String)unitDbRow.get("sourceid"));
     unit.put("gmsStatusCode", (Integer)unitDbRow.get("gmsstatuscode"));
     unit.put("primaireVoertuigSoort", (String)unitDbRow.get("primairevoertuigsoort"));
@@ -65,6 +69,7 @@ public class SafetyConnectMessageUtil {
     unit.put("speed", (Integer)unitDbRow.get("speed"));
     unit.put("heading", (Integer)unitDbRow.get("heading"));
     unit.put("eta", (Integer)unitDbRow.get("eta"));
+    unit.put("abbs", abbs);
 
     return unit;
   }

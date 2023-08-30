@@ -13,6 +13,7 @@ import org.apache.commons.dbutils.handlers.ColumnListHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
@@ -28,8 +29,14 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.sql.Connection;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
@@ -91,6 +98,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             return unAuthorizedResolution();
         }
 
+        String qs = context.getRequest().getQueryString();
         String regioCode = Cfg.getSetting("safetyconnect_regio_code");
         String defaultApi = Cfg.getSetting("safetyconnect_webservice_default"); // new
 
@@ -123,6 +131,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         if ("true".equals(useRabbitMq) && requestIs(INCIDENT_REQUEST)) {
           String numString = path.substring(path.lastIndexOf('/') + 1);
           Integer number = 0;
+          String daysInPast = getQueryStringMap(qs).get("daysInPast") != null ? getQueryStringMap(qs).get("daysInPast") : "5";
 
           if (numString.equals("incident") == false) {
             number = Integer.parseInt(numString);
@@ -166,19 +175,25 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
                     if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { 
                       JSONObject discipline = incident.has("brwDisciplineGegevens") ? (JSONObject)incident.get("brwDisciplineGegevens") : null;
+                      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-ddTHH:mm:ss");
+                      Date checkDate = DateUtils.addDays(new Date(), (-1 * Integer.parseInt(daysInPast)));
+                      Date startDtg = discipline.has("startDtg") ? sdf.parse(discipline.getString("startDtg")) : checkDate;
 
-                      if (isauthfor_hidenotepad || incidentNummer == 0 ) { 
+                      if (isauthfor_hidenotepad || incidentNummer == 0) { 
                         incident.put("kladblokregels", new JSONArray()); 
                       }
 
-                      if (isauthfor_incident && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
-                        incidents.put(incident); 
-                      } else if (isauthfor_incident && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
-                        incidents.put(incident); 
-                      } else if (isauthfor_incident && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
-                        incidents.put(incident); 
-                      } else if (isauthfor_incident && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
-                        incidents.put(incident); 
+                      if (checkDate.before(startDtg))
+                      {
+                        if (isauthfor_incident && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
+                          incidents.put(incident); 
+                        } else if (isauthfor_incident && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
+                          incidents.put(incident); 
+                        } else if (isauthfor_incident && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
+                          incidents.put(incident); 
+                        } else if (isauthfor_incident && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
+                          incidents.put(incident); 
+                        }
                       }
                     }
                   }
@@ -293,7 +308,6 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           };
        }
 
-        String qs = context.getRequest().getQueryString();
         String uri = url + "/" + path + (regioCode == null ? (qs == null ? "" : "?") : "?regioCode=" + regioCode + (qs == null ? "" : "&")) + qs;
         final HttpUriRequest req;
         
@@ -369,6 +383,18 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             log.error("Failed to write output:", e);
             return null;
         }
+    }
+
+    private Map<String, String> getQueryStringMap(String query) {  
+      String[] params = query.split("&");  
+      Map<String, String> map = new HashMap<String, String>();
+  
+      for (String param : params) {  
+          String name = param.split("=")[0];  
+          String value = param.split("=")[1];  
+          map.put(name, value);  
+      }  
+      return map;  
     }
 
     private String incidentIsForUserVehicle(JSONObject incident) {
