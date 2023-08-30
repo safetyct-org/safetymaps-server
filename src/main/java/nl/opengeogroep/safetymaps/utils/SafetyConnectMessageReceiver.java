@@ -320,13 +320,14 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private String nameQueue(Channel channel, String rqMb, String event, String vhost) {
     String name = null;
+    String checkByName = vhost + "_Safetymaps-Server_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
     try {
-      name = DB.qr().query("select queuenname from safetymaps.rq where messagebus = ?", new ScalarHandler<String>(), rqMb);
+      name = DB.qr().query("select queuenname from safetymaps.rq where queuenname = ?", new ScalarHandler<String>(), checkByName);
       if (name != null) {
         channel.queueBind(name, rqMb, "");
         return name;
       } else {
-        name = channel.queueDeclare(vhost + "_Safetymaps-Server_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event, true, false, false, null).getQueue();
+        name = channel.queueDeclare(checkByName, true, false, false, null).getQueue();
         channel.queueBind(name, rqMb, "");
         DB.qr().update("INSERT INTO safetymaps.rq (queuenname, messagebus) VALUES (?, ?)", name, rqMb);
         return name;
