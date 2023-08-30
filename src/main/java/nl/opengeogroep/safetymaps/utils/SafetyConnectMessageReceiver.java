@@ -153,7 +153,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private void initRabbitMqChannel(String vhost, String rqMb, String internalEvent) throws Exception {    
     Channel channel = RQ_CONNECTIONS.get(vhost).createChannel();
-    String queueName = nameQueue(channel, rqMb, internalEvent);
+    String queueName = nameQueue(channel, rqMb, internalEvent, vhost);
     String channelName = nameChannel(vhost, rqMb);
     DeliverCallback messageHandler = getMessageHandler(vhost, rqMb);
 
@@ -318,7 +318,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     return object;
   }
 
-  private String nameQueue(Channel channel, String rqMb, String event) {
+  private String nameQueue(Channel channel, String rqMb, String event, String vhost) {
     String name = null;
     try {
       name = DB.qr().query("select queuenname from safetymaps.rq where messagebus = ?", new ScalarHandler<String>(), rqMb);
@@ -326,7 +326,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         channel.queueBind(name, rqMb, "");
         return name;
       } else {
-        name = channel.queueDeclare("Safetymaps-Server_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event, true, false, false, null).getQueue();
+        name = channel.queueDeclare(vhost + "_Safetymaps-Server_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event, true, false, false, null).getQueue();
         channel.queueBind(name, rqMb, "");
         DB.qr().update("INSERT INTO safetymaps.rq (queuenname, messagebus) VALUES (?, ?)", name, rqMb);
         return name;
