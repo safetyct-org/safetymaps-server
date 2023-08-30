@@ -391,7 +391,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
   
       for (String param : params) {  
           String name = param.split("=")[0];  
-          String value = param.length() == 1 ? "" : param.split("=")[1];  
+          String value = param.split("=").length == 1 ? "" : param.split("=")[1];  
           map.put(name, value);  
       }  
       return map;  
