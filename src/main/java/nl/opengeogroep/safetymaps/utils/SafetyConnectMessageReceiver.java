@@ -248,66 +248,66 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     JSONObject incident = extractObjectFromMessage(msgBody);
     
     if (
-      incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == false ||
-      incidentIsForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == false) {
-        return;
-    }
+      incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true ||
+      incidentIsForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true
+    ) {
 
-    String incidentId = incident.getString("incidentId");
-    String envId = vhost + '-' + incidentId;
-    
-    try {
-      List<Map<String, Object>> dbIncidents = DB.qr().query("SELECT * FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
-      JSONObject dbIncident = dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidents.get(0)) : new JSONObject();
+      String incidentId = incident.getString("incidentId");
+      String envId = vhost + '-' + incidentId;
       
-      Integer number = incident.getInt("incidentNummer");
-      String tenantId = incident.getString("tenantIndentifier");
-      String status = incident.getString("status");
-      String sender = incident.getString("afzender");
-      JSONArray notes = incident.has("kladblokregels") 
-        ? incident.getJSONArray("kladblokregels") 
-        : dbIncident.has("notes") 
-          ? dbIncident.getJSONArray("notes") 
-          : new JSONArray();
-      JSONArray units = incident.has("betrokkenEenheden") 
-        ? incident.getJSONArray("betrokkenEenheden") 
-        : dbIncident.has("units") 
-          ? dbIncident.getJSONArray("units") 
-          : new JSONArray();
-      JSONArray characts = incident.has("karakteristieken") 
-        ? incident.getJSONArray("karakteristieken") 
-        : dbIncident.has("characts") 
-          ? dbIncident.getJSONArray("characts") 
-          : new JSONArray();
-      JSONObject location = incident.has("incidentLocatie") 
-        ? incident.getJSONObject("incidentLocatie") 
-        : dbIncident.has("location") 
-          ? dbIncident.getJSONObject("location") 
-          : new JSONObject();
-      JSONObject discipline = incident.has("brwDisciplineGegevens") 
-        ? incident.getJSONObject("brwDisciplineGegevens") 
-        : dbIncident.has("discipline") 
-          ? dbIncident.getJSONObject("discipline") 
-          : new JSONObject();
+      try {
+        List<Map<String, Object>> dbIncidents = DB.qr().query("SELECT * FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
+        JSONObject dbIncident = dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidents.get(0)) : new JSONObject();
+        
+        Integer number = incident.getInt("incidentNummer");
+        String tenantId = incident.getString("tenantIndentifier");
+        String status = incident.getString("status");
+        String sender = incident.getString("afzender");
+        JSONArray notes = incident.has("kladblokregels") 
+          ? incident.getJSONArray("kladblokregels") 
+          : dbIncident.has("notes") 
+            ? dbIncident.getJSONArray("notes") 
+            : new JSONArray();
+        JSONArray units = incident.has("betrokkenEenheden") 
+          ? incident.getJSONArray("betrokkenEenheden") 
+          : dbIncident.has("units") 
+            ? dbIncident.getJSONArray("units") 
+            : new JSONArray();
+        JSONArray characts = incident.has("karakteristieken") 
+          ? incident.getJSONArray("karakteristieken") 
+          : dbIncident.has("characts") 
+            ? dbIncident.getJSONArray("characts") 
+            : new JSONArray();
+        JSONObject location = incident.has("incidentLocatie") 
+          ? incident.getJSONObject("incidentLocatie") 
+          : dbIncident.has("location") 
+            ? dbIncident.getJSONObject("location") 
+            : new JSONObject();
+        JSONObject discipline = incident.has("brwDisciplineGegevens") 
+          ? incident.getJSONObject("brwDisciplineGegevens") 
+          : dbIncident.has("discipline") 
+            ? dbIncident.getJSONObject("discipline") 
+            : new JSONObject();
 
-      DB.qr().update("INSERT INTO safetymaps.incidents " + 
-        "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-        " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?, tenantId = ?", 
-        vhost, incidentId, envId, status, sender, number, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId, status, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId);
+        DB.qr().update("INSERT INTO safetymaps.incidents " + 
+          "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+          " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?, tenantId = ?", 
+          vhost, incidentId, envId, status, sender, number, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId, status, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId);
 
-      for(int i=0; i<units.length(); i++) {
-        JSONObject unit = (JSONObject)units.get(i);
+        for(int i=0; i<units.length(); i++) {
+          JSONObject unit = (JSONObject)units.get(i);
 
-        String unitId = unit.getString("roepnaam");
-        String unitEnvId = vhost + '-' + unitId;
-        Integer gmsStatusCode = unit.getInt("statusCode");
-        String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
-        JSONArray abbs = unit.getJSONArray("meldkamerStatusAbonnementen");
+          String unitId = unit.getString("roepnaam");
+          String unitEnvId = vhost + '-' + unitId;
+          Integer gmsStatusCode = unit.getInt("statusCode");
+          String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
+          JSONArray abbs = unit.getJSONArray("meldkamerStatusAbonnementen");
 
-        addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString());
+          addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString());
+        }
+      } catch (Exception e) {
+        log.error("Exception while upserting incident(" + envId + ") in database: ", e);
       }
-    } catch (Exception e) {
-      log.error("Exception while upserting incident(" + envId + ") in database: ", e);
     }
   }
 
