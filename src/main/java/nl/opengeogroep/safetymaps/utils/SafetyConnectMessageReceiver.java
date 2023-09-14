@@ -179,6 +179,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           default:
             break;
         }
+      } catch(Exception e) {
+        log.error("Rabbit MQ handling error");
       } finally {
         RQ_CHANNELS.get(channelName).basicAck(delivery.getEnvelope().getDeliveryTag(), false);
       }
@@ -193,7 +195,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     try {
       // Is message for me
-      if (unitIsForMe(move, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true) {
+      if (unitIsForMe(move, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(",")), false) == true) {
         Double lon = move.getDouble("lon");
         Double lat = move.getDouble("lat");
         Integer speed = move.has("speed") && move.get("speed") != null ? move.getInt("speed") : 0;
@@ -207,6 +209,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       }
     } catch (Exception e) {
       log.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -219,8 +222,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     try {
       // Is message for me
       if (
-        unitIsForMe(unit, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true ||
-        unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(","))) == true
+        unitIsForMe(unit, "afzender", Arrays.asList(RQ_SENDERS.split(",")), false) == true ||
+        unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(",")), true) == true
       ) {
         Integer gmsStatusCode = unit.getInt("gmsStatusCode");
         String sender = unit.getString("afzender");
@@ -231,6 +234,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       }
     } catch(Exception e) {
       log.error("Exception while updating unit(" + envId + ") in database: ", e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -308,6 +312,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         }
       } catch (Exception e) {
         log.error("Exception while upserting incident(" + envId + ") in database: ", e);
+        throw new RuntimeException(e);
       }
     }
   }
@@ -352,7 +357,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     return matched;
   }
 
-  private boolean unitIsForMe(JSONObject object, String key, List<String> valuesToCheck) {
+  private boolean unitIsForMe(JSONObject object, String key, List<String> valuesToCheck, Boolean keyIsString) {
     boolean matched = false;
 
     if (object.has(key) == false) {
@@ -360,13 +365,18 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
 
     String keyValueString = object.getString(key);
-    JSONArray keyValues = new JSONArray(keyValueString);
 
-    for(int i=0; i<keyValues.length(); i++) {
-      boolean found = valuesToCheck.contains(keyValues.get(i));
-      if (found) { 
-        matched = true;
+    if (keyIsString) {
+      JSONArray keyValues = new JSONArray(keyValueString);
+
+      for(int i=0; i<keyValues.length(); i++) {
+        boolean found = valuesToCheck.contains(keyValues.get(i));
+        if (found) { 
+          matched = true;
+        }
       }
+    } else {
+      matched = valuesToCheck.contains(keyValueString);
     }
     
     return matched;
