@@ -195,7 +195,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     try {
       // Is message for me
-      if (unitIsForMe(move, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(",")), false) == true) {
+      if (unitIsForMe(move, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(",")), true) == true) {
         Double lon = move.getDouble("lon");
         Double lat = move.getDouble("lat");
         Integer speed = move.has("speed") && move.get("speed") != null ? move.getInt("speed") : 0;
@@ -222,8 +222,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     try {
       // Is message for me
       if (
-        unitIsForMe(unit, "afzender", Arrays.asList(RQ_SENDERS.split(",")), false) == true ||
-        unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(",")), true) == true
+        unitIsForMe(unit, "afzender", Arrays.asList(RQ_SENDERS.split(",")), true) == true ||
+        unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(",")), false) == true
       ) {
         Integer gmsStatusCode = unit.getInt("gmsStatusCode");
         String sender = unit.getString("afzender");
@@ -364,10 +364,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       return false;
     }
 
-    String keyValueString = object.getString(key);
-
-    if (keyIsString) {
-      JSONArray keyValues = new JSONArray(keyValueString);
+    if (keyIsString == false) {
+      JSONArray keyValues = object.getJSONArray(key);
 
       for(int i=0; i<keyValues.length(); i++) {
         boolean found = valuesToCheck.contains(keyValues.get(i));
@@ -376,6 +374,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         }
       }
     } else {
+      String keyValueString = object.getString(key);
       matched = valuesToCheck.contains(keyValueString);
     }
     
