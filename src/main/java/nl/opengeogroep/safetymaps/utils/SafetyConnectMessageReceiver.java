@@ -85,7 +85,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       }
 
       try {
-        initRabbitMqChannel(vhost, RQ_MB_UNIT_MOVED, "incident_moved");
+        initRabbitMqChannel(vhost, RQ_MB_UNIT_MOVED, "unit_moved");
         log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_MOVED + "') initialized.");
       } catch (Exception e) {
         log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_MOVED + ")'", e);
@@ -153,31 +153,36 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private void initRabbitMqChannel(String vhost, String rqMb, String internalEvent) throws Exception {    
     Channel channel = RQ_CONNECTIONS.get(vhost).createChannel();
+    channel.basicQos(1);
     String queueName = nameQueue(channel, rqMb, internalEvent, vhost);
     String channelName = nameChannel(vhost, rqMb);
-    DeliverCallback messageHandler = getMessageHandler(vhost, rqMb);
+    DeliverCallback messageHandler = getMessageHandler(vhost, rqMb, channelName);
 
-    channel.basicConsume(queueName, true, messageHandler, consumerTag -> { });
+    channel.basicConsume(queueName, false, messageHandler, consumerTag -> { });
 
     RQ_CHANNELS.put(channelName, channel);
   }
 
-  private DeliverCallback getMessageHandler(String vhost, String rqMb) {
+  private DeliverCallback getMessageHandler(String vhost, String rqMb, String channelName) {
     return (consumerTag, delivery) -> {
       String msgBody = new String(delivery.getBody(), "UTF-8");
 
-      switch (rqMb) {
-        case RQ_MB_INCIDENT_CHANGED:
-          handleIncidentChangedMessage(vhost, msgBody);
-          break;
-        case RQ_MB_UNIT_CHANGED:
-          handleUnitChangedMessage(vhost, msgBody);
-          break;
-        case RQ_MB_UNIT_MOVED:
-          handleUnitMovedMessage(vhost, msgBody);
-          break;
-        default:
-          break;
+      try {
+        switch (rqMb) {
+          case RQ_MB_INCIDENT_CHANGED:
+            handleIncidentChangedMessage(vhost, msgBody);
+            break;
+          case RQ_MB_UNIT_CHANGED:
+            handleUnitChangedMessage(vhost, msgBody);
+            break;
+          case RQ_MB_UNIT_MOVED:
+            handleUnitMovedMessage(vhost, msgBody);
+            break;
+          default:
+            break;
+        }
+      } finally {
+        RQ_CHANNELS.get(channelName).basicAck(delivery.getEnvelope().getDeliveryTag(), false);
       }
     }; 
   }
@@ -189,23 +194,19 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     String envId = vhost + '-' + moveId;
 
     try {
-      String regioCode = Cfg.getSetting("safetyconnect_regio_code", "089u2!3hjrb");
-      
       // Is message for me
-      if (!moveId.startsWith(regioCode)) {
-        return;
+      if (unitIsForMe(move, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(","))) == true) {
+        Double lon = move.getDouble("lon");
+        Double lat = move.getDouble("lat");
+        Integer speed = move.has("speed") && move.get("speed") != null ? move.getInt("speed") : 0;
+        Integer heading = move.has("heading") && move.get("heading") != null ? move.getInt("heading") : 0;
+        Integer eta = move.has("eta") && move.get("eta") != null ? move.getInt("eta") : 0;
+
+        DB.qr().update(
+          "INSERT INTO safetymaps.units (source, sourceEnv, sourceId, sourceEnvId, lon, lat, speed, heading, eta, geom) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)) ON CONFLICT (sourceEnvId) DO UPDATE SET lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)",
+          vhost, moveId, envId, lon, lat, speed, heading, eta, lon, lat, lon, lat, speed, heading, eta, lon, lat
+        );
       }
-
-      Double lon = move.getDouble("lon");
-      Double lat = move.getDouble("lat");
-      Integer speed = move.has("speed") ? move.getInt("speed") : 0;
-      Integer heading = move.has("heading") ? move.getInt("heading") : 0;
-      Integer eta = move.has("eta") ? move.getInt("eta") : 0;
-
-      DB.qr().update(
-        "INSERT INTO safetymaps.units (source, sourceEnv, sourceId, sourceEnvId, lon, lat, speed, heading, eta, geom) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)) ON CONFLICT (sourceEnvId) DO UPDATE SET lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)",
-        vhost, moveId, envId, lon, lat, speed, heading, eta, lon, lat, lon, lat, speed, heading, eta, lon, lat
-      );
     } catch (Exception e) {
       log.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
     }
@@ -219,17 +220,16 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     try {
       // Is message for me
-      if (unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(","))) == false) {
-        return;
+      if (unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(","))) == true) {
+        Integer gmsStatusCode = unit.getInt("gmsStatusCode");
+        String sender = unit.getString("afzender");
+        String primairevoertuigsoort = unit.has("primaireVoertuigSoort") ? unit.getString("primaireVoertuigSoort") : "";
+        JSONArray abbs = unit.has("meldkamerStatusAbonnementen") ? unit.getJSONArray("meldkamerStatusAbonnementen") : new JSONArray();
+    
+        addOrUpdateDbUnit(vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString());
       }
-
-      Integer gmsStatusCode = unit.getInt("gmsStatusCode");
-      String sender = unit.getString("afzender");
-      String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
-      JSONArray abbs = unit.getJSONArray("meldkamerStatusAbonnementen");
-  
-      addOrUpdateDbUnit(vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString());
     } catch(Exception e) {
+      log.error("Exception while updating unit(" + envId + ") in database: ", e);
     }
   }
 
@@ -300,8 +300,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           String unitId = unit.getString("roepnaam");
           String unitEnvId = vhost + '-' + unitId;
           Integer gmsStatusCode = unit.getInt("statusCode");
-          String primairevoertuigsoort = unit.getString("primaireVoertuigSoort");
-          JSONArray abbs = unit.getJSONArray("meldkamerStatusAbonnementen");
+          String primairevoertuigsoort = unit.has("primaireVoertuigSoort") ? unit.getString("primaireVoertuigSoort") : "";
+          JSONArray abbs = unit.has("meldkamerStatusAbonnementen") ? unit.getJSONArray("meldkamerStatusAbonnementen") : new JSONArray();
 
           addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString());
         }
@@ -320,7 +320,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private String nameQueue(Channel channel, String rqMb, String event, String vhost) {
     String name = null;
-    String checkByName = vhost + "_Safetymaps-Server_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
+    String checkByName = RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
     try {
       name = DB.qr().query("select queuenname from safetymaps.rq where queuenname = ?", new ScalarHandler<String>(), checkByName);
       if (name != null) {
@@ -339,7 +339,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   }
 
   private String nameChannel(String vhost, String rqMb) {
-    return vhost + "-" + rqMb;
+    return RQ_VHOSTS.substring(0, 1) + "-" + vhost + "-" + rqMb;
   }
 
   private boolean incidentIsForMe(JSONObject object, String key, List<String> valuesToCheck) {
