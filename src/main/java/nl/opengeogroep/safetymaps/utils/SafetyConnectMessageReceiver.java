@@ -193,7 +193,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     try {
       // Is message for me
-      if (unitIsForMe(move, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(","))) == true) {
+      if (unitIsForMe(move, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true) {
         Double lon = move.getDouble("lon");
         Double lat = move.getDouble("lat");
         Integer speed = move.has("speed") && move.get("speed") != null ? move.getInt("speed") : 0;
@@ -218,7 +218,10 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     try {
       // Is message for me
-      if (unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(","))) == true) {
+      if (
+        unitIsForMe(unit, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true ||
+        unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(","))) == true
+      ) {
         Integer gmsStatusCode = unit.getInt("gmsStatusCode");
         String sender = unit.getString("afzender");
         String primairevoertuigsoort = unit.has("primaireVoertuigSoort") ? unit.getString("primaireVoertuigSoort") : "";
@@ -351,6 +354,11 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private boolean unitIsForMe(JSONObject object, String key, List<String> valuesToCheck) {
     boolean matched = false;
+
+    if (object.has(key) == false) {
+      return false;
+    }
+
     String keyValueString = object.getString(key);
     JSONArray keyValues = new JSONArray(keyValueString);
 
