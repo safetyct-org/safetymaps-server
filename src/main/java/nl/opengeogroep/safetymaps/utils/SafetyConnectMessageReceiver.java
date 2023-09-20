@@ -28,16 +28,16 @@ import nl.opengeogroep.safetymaps.server.db.DB;
 public class SafetyConnectMessageReceiver implements ServletContextListener {
   private static final Log log = LogFactory.getLog(SafetyConnectMessageReceiver.class);
 
-  private ServletContext CONTEXT;
-  private String RQ_SENDERS;
-  private String RQ_TENANTS;
-  private String RQ_HOST;
-  private String RQ_VHOSTS;
-  private String RQ_USER;
-  private String RQ_PASS;
+  private static ServletContext CONTEXT;
+  private static String RQ_SENDERS;
+  private static String RQ_TENANTS;
+  private static String RQ_HOST;
+  private static String RQ_VHOSTS;
+  private static String RQ_USER;
+  private static String RQ_PASS;
   
-  private HashMap<String, Connection> RQ_CONNECTIONS = new HashMap<String, Connection>();
-  private HashMap<String, Channel> RQ_CHANNELS = new HashMap<String, Channel>();
+  private static HashMap<String, Connection> RQ_CONNECTIONS = new HashMap<String, Connection>();
+  private static HashMap<String, Channel> RQ_CHANNELS = new HashMap<String, Channel>();
 
   private static final String RQ_MB_INCIDENT_CHANGED = "SafetyConnect.Messages.IncidentChanged:IIncidentChangedEvent";
   private static final String RQ_MB_UNIT_CHANGED = "SafetyConnect.Messages.EenheidChanged:IEenheidChangedEvent";
@@ -118,7 +118,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
   }
 
-  private void getConfigFromDb() throws Exception {
+  private static void getConfigFromDb() throws Exception {
     RQ_HOST = Cfg.getSetting("safetyconnect_rq_host");
     RQ_VHOSTS = Cfg.getSetting("safetyconnect_rq_vhost");
     RQ_USER = Cfg.getSetting("safetyconnect_rq_user");
@@ -135,7 +135,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
   }
 
-  private void initiateRabbitMqConnection(String vhost) throws Exception {
+  private static void initiateRabbitMqConnection(String vhost) throws Exception {
     ConnectionFactory rqConFac;
 
     rqConFac = new ConnectionFactory();
@@ -149,7 +149,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     RQ_CONNECTIONS.put(vhost, rqConFac.newConnection());
   }
 
-  private void initRabbitMqChannel(String vhost, String rqMb, String internalEvent) throws Exception {    
+  private static void initRabbitMqChannel(String vhost, String rqMb, String internalEvent) throws Exception {    
     Channel channel = RQ_CONNECTIONS.get(vhost).createChannel();
     channel.basicQos(1);
     String queueName = nameQueue(channel, rqMb, internalEvent, vhost);
@@ -161,7 +161,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     RQ_CHANNELS.put(channelName, channel);
   }
 
-  private DeliverCallback getMessageHandler(String vhost, String rqMb, String channelName) {
+  private static DeliverCallback getMessageHandler(String vhost, String rqMb, String channelName) {
     return (consumerTag, delivery) -> {
       String msgBody = new String(delivery.getBody(), "UTF-8");
 
@@ -187,7 +187,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }; 
   }
 
-  private void handleUnitMovedMessage(String vhost, String msgBody) {
+  private static void handleUnitMovedMessage(String vhost, String msgBody) {
     JSONObject move = extractObjectFromMessage(msgBody);
     
     String moveId = move.getString("unit");
@@ -213,7 +213,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
   }
 
-  private void handleUnitChangedMessage(String vhost, String msgBody) {
+  private static void handleUnitChangedMessage(String vhost, String msgBody) {
     JSONObject unit = extractObjectFromMessage(msgBody);
 
     String unitId = unit.getString("roepnaam");
@@ -238,7 +238,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
   }
 
-  private void addOrUpdateDbUnit(String vhost, String unitId, String envId, Integer gmsStatusCode, String sender, String primairevoertuigsoort, String abbs) {
+  private static void addOrUpdateDbUnit(String vhost, String unitId, String envId, Integer gmsStatusCode, String sender, String primairevoertuigsoort, String abbs) {
     try {
       DB.qr().update("INSERT INTO safetymaps.units " +
         "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs) VALUES('sc', ?, ?, ?, ?, ?, ?, ?) " +
@@ -249,7 +249,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
   }
 
-  private void handleIncidentChangedMessage(String vhost, String msgBody) {
+  private static void handleIncidentChangedMessage(String vhost, String msgBody) {
     JSONObject incident = extractObjectFromMessage(msgBody);
     
     if (
@@ -317,14 +317,14 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
   }
 
-  private JSONObject extractObjectFromMessage(String msgBody) {
+  private static JSONObject extractObjectFromMessage(String msgBody) {
     JSONObject msg = new JSONObject(msgBody);
     JSONObject object = msg.getJSONObject("message");
 
     return object;
   }
 
-  private String nameQueue(Channel channel, String rqMb, String event, String vhost) {
+  private static String nameQueue(Channel channel, String rqMb, String event, String vhost) {
     String name = null;
     String checkByName = RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
     try {
@@ -344,11 +344,11 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
   }
 
-  private String nameChannel(String vhost, String rqMb) {
+  private static String nameChannel(String vhost, String rqMb) {
     return RQ_VHOSTS.substring(0, 1) + "-" + vhost + "-" + rqMb;
   }
 
-  private boolean incidentIsForMe(JSONObject object, String key, List<String> valuesToCheck) {
+  private static boolean incidentIsForMe(JSONObject object, String key, List<String> valuesToCheck) {
     boolean matched = false;
     String keyValue = object.getString(key);
 
@@ -357,7 +357,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     return matched;
   }
 
-  private boolean unitIsForMe(JSONObject object, String key, List<String> valuesToCheck, Boolean keyIsString) {
+  private static boolean unitIsForMe(JSONObject object, String key, List<String> valuesToCheck, Boolean keyIsString) {
     boolean matched = false;
 
     if (object.has(key) == false) {
@@ -381,7 +381,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     return matched;
   }
 
-  private boolean isEnabled() {
+  private static boolean isEnabled() {
     try {
       String useRabbitMq = Cfg.getSetting("safetyconnect_rq", "false");
 
