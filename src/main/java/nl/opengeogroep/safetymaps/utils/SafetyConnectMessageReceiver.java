@@ -195,7 +195,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     try {
       // Is message for me
-      if (unitIsForMe(move, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(",")), true) == true) {
+      if (unitIsForMe(move, "customer", Arrays.asList(RQ_TENANTS.split(",")), true) == true) {
         Double lon = move.getDouble("lon");
         Double lat = move.getDouble("lat");
         Integer speed = move.has("speed") && move.get("speed") != null ? move.getInt("speed") : 0;
