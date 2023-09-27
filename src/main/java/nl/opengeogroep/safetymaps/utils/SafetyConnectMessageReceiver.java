@@ -180,7 +180,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
             break;
         }
       } catch(Exception e) {
-        log.error("Rabbit MQ handling error");
+        log.error(e.getMessage());
       } finally {
         RQ_CHANNELS.get(channelName).basicAck(delivery.getEnvelope().getDeliveryTag(), false);
       }
