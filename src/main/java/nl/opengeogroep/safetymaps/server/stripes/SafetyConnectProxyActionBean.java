@@ -280,14 +280,18 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                      * smvng_vehicleinfo_unasigned	Toon locaties van alle voertuigen die niet aan een incident gekoppeld zijn.
                      * smvng_vehicleinfo_maplocations	Toon locaties van alle voertuigen die aan een incident gekoppeld zijn.
                      * smvng_vehicleinfo_incidentlocations	Toon locaties van betrokken voertuigen wanner het incident is geopend.
+                     * smvng_incident_ownvehiclenumber   Mag eigen voertuignummer wijzigen
                      */
                     boolean isauthfor_unasigned = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_unasigned");
                     boolean isauthfor_maplocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_maplocations");
                     boolean isauthfor_incidentlocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations");
+                    boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
 
                     if (isauthfor_unasigned && unit.has("incidentId") == false) {
                       units.put(unit);
                     } else if (isauthfor_maplocations && unit.has("incidentId")) {
+                      units.put(unit);
+                    } else if (isauthfor_ownvehiclenumber && unit.has("incidentId")) {
                       units.put(unit);
                     } else if (isauthfor_incidentlocations && unit.has("incidentId")) {
                       for (Map<String, Object> dbIncident : dbIncidents) {
