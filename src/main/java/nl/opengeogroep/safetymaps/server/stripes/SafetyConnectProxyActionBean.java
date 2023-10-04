@@ -160,7 +160,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   for (Map<String, Object> res : results) {
                     JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res);
 
-                    /*
+                    /**
                     * smvng_incident_hidenotepad	Kladblok verbergen
                     * smvng_incident_ownvehiclenumber	Gebruiker mag eigen voertuignummer wijzigen.
                     * smvng_incident_prio45	Toon incidenten met prio 4 of 5 en koppel voertuigen aan deze incidenten.
@@ -276,7 +276,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                       unit.put("incidentRol", unitOnIncident.get("incidentRol"));
                     }
 
-                    /*
+                    /**
                      * smvng_vehicleinfo_unasigned	Toon locaties van alle voertuigen die niet aan een incident gekoppeld zijn.
                      * smvng_vehicleinfo_maplocations	Toon locaties van alle voertuigen die aan een incident gekoppeld zijn.
                      * smvng_vehicleinfo_incidentlocations	Toon locaties van betrokken voertuigen wanner het incident is geopend.
