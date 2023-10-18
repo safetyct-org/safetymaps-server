@@ -198,8 +198,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       if (unitIsForMe(move, "customer", Arrays.asList(RQ_TENANTS.split(",")), true) == true) {
         Double lon = move.getDouble("lon");
         Double lat = move.getDouble("lat");
-        Integer speed = move.has("speed") && move.get("speed") != null ? move.getInt("speed") : 0;
-        Integer heading = move.has("heading") && move.get("heading") != null ? move.getInt("heading") : 0;
+        Integer speed = move.has("speed") && move.get("speed").toString() != "null" ? move.getInt("speed") : 0;
+        Integer heading = move.has("heading") && move.get("heading").toString() != "null" ? move.getInt("heading") : 0;
         Integer eta = move.has("eta") && move.get("eta").toString() != "null" ? move.getInt("eta") : 0;
 
         DB.qr().update(
