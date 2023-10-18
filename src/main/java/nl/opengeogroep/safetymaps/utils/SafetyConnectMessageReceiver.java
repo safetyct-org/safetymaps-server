@@ -200,7 +200,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         Double lat = move.getDouble("lat");
         Integer speed = move.has("speed") && move.get("speed") != null ? move.getInt("speed") : 0;
         Integer heading = move.has("heading") && move.get("heading") != null ? move.getInt("heading") : 0;
-        Integer eta = move.has("eta") && move.get("eta") != null ? move.getInt("eta") : 0;
+        Integer eta = move.has("eta") && move.getString("eta") != null && move.getString("eta") != "null" ? move.getInt("eta") : 0;
 
         DB.qr().update(
           "INSERT INTO safetymaps.units (source, sourceEnv, sourceId, sourceEnvId, lon, lat, speed, heading, eta, geom) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)) ON CONFLICT (sourceEnvId) DO UPDATE SET lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)",
