@@ -209,6 +209,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       }
     } catch (Exception e) {
       log.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
+      log.error(move.get("eta"));
       throw new RuntimeException(e);
     }
   }
