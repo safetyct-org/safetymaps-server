@@ -4,7 +4,9 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -61,10 +63,22 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
 
     List<String> vhosts = Arrays.asList(RQ_VHOSTS.split(","));
+    List<String> hosts = Arrays.asList(RQ_HOST.split(","));
+    List<String> users = Arrays.asList(RQ_USER.split(","));
+    List<String> passes = Arrays.asList(RQ_PASS.split(","));
 
     vhosts.forEach((vhost) -> {
+      String matchVhost = "[" + vhost + "]:";
       try {
-        initiateRabbitMqConnection(vhost);
+        Optional<String> host = hosts.stream().filter(h -> h.startsWith(matchVhost)).findFirst();
+        Optional<String> user = users.stream().filter(u -> u.startsWith(matchVhost)).findFirst();
+        Optional<String> pass = passes.stream().filter(p -> p.startsWith(matchVhost)).findFirst();
+
+        if (host.isPresent() && user.isPresent() && pass.isPresent()) {
+          initiateRabbitMqConnection(vhost, host.get().replace(matchVhost, ""), user.get().replace(matchVhost, ""), pass.get().replace(matchVhost, ""));
+        } else {
+          log.error("Missing host/user/pass combination for 'initiateRabbitMqConnection(" + vhost + ")': ");
+        }
         log.info("SafetyConnectMessageReceiver RabbitMqConnection initialized.");
       } catch (Exception e) {
         log.error("Exception while exec 'initiateRabbitMqConnection(" + vhost + ")': ", e);
@@ -138,16 +152,16 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
   }
 
-  private static void initiateRabbitMqConnection(String vhost) throws Exception {
+  private static void initiateRabbitMqConnection(String vhost, String host, String user, String pass) throws Exception {
     ConnectionFactory rqConFac;
 
     rqConFac = new ConnectionFactory();
     if (vhost != "*") {
       rqConFac.setVirtualHost(vhost);
     }
-    rqConFac.setHost(RQ_HOST);
-    rqConFac.setUsername(RQ_USER);
-    rqConFac.setPassword(RQ_PASS);
+    rqConFac.setHost(host);
+    rqConFac.setUsername(user);
+    rqConFac.setPassword(pass);
 
     RQ_CONNECTIONS.put(vhost, rqConFac.newConnection());
   }
