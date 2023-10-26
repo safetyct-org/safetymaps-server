@@ -1,5 +1,6 @@
 package nl.opengeogroep.safetymaps.utils;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private static String RQ_VHOSTS;
   private static String RQ_USER;
   private static String RQ_PASS;
+  private static String RQ_PARAMS;
   
   private static HashMap<String, Connection> RQ_CONNECTIONS = new HashMap<String, Connection>();
   private static HashMap<String, Channel> RQ_CHANNELS = new HashMap<String, Channel>();
@@ -125,6 +127,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     RQ_PASS = Cfg.getSetting("safetyconnect_rq_pass");
     RQ_SENDERS = Cfg.getSetting("safetyconnect_rq_senders", "");
     RQ_TENANTS = Cfg.getSetting("safetyconnect_rq_tenants", "");
+    RQ_PARAMS = Cfg.getSetting("safetyconnect_rq_params", "");
 
     if (RQ_HOST == null || RQ_USER == null || RQ_PASS == null) {
       throw new Exception("One or more required 'safetyconnect_rq' settings are empty.");
@@ -328,15 +331,28 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private static String nameQueue(Channel channel, String rqMb, String event, String vhost) {
     String name = null;
     String checkByName = RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
+    
     try {
       name = DB.qr().query("select queuenname from safetymaps.rq where queuenname = ?", new ScalarHandler<String>(), checkByName);
       if (name != null) {
         channel.queueBind(name, rqMb, "");
         return name;
       } else {
-        name = channel.queueDeclare(checkByName, true, false, false, null).getQueue();
+        Map<String, Object> args = new HashMap<>();
+        List<String> params = Arrays.asList(RQ_PARAMS.split(","));
+        
+        params.forEach((param) -> {
+          String[] paramArr = param.split(":");
+          if (paramArr.length == 2) {
+            args.put(paramArr[0], paramArr[1]);
+          }
+        });
+
+        name = channel.queueDeclare(checkByName, true, false, false, args).getQueue();
         channel.queueBind(name, rqMb, "");
+
         DB.qr().update("INSERT INTO safetymaps.rq (queuenname, messagebus) VALUES (?, ?)", name, rqMb);
+
         return name;
       }
     } catch (Exception e) {
