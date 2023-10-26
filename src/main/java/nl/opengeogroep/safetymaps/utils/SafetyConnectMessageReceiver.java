@@ -254,7 +254,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     JSONObject incident = extractObjectFromMessage(msgBody);
     
     if (
-      incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true ||
+      // SMVNG-711 : only filter on tenant // incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true ||
       incidentIsForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true
     ) {
 
