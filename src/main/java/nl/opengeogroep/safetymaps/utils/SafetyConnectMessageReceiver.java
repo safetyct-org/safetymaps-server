@@ -69,11 +69,11 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     vhosts.forEach((vhost) -> {
       String matchVhost = "[" + vhost + "]:";
-      try {
-        Optional<String> host = hosts.stream().filter(h -> h.startsWith(matchVhost)).findFirst();
-        Optional<String> user = users.stream().filter(u -> u.startsWith(matchVhost)).findFirst();
-        Optional<String> pass = passes.stream().filter(p -> p.startsWith(matchVhost)).findFirst();
+      Optional<String> host = hosts.stream().filter(h -> h.startsWith(matchVhost)).findFirst();
+      Optional<String> user = users.stream().filter(u -> u.startsWith(matchVhost)).findFirst();
+      Optional<String> pass = passes.stream().filter(p -> p.startsWith(matchVhost)).findFirst();
 
+      try {
         if (host.isPresent() && user.isPresent() && pass.isPresent()) {
           initiateRabbitMqConnection(vhost, host.get().replace(matchVhost, ""), user.get().replace(matchVhost, ""), pass.get().replace(matchVhost, ""));
         } else {
@@ -85,21 +85,21 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       }
 
       try {
-        initRabbitMqChannel(vhost, RQ_MB_INCIDENT_CHANGED, "incident_changed");
+        initRabbitMqChannel(vhost, host.get(), RQ_MB_INCIDENT_CHANGED, "incident_changed");
         log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_INCIDENT_CHANGED + "') initialized.");
       } catch (Exception e) {
         log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_INCIDENT_CHANGED + ")'", e);
       }
 
       try {
-        initRabbitMqChannel(vhost, RQ_MB_UNIT_CHANGED, "unit_changed");
+        initRabbitMqChannel(vhost, host.get(), RQ_MB_UNIT_CHANGED, "unit_changed");
         log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_CHANGED + "') initialized.");
       } catch (Exception e) {
         log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_CHANGED + ")'", e);
       }
 
       try {
-        initRabbitMqChannel(vhost, RQ_MB_UNIT_MOVED, "unit_moved");
+        initRabbitMqChannel(vhost, host.get(), RQ_MB_UNIT_MOVED, "unit_moved");
         log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_MOVED + "') initialized.");
       } catch (Exception e) {
         log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_MOVED + ")'", e);
@@ -166,10 +166,10 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     RQ_CONNECTIONS.put(vhost, rqConFac.newConnection());
   }
 
-  private static void initRabbitMqChannel(String vhost, String rqMb, String internalEvent) throws Exception {    
+  private static void initRabbitMqChannel(String vhost, String host, String rqMb, String internalEvent) throws Exception {    
     Channel channel = RQ_CONNECTIONS.get(vhost).createChannel();
     channel.basicQos(1);
-    String queueName = nameQueue(channel, rqMb, internalEvent, vhost);
+    String queueName = nameQueue(channel, rqMb, internalEvent, vhost, host);
     String channelName = nameChannel(vhost, rqMb);
     DeliverCallback messageHandler = getMessageHandler(vhost, rqMb, channelName);
 
@@ -342,7 +342,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     return object;
   }
 
-  private static String nameQueue(Channel channel, String rqMb, String event, String vhost) {
+  private static String nameQueue(Channel channel, String rqMb, String event, String vhost, String host) {
     String name = null;
     String checkByName = RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
     
@@ -353,14 +353,17 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         return name;
       } else {
         Map<String, Object> args = new HashMap<>();
-        List<String> params = Arrays.asList(RQ_PARAMS.split(","));
-        
-        params.forEach((param) -> {
-          String[] paramArr = param.split(":");
-          if (paramArr.length == 2) {
-            args.put(paramArr[0], paramArr[1]);
-          }
-        });
+
+        // Backwards compatible, disallow args on old server
+        if (host.equals("10.233.184.139") == false) {
+          List<String> params = Arrays.asList(RQ_PARAMS.split(","));
+          params.forEach((param) -> {
+            String[] paramArr = param.split(":");
+            if (paramArr.length == 2) {
+              args.put(paramArr[0], paramArr[1]);
+            }
+          });
+        }
 
         name = channel.queueDeclare(checkByName, true, false, false, args).getQueue();
         channel.queueBind(name, rqMb, "");
