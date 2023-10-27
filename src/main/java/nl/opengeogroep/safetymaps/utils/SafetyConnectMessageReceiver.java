@@ -85,21 +85,21 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       }
 
       try {
-        initRabbitMqChannel(vhost, host.get(), RQ_MB_INCIDENT_CHANGED, "incident_changed");
+        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_INCIDENT_CHANGED, "incident_changed");
         log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_INCIDENT_CHANGED + "') initialized.");
       } catch (Exception e) {
         log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_INCIDENT_CHANGED + ")'", e);
       }
 
       try {
-        initRabbitMqChannel(vhost, host.get(), RQ_MB_UNIT_CHANGED, "unit_changed");
+        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_UNIT_CHANGED, "unit_changed");
         log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_CHANGED + "') initialized.");
       } catch (Exception e) {
         log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_CHANGED + ")'", e);
       }
 
       try {
-        initRabbitMqChannel(vhost, host.get(), RQ_MB_UNIT_MOVED, "unit_moved");
+        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_UNIT_MOVED, "unit_moved");
         log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_MOVED + "') initialized.");
       } catch (Exception e) {
         log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_MOVED + ")'", e);
