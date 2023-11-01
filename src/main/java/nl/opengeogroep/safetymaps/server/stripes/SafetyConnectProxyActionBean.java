@@ -166,6 +166,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     * smvng_incident_prio45	Toon incidenten met prio 4 of 5 en koppel voertuigen aan deze incidenten.
                     * smvng_incident_trainingincident	Toon training incidenten en koppel voertuigen aan deze incidenten.
                     */
+                    String hideNotepadOnTerm = Cfg.getSetting("kladblok_hidden_on_term", "#&*^@&^#&*&HGDGJFGS8F778ASDxcvsdfdfsdfsd");
                     boolean isauthfor_hidenotepad = request.isUserInRole("smvng_incident_hidenotepad");
                     boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
                     boolean isauthfor_prio45 = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_prio45");
@@ -179,7 +180,22 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                       Date checkDate = DateUtils.addDays(new Date(), (-1 * Integer.parseInt(daysInPast)));
                       Date startDtg = discipline.has("startDtg") ? sdf.parse(discipline.getString("startDtg").replaceAll("T", " ")) : checkDate;
 
-                      if (isauthfor_hidenotepad || incidentNummer == 0) { 
+                      JSONArray notepad;
+                      if (incident.has("Kladblokregels") && !JSONObject.NULL.equals(incident.get("Kladblokregels"))) {
+                        notepad = (JSONArray)incident.get("Kladblokregels");
+                      } else {
+                        notepad = new JSONArray();
+                      }
+                      boolean hideNotepad = false;
+                      for(int v=0; v<notepad.length(); v++) {
+                          JSONObject notepadrule = (JSONObject)notepad.get(v);
+                          String inhoud = notepadrule.getString("Inhoud");
+                          if (inhoud.toLowerCase().startsWith(hideNotepadOnTerm.toLowerCase())) {
+                            hideNotepad = true;
+                          }
+                      }
+
+                      if (isauthfor_hidenotepad || hideNotepad || incidentNummer == 0) { 
                         incident.put("kladblokregels", new JSONArray()); 
                       }
 
