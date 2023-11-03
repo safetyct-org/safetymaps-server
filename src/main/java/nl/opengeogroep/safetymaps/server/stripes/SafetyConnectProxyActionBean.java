@@ -164,12 +164,14 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     * smvng_incident_hidenotepad	Kladblok verbergen
                     * smvng_incident_ownvehiclenumber	Gebruiker mag eigen voertuignummer wijzigen.
                     * smvng_incident_prio45	Toon incidenten met prio 4 of 5 en koppel voertuigen aan deze incidenten.
+                    * smvng_incident_samengevoegd Toon samengevoegde incidenten en koppel voertuigen aan deze incidenten.
                     * smvng_incident_trainingincident	Toon training incidenten en koppel voertuigen aan deze incidenten.
                     */
                     String hideNotepadOnTerm = Cfg.getSetting("kladblok_hidden_on_term", "#&*^@&^#&*&HGDGJFGS8F778ASDxcvsdfdfsdfsd");
                     boolean isauthfor_hidenotepad = request.isUserInRole("smvng_incident_hidenotepad");
                     boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
                     boolean isauthfor_prio45 = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_prio45");
+                    boolean isauthfor_concatted = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_samengevoegd");
                     boolean isauthfor_trainingincident = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_trainingincident");
                     boolean isauthfor_im = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
                     boolean isauthfor_incident = incidentIsForUserVehicle(incident) != "" || isauthfor_im ||  isauthfor_ownvehiclenumber;
@@ -179,10 +181,13 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                       SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                       Date checkDate = DateUtils.addDays(new Date(), (-1 * Integer.parseInt(daysInPast)));
                       Date startDtg = discipline.has("startDtg") ? sdf.parse(discipline.getString("startDtg").replaceAll("T", " ")) : checkDate;
+                      String closureCode = discipline.has("afsluitCode") ? discipline.getString("afsluitCode") : "";
+                      String concattedClosureCode = "Samengevoegd incident";
+                      boolean incIsNotConcattedOrIsUserisAuthForConcatted = closureCode != concattedClosureCode || (closureCode == concattedClosureCode && isauthfor_concatted);
 
                       JSONArray notepad;
-                      if (incident.has("Kladblokregels") && !JSONObject.NULL.equals(incident.get("Kladblokregels"))) {
-                        notepad = (JSONArray)incident.get("Kladblokregels");
+                      if (incident.has("kladblokregels") && !JSONObject.NULL.equals(incident.get("kladblokregels"))) {
+                        notepad = (JSONArray)incident.get("kladblokregels");
                       } else {
                         notepad = new JSONArray();
                       }
@@ -201,13 +206,13 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
                       if (checkDate.before(startDtg))
                       {
-                        if (isauthfor_incident && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
+                        if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
                           incidents.put(incident); 
-                        } else if (isauthfor_incident && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
+                        } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
                           incidents.put(incident); 
-                        } else if (isauthfor_incident && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
+                        } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
                           incidents.put(incident); 
-                        } else if (isauthfor_incident && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
+                        } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
                           incidents.put(incident); 
                         }
                       }
