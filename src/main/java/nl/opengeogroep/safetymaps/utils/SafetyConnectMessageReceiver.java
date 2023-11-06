@@ -245,10 +245,11 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       ) {
         Integer gmsStatusCode = unit.getInt("gmsStatusCode");
         String sender = unit.getString("afzender");
+        String post = unit.has("standplaatsKazerne") ? unit.getString("standplaatsKazerne") : "";
         String primairevoertuigsoort = unit.has("primaireVoertuigSoort") ? unit.getString("primaireVoertuigSoort") : "";
         JSONArray abbs = unit.has("meldkamerStatusAbonnementen") ? unit.getJSONArray("meldkamerStatusAbonnementen") : new JSONArray();
     
-        addOrUpdateDbUnit(vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString());
+        addOrUpdateDbUnit(vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString(), post);
       }
     } catch(Exception e) {
       log.error("Exception while updating unit(" + envId + ") in database: ", e);
@@ -256,12 +257,19 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }
   }
 
-  private static void addOrUpdateDbUnit(String vhost, String unitId, String envId, Integer gmsStatusCode, String sender, String primairevoertuigsoort, String abbs) {
+  private static void addOrUpdateDbUnit(String vhost, String unitId, String envId, Integer gmsStatusCode, String sender, String primairevoertuigsoort, String abbs, String post) {
     try {
-      DB.qr().update("INSERT INTO safetymaps.units " +
-        "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs) VALUES('sc', ?, ?, ?, ?, ?, ?, ?) " +
-        " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?",
-        vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, gmsStatusCode, primairevoertuigsoort, abbs);
+      if (post.equals("")) {
+        DB.qr().update("INSERT INTO safetymaps.units " +
+          "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs) VALUES('sc', ?, ?, ?, ?, ?, ?, ?) " +
+          " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?",
+          vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, gmsStatusCode, primairevoertuigsoort, abbs);
+      } else {
+        DB.qr().update("INSERT INTO safetymaps.units " +
+          "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs, post) VALUES('sc', ?, ?, ?, ?, ?, ?, ?, ?) " +
+          " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?",
+          vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, gmsStatusCode, primairevoertuigsoort, abbs, post);
+      }
     } catch (Exception e) {
       log.error("Exception while upserting unit(" + envId + ") in database: ", e);
     }
@@ -311,12 +319,13 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           : dbIncident.has("discipline") 
             ? dbIncident.getJSONObject("discipline") 
             : new JSONObject();
+        JSONArray talkinggroups = incident.has("gespreksgroepen") 
+          ? incident.getJSONArray("gespreksgroepen") 
+          : dbIncident.has("talkinggroups") 
+            ? dbIncident.getJSONArray("talkinggroups") 
+            : new JSONArray();
 
-        DB.qr().update("INSERT INTO safetymaps.incidents " + 
-          "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-          " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?, tenantId = ?", 
-          vhost, incidentId, envId, status, sender, number, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId, status, notes.toString(), units.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId);
-
+        JSONArray modifiedUnits = new JSONArray();
         for(int i=0; i<units.length(); i++) {
           JSONObject unit = (JSONObject)units.get(i);
 
@@ -326,8 +335,20 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           String primairevoertuigsoort = unit.has("primaireVoertuigSoort") ? unit.getString("primaireVoertuigSoort") : "";
           JSONArray abbs = unit.has("meldkamerStatusAbonnementen") ? unit.getJSONArray("meldkamerStatusAbonnementen") : new JSONArray();
 
-          addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString());
+          addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString(), "");
+
+          List<Map<String, Object>> dbUnits = DB.qr().query("SELECT * FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), unitEnvId);
+          JSONObject dbUnit = dbUnits.size() > 0 ? SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnits.get(0)) : new JSONObject();
+
+          unit.put("standPlaatsKazerneCode", dbUnit.has("post") ? dbUnit.getString("post") : "");
+          modifiedUnits.put(unit);
         }
+
+        DB.qr().update("INSERT INTO safetymaps.incidents " + 
+          "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid, talkinggroups) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+          " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?, tenantId = ?, talkinggroups = ?", 
+          vhost, incidentId, envId, status, sender, number, notes.toString(), modifiedUnits.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId, talkinggroups.toString(), status, notes.toString(), modifiedUnits.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId, talkinggroups.toString());
+
       } catch (Exception e) {
         log.error("Exception while upserting incident(" + envId + ") in database: ", e);
         throw new RuntimeException(e);

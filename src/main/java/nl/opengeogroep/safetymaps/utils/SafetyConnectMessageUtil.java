@@ -38,9 +38,11 @@ public class SafetyConnectMessageUtil {
     String charactsString = (String)incidentDbRow.get("characts");
     String locationString = (String)incidentDbRow.get("location");
     String discString = (String)incidentDbRow.get("discipline");
+    String talkingString = (String)incidentDbRow.get("talkinggroups");
     JSONArray notes = incidentDbRow.get("notes") != null ? new JSONArray(notesString) : new JSONArray();
     JSONArray units = incidentDbRow.get("units") != null ? new JSONArray(unitsString) : new JSONArray();
     JSONArray characts = incidentDbRow.get("characts") != null ? new JSONArray(charactsString): new JSONArray();
+    JSONArray talkinggroups = incidentDbRow.get("talkinggroups") != null ? new JSONArray(talkingString): new JSONArray();
 
     incident.put("incidentNummer", (Integer)incidentDbRow.get("number"));
     incident.put("incidentId", (String)incidentDbRow.get("sourceid"));
@@ -51,6 +53,7 @@ public class SafetyConnectMessageUtil {
     incident.put("karakteristieken", characts);
     incident.put("incidentLocatie", new JSONObject(locationString));
     incident.put("brwDisciplineGegevens", new JSONObject(discString));
+    incident.put("gespreksGroepen", talkinggroups);
 
     return incident;
   }
@@ -63,7 +66,9 @@ public class SafetyConnectMessageUtil {
 
     unit.put("roepnaam", (String)unitDbRow.get("sourceid"));
     unit.put("gmsStatusCode", (Integer)unitDbRow.get("gmsstatuscode"));
+    unit.put("gmsStatusText", (String)unitDbRow.get("gmsstatustext"));
     unit.put("primaireVoertuigSoort", (String)unitDbRow.get("primairevoertuigsoort"));
+    unit.put("post", (String)unitDbRow.get("post"));
     unit.put("lon", (BigDecimal)unitDbRow.get("lon"));
     unit.put("lat", (BigDecimal)unitDbRow.get("lat"));
     unit.put("speed", (Integer)unitDbRow.get("speed"));

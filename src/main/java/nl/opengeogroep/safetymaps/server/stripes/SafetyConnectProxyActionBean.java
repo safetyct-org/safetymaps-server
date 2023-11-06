@@ -246,7 +246,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   }
 
                   JSONArray units = new JSONArray();
-                  List<Map<String, Object>> results = DB.qr().query("select * from safetymaps.units where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
+                  List<Map<String, Object>> results = DB.qr().query("select u.*, mds.gmsstatustext from safetymaps.units u left join safetymaps.mdstatusses mds on mds.gmsstatuscode = u.gmsstatuscode where u.source='sc' and u.sourceenv=?", new MapListHandler(), rabbitMqSource);
                   
                   for (Map<String, Object> res : results) {
                     JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(res);
