@@ -267,8 +267,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       } else {
         DB.qr().update("INSERT INTO safetymaps.units " +
           "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs, post) VALUES('sc', ?, ?, ?, ?, ?, ?, ?, ?) " +
-          " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?",
-          vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, gmsStatusCode, primairevoertuigsoort, abbs, post);
+          " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?, post = ?",
+          vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, post, gmsStatusCode, primairevoertuigsoort, abbs, post);
       }
     } catch (Exception e) {
       log.error("Exception while upserting unit(" + envId + ") in database: ", e);
