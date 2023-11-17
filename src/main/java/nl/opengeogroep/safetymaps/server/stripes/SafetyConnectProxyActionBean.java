@@ -317,8 +317,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     } else if (isauthfor_incidentlocations && unit.has("incidentId")) {
                       for (Map<String, Object> dbIncident : dbIncidents) {
                         JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncident);
-                        String incidentId = incidentIsForUserVehicle(incident);
-                        if (incidentId == unit.get("incidentId")) {
+                        String incidentId = incident.getString("incidentNummer"); //incidentIsForUserVehicle(incident);
+                        if (incidentId == unit.getString("incidentId")) {
                           units.put(unit);
                         }
                       }
