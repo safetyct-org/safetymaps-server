@@ -274,8 +274,16 @@ public class KROActionBean implements ActionBean {
         } else {
             String[] address = splitAddress();
             sql += COLUMN_HUISNR + "=? and " + COLUMN_HUISLET + "=? and " + COLUMN_HUISTOEV + "=? and (" + COLUMN_PC + "=? or (" + COLUMN_PLAATS + "=? and " + COLUMN_STRAAT + "=?))";
+            Integer nr = 0;
+
+            try {
+              nr = Integer.parseInt(address[1]);
+            } catch (NumberFormatException ex) {
+              nr = 0;
+            }
+
             qparams = new Object[] {
-                Integer.parseInt(address[1].split(".")[0]), address[2], address[3], address[5], address[4], address[0]
+                nr, address[2], address[3], address[5], address[4], address[0]
             };
         }
         List<Map<String, Object>> rows = qr.query(sql, new MapListHandler(), qparams);
