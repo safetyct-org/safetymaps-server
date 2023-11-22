@@ -101,6 +101,39 @@ public class KROActionBean implements ActionBean {
         this.created = new Date();
         this.response = response;
       }
+
+      public boolean isReadyToCleanup() {
+        int outdatedAfterHours = 6;
+        Date now = new Date();
+        Date outDated = new Date(now.getTime() - outdatedAfterHours * 60 * 60 * 1000);
+        return this.created.before(outDated);
+      }
+    }
+
+    private void CleanupCache() {
+      cache_kro.forEach((key, value) -> {
+        if (value.isReadyToCleanup()) {
+          cache_kro.remove(key, value);
+        }
+      });
+
+      cache_config.forEach((key, value) -> {
+        if (value.isReadyToCleanup()) {
+          cache_config.remove(key, value);
+        }
+      });
+
+      cache_address.forEach((key, value) -> {
+        if (value.isReadyToCleanup()) {
+          cache_address.remove(key, value);
+        }
+      });
+
+      cache_pand.forEach((key, value) -> {
+        if (value.isReadyToCleanup()) {
+          cache_pand.remove(key, value);
+        }
+      });
     }
 
     private static final Map<String,CachedResponseString> cache_kro = new HashMap<>();
@@ -112,6 +145,7 @@ public class KROActionBean implements ActionBean {
         }
 
         synchronized(cache_kro) {
+          CleanupCache();
           CachedResponseString cache = cache_kro.get(this.address);
 
           if (!cache_kro.containsKey(this.address) || cache == null) {
@@ -170,6 +204,7 @@ public class KROActionBean implements ActionBean {
         }
 
         synchronized(cache_config) {
+          CleanupCache();
           CachedResponseString cache = cache_config.get(this.address);
 
           if (!cache_config.containsKey(this.address) || cache == null) {
@@ -197,6 +232,7 @@ public class KROActionBean implements ActionBean {
         }
         
         synchronized(cache_address) {
+          CleanupCache();
           CachedResponseString cache = cache_address.get(this.address);
 
           if (!cache_address.containsKey(this.address) || cache == null) {
@@ -230,6 +266,7 @@ public class KROActionBean implements ActionBean {
         }
 
         synchronized(cache_pand) {
+          CleanupCache();
           CachedResponseString cache = cache_pand.get(this.address);
 
           if (!cache_pand.containsKey(this.address) || cache == null) {

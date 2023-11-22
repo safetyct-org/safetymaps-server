@@ -428,12 +428,28 @@ public class ViewerApiActionBean implements ActionBean {
         Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
         return this.created.before(outDated);
       }
+
+      public boolean isReadyToCleanup() {
+        int outdatedAfterHours = 6;
+        Date now = new Date();
+        Date outDated = new Date(now.getTime() - outdatedAfterHours * 60 * 60 * 1000);
+        return this.created.before(outDated);
+      }
+  }
+
+  private void CleanupCacheOrganisation() {
+    cache_organisation.forEach((key, value) -> {
+      if (value.isReadyToCleanup()) {
+        cache_organisation.remove(key, value);
+      }
+    });
   }
 
   private static final Map<String,CachedResponseString> cache_organisation = new HashMap<>();
 
   private Resolution organisation(Connection c, boolean isSmvng) throws Exception {
     synchronized(cache_organisation) {
+      CleanupCacheOrganisation();
       CachedResponseString cache = cache_organisation.get("organisation.json");
 
       if (!cache_organisation.containsKey("organisation.json") || cache == null || cache.isOutDated()) {

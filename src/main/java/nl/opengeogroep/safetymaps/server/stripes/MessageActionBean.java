@@ -71,6 +71,21 @@ public class MessageActionBean implements ActionBean {
       Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
       return this.created.before(outDated);
     }
+
+    public boolean isReadyToCleanup() {
+      int outdatedAfterHours = 6;
+      Date now = new Date();
+      Date outDated = new Date(now.getTime() - outdatedAfterHours * 60 * 60 * 1000);
+      return this.created.before(outDated);
+    }
+  }
+
+  private void CleanupCacheDef() {
+    cache_def.forEach((key, value) -> {
+      if (value.isReadyToCleanup()) {
+        cache_def.remove(key, value);
+      }
+    });
   }
 
   private static final Map<String,CachedResponseString> cache_def = new HashMap<>();
@@ -88,7 +103,8 @@ public class MessageActionBean implements ActionBean {
     CachedResponseString cache = new CachedResponseString("");
 
     synchronized(cache_def) {
-     try {
+      CleanupCacheDef();
+      try {
         if("all".equals(path)) {
           cache = cache_def.get("all");
 

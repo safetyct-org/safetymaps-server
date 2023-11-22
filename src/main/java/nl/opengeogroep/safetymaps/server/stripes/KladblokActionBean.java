@@ -106,9 +106,24 @@ public class KladblokActionBean implements ActionBean {
         Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
         return this.created.before(outDated);
       }
+
+      public boolean isReadyToCleanup() {
+        int outdatedAfterHours = 6;
+        Date now = new Date();
+        Date outDated = new Date(now.getTime() - outdatedAfterHours * 60 * 60 * 1000);
+        return this.created.before(outDated);
+      }
     }
 
     private static final Map<String,CachedResponseString> cache_load = new HashMap<>();
+
+    private void CleanupCacheLoad() {
+      cache_load.forEach((key, value) -> {
+        if (value.isReadyToCleanup()) {
+          cache_load.remove(key, value);
+        }
+      });
+    }
 
     public Resolution load() throws Exception {
         HttpServletRequest request = getContext().getRequest();
@@ -119,6 +134,7 @@ public class KladblokActionBean implements ActionBean {
         }
 
         synchronized(cache_load) {
+          CleanupCacheLoad();
           CachedResponseString cache = cache_load.get(this.incident);
           
           try {

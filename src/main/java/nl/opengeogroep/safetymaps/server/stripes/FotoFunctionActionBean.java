@@ -167,6 +167,13 @@ public class FotoFunctionActionBean implements ActionBean {
         Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
         return this.created.before(outDated);
       }
+
+      public boolean isReadyToCleanup() {
+        int outdatedAfterHours = 6;
+        Date now = new Date();
+        Date outDated = new Date(now.getTime() - outdatedAfterHours * 60 * 60 * 1000);
+        return this.created.before(outDated);
+      }
     }
 
     @DefaultHandler
@@ -300,12 +307,21 @@ public class FotoFunctionActionBean implements ActionBean {
         return new StreamingResolution(mimeType, new FileInputStream(f));
     }
 
+    private void CleanupCacheLoad() {
+      cache_load.forEach((key, value) -> {
+        if (value.isReadyToCleanup()) {
+          cache_load.remove(key, value);
+        }
+      });
+    }
+
     private static final Map<String,CachedResponseString> cache_load = new HashMap<>();
 
     public Resolution fotoForIncident() throws Exception {      
         JSONArray response = new JSONArray();
 
         synchronized(cache_load) {
+          CleanupCacheLoad();
           CachedResponseString cache = cache_load.get(this.incidentNummer);
 
           if (!cache_load.containsKey(this.incidentNummer) || cache == null || cache.isOutDated()) {
