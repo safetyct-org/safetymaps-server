@@ -5,6 +5,8 @@ import java.io.StringReader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -411,9 +413,38 @@ public class ViewerApiActionBean implements ActionBean {
       }
   }
 
-    private Resolution organisation(Connection c, boolean isSmvng) throws Exception {
-        return new StreamingResolution("application/json", getOrganisationWithAuthorizedModulesAndLayers(getContext().getRequest(), c, srid, isSmvng).toString(indent));
+  private class CachedResponseString {
+      Date created;
+      String response; 
+
+      public CachedResponseString(String response) {
+        this.created = new Date();
+        this.response = response;
+      }
+
+      public boolean isOutDated() {
+        int outdatedAfterSecondes = 60 * 5;
+        Date now = new Date();
+        Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
+        return this.created.before(outDated);
+      }
+  }
+
+  private static final Map<String,CachedResponseString> cache_organisation = new HashMap<>();
+
+  private Resolution organisation(Connection c, boolean isSmvng) throws Exception {
+    synchronized(cache_organisation) {
+      CachedResponseString cache = cache_organisation.get("organisation.json");
+
+      if (!cache_organisation.containsKey("organisation.json") || cache == null || cache.isOutDated()) {
+        JSONObject response = getOrganisationWithAuthorizedModulesAndLayers(getContext().getRequest(), c, srid, isSmvng);
+
+        cache = new CachedResponseString(response.toString(indent));
+      }
+
+      return new StreamingResolution("application/json", cache.response);
     }
+  }
 
     public static JSONObject getLibrary(Connection c) throws Exception {
         JSONArray a = new JSONArray();
