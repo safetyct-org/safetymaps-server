@@ -1,6 +1,7 @@
 package nl.opengeogroep.safetymaps.server.stripes;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,6 +56,25 @@ public class MessageActionBean implements ActionBean {
       this.path = path;
   }
 
+  private class CachedResponseString {
+    Date created;
+    String response; 
+
+    public CachedResponseString(String response) {
+      this.created = new Date();
+      this.response = response;
+    }
+
+    public boolean isOutDated() {
+      int outdatedAfterSecondes = 10;
+      Date now = new Date();
+      Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
+      return this.created.before(outDated);
+    }
+  }
+
+  private static final Map<String,CachedResponseString> cache_def = new HashMap<>();
+
   /**
    * Default handler
    * 
@@ -65,26 +85,43 @@ public class MessageActionBean implements ActionBean {
   public Resolution def() {
     JSONArray response = new JSONArray();
     Date now = new Date();
-    
-    try {
-      if("all".equals(path)) {
-        List<Map<String,Object>> results = DB.qr().query("SELECT * FROM safetymaps.messages", new MapListHandler());
-        for (Map<String, Object> resultRow : results) {
-          response.put(rowToJson(resultRow, false, false));
-        }
-      }
+    CachedResponseString cache = new CachedResponseString("");
 
-      if("active".equals(path)) {
-        List<Map<String,Object>> results = DB.qr().query("SELECT * FROM safetymaps.messages WHERE dtgstart<=? AND dtgend >?", new MapListHandler(), new java.sql.Timestamp(now.getTime()), new java.sql.Timestamp(now.getTime()));
-        for (Map<String, Object> resultRow : results) {
-          response.put(rowToJson(resultRow, false, false));
-        }
-      }
+    synchronized(cache_def) {
+     try {
+        if("all".equals(path)) {
+          cache = cache_def.get("all");
 
-      return new StreamingResolution("application/json", response.toString());
-    } catch(Exception e) {
-      return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
-    } 
+          if (!cache_def.containsKey("all") || cache == null || cache.isOutDated()) {
+            List<Map<String,Object>> results = DB.qr().query("SELECT * FROM safetymaps.messages", new MapListHandler());
+            for (Map<String, Object> resultRow : results) {
+              response.put(rowToJson(resultRow, false, false));
+            }
+
+            cache = new CachedResponseString(response.toString());
+            cache_def.put("all", cache);
+          }
+        }
+
+        if("active".equals(path)) {
+          cache = cache_def.get("active");
+
+          if (!cache_def.containsKey("active") || cache == null || cache.isOutDated()) {
+            List<Map<String,Object>> results = DB.qr().query("SELECT * FROM safetymaps.messages WHERE dtgstart<=? AND dtgend >?", new MapListHandler(), new java.sql.Timestamp(now.getTime()), new java.sql.Timestamp(now.getTime()));
+            for (Map<String, Object> resultRow : results) {
+              response.put(rowToJson(resultRow, false, false));
+            }
+
+            cache = new CachedResponseString(response.toString());
+            cache_def.put("active", cache);          
+          }
+        }
+
+        return new StreamingResolution("application/json", cache.response);
+      } catch(Exception e) {
+        return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
+      } 
+    }
   }
   
 }

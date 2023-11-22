@@ -7,8 +7,10 @@ import nl.b3p.web.stripes.ErrorMessageResolution;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
@@ -91,108 +93,161 @@ public class KROActionBean implements ActionBean {
         this.address = address;
     }
 
+    private class CachedResponseString {
+      Date created;
+      String response; 
+
+      public CachedResponseString(String response) {
+        this.created = new Date();
+        this.response = response;
+      }
+    }
+
+    private static final Map<String,CachedResponseString> cache_kro = new HashMap<>();
+
     @DefaultHandler
     public Resolution kro() throws Exception {
         if(isNotAuthorized()) {
             return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot kro");
         }
 
-        JSONArray response = new JSONArray();
-        List<Map<String, Object>> rows = getKroFromDb();
-        for (Map<String, Object> row : rows) {
-            JSONObject kroFromDb = rowToJson(row, false, false);
-            
-            String delimitedBagPandTypes = "";
-            String addressObjectTypes = (String)row.get(COLUMN_ADDRESS_OBJECTTYPERING);
-            String aanzienObjectTypes = (String)row.get(COLUMN_AANZIEN_OBJECTTYPERING);
-            String combinedObjectTypes = (addressObjectTypes == null ||  addressObjectTypes.length() == 0 ? "" : addressObjectTypes) + 
-                OBJECTTYPEPERADRESS_DELIM +
-                (aanzienObjectTypes == null ||  aanzienObjectTypes.length() == 0 ? "" : aanzienObjectTypes); 
+        synchronized(cache_kro) {
+          CachedResponseString cache = cache_kro.get(this.address);
 
-            List<Map<String, Object>> bagPandObjectTypes = getObjectTypesForBagPandId((String)row.get(COLUMN_BAGPANDID));
-            for (Map<String, Object> bagPandType : bagPandObjectTypes) {
-                delimitedBagPandTypes += OBJECTTYPEPERADRESS_DELIM;
-                delimitedBagPandTypes += (String)bagPandType.get(COLUMN_OBJECTTYPERING);
-            }
-            List<String> orderedObjectTypes = getAndCountObjectTypesOrderedByScore(delimitedBagPandTypes, true);
-            List<String> orderedAddressObjectTypes = getAndCountObjectTypesOrderedByScore(combinedObjectTypes, false);
+          if (!cache_kro.containsKey(this.address) || cache == null) {
+            JSONArray response = new JSONArray();
+            List<Map<String, Object>> rows = getKroFromDb();
+            for (Map<String, Object> row : rows) {
+                JSONObject kroFromDb = rowToJson(row, false, false);
+                
+                String delimitedBagPandTypes = "";
+                String addressObjectTypes = (String)row.get(COLUMN_ADDRESS_OBJECTTYPERING);
+                String aanzienObjectTypes = (String)row.get(COLUMN_AANZIEN_OBJECTTYPERING);
+                String combinedObjectTypes = (addressObjectTypes == null ||  addressObjectTypes.length() == 0 ? "" : addressObjectTypes) + 
+                    OBJECTTYPEPERADRESS_DELIM +
+                    (aanzienObjectTypes == null ||  aanzienObjectTypes.length() == 0 ? "" : aanzienObjectTypes); 
 
-            if (orderedObjectTypes.size() > 0) {
-                kroFromDb.put("pand_objecttypering_ordered", orderedObjectTypes);
-            }
-
-            if (orderedAddressObjectTypes.size() > 0) {
-                kroFromDb.put("address_objecttypering_ordered", orderedAddressObjectTypes);
-            } else {
-                String text = (String)row.get(COLUMN_BEDRIJFSNAAM);
-                if (text == null || text.length() == 0) {
-                    text = "Onbekend";
+                List<Map<String, Object>> bagPandObjectTypes = getObjectTypesForBagPandId((String)row.get(COLUMN_BAGPANDID));
+                for (Map<String, Object> bagPandType : bagPandObjectTypes) {
+                    delimitedBagPandTypes += OBJECTTYPEPERADRESS_DELIM;
+                    delimitedBagPandTypes += (String)bagPandType.get(COLUMN_OBJECTTYPERING);
                 }
-                orderedObjectTypes = new ArrayList<String>();
-                orderedObjectTypes.add(text);
-                kroFromDb.put("address_objecttypering_ordered", orderedObjectTypes);
+                List<String> orderedObjectTypes = getAndCountObjectTypesOrderedByScore(delimitedBagPandTypes, true);
+                List<String> orderedAddressObjectTypes = getAndCountObjectTypesOrderedByScore(combinedObjectTypes, false);
+
+                if (orderedObjectTypes.size() > 0) {
+                    kroFromDb.put("pand_objecttypering_ordered", orderedObjectTypes);
+                }
+
+                if (orderedAddressObjectTypes.size() > 0) {
+                    kroFromDb.put("address_objecttypering_ordered", orderedAddressObjectTypes);
+                } else {
+                    String text = (String)row.get(COLUMN_BEDRIJFSNAAM);
+                    if (text == null || text.length() == 0) {
+                        text = "Onbekend";
+                    }
+                    orderedObjectTypes = new ArrayList<String>();
+                    orderedObjectTypes.add(text);
+                    kroFromDb.put("address_objecttypering_ordered", orderedObjectTypes);
+                }
+
+                response.put(kroFromDb);
             }
 
-            
-            response.put(kroFromDb);
-        }
+            cache = new CachedResponseString(response.toString());
+            cache_kro.put(this.address, cache);
+          }
 
-        return new StreamingResolution("application/json", response.toString());
+          return new StreamingResolution("application/json", cache.response);
+        }
     }
+
+    private static final Map<String,CachedResponseString> cache_config = new HashMap<>();
 
     public Resolution config() throws Exception {
         if(isNotAuthorized()) {
             return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot kro");
         }
 
-        JSONArray response = new JSONArray();
-        List<Map<String, Object>> rows;
-        rows = getConfigFromDb();
-        for (Map<String, Object> row : rows) {
-            JSONObject configFromDb = rowToJson(row, false, false);
-            response.put(configFromDb);
-        }
+        synchronized(cache_config) {
+          CachedResponseString cache = cache_config.get(this.address);
 
-        return new StreamingResolution("application/json", response.toString());
+          if (!cache_config.containsKey(this.address) || cache == null) {
+            JSONArray response = new JSONArray();
+            List<Map<String, Object>> rows;
+            rows = getConfigFromDb();
+            for (Map<String, Object> row : rows) {
+                JSONObject configFromDb = rowToJson(row, false, false);
+                response.put(configFromDb);
+            }
+
+            cache = new CachedResponseString(response.toString());
+            cache_config.put(this.address, cache);
+          }
+
+          return new StreamingResolution("application/json", cache.response);
+        }
     }
+
+    private static final Map<String,CachedResponseString> cache_address = new HashMap<>();
 
     public Resolution addresses() throws Exception {
         if(isNotAuthorized()) {
             return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot kro");
         }
         
-        List<Map<String, Object>> rows;
-        List<String> orderedTypes = new ArrayList<String>();
-        rows = getObjectTypesOrderedPerScoreFromDb();
-        for (Map<String, Object> row : rows) {
-            orderedTypes.add((String)row.get(COLUMN_TYPECODE));
-        }
+        synchronized(cache_address) {
+          CachedResponseString cache = cache_address.get(this.address);
 
-        JSONArray response = new JSONArray();
-        rows = getKroAddressesFromDb();
-        for (Map<String, Object> row : rows) {
-            JSONObject kroFromDb = rowToJson(row, false, false);
-            response.put(kroFromDb);
-        }
+          if (!cache_address.containsKey(this.address) || cache == null) {
+            List<Map<String, Object>> rows;
+            List<String> orderedTypes = new ArrayList<String>();
+            rows = getObjectTypesOrderedPerScoreFromDb();
+            for (Map<String, Object> row : rows) {
+                orderedTypes.add((String)row.get(COLUMN_TYPECODE));
+            }
 
-        return new StreamingResolution("application/json", response.toString());
+            JSONArray response = new JSONArray();
+            rows = getKroAddressesFromDb();
+            for (Map<String, Object> row : rows) {
+                JSONObject kroFromDb = rowToJson(row, false, false);
+                response.put(kroFromDb);
+            }
+
+            cache = new CachedResponseString(response.toString());
+            cache_address.put(this.address, cache);
+          }
+
+          return new StreamingResolution("application/json", cache.response);
+        }
     }
+
+    private static final Map<String,CachedResponseString> cache_pand = new HashMap<>();
 
     public Resolution pand() throws Exception {
         if(isNotAuthorized()) {
             return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot kro");
         }
 
-        QueryRunner qr = DB.bagQr();
-        List<Map<String, Object>> result = qr.query("select st_astext(st_force2d(geovlak)) as pandgeo from bag_actueel.pandactueelbestaand_filter where identificatie=?", new MapListHandler(), getBagPandId());
-        
-        JSONArray response = new JSONArray();
-        for (Map<String, Object> row : result) {
-            JSONObject pandGeo = rowToJson(row, false, false);
-            response.put(pandGeo);
-        }
+        synchronized(cache_pand) {
+          CachedResponseString cache = cache_pand.get(this.address);
 
-        return new StreamingResolution("application/json", response.toString());
+          if (!cache_pand.containsKey(this.address) || cache == null) {
+            QueryRunner qr = DB.bagQr();
+            List<Map<String, Object>> result = qr.query("select st_astext(st_force2d(geovlak)) as pandgeo from bag_actueel.pandactueelbestaand_filter where identificatie=?", new MapListHandler(), getBagPandId());
+            
+            JSONArray response = new JSONArray();
+            for (Map<String, Object> row : result) {
+                JSONObject pandGeo = rowToJson(row, false, false);
+                response.put(pandGeo);
+            }
+
+            cache = new CachedResponseString(response.toString());
+            cache_pand.put(this.address, cache);
+          }
+
+          return new StreamingResolution("application/json", cache.response);
+        }
     }
 
     private Boolean isNotAuthorized() {

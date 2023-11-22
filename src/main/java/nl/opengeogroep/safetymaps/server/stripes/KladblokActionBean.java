@@ -15,6 +15,7 @@ import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -90,6 +91,25 @@ public class KladblokActionBean implements ActionBean {
         }
     }
 
+    private class CachedResponseString {
+      Date created;
+      String response; 
+
+      public CachedResponseString(String response) {
+        this.created = new Date();
+        this.response = response;
+      }
+
+      public boolean isOutDated() {
+        int outdatedAfterSecondes = 10;
+        Date now = new Date();
+        Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
+        return this.created.before(outDated);
+      }
+    }
+
+    private static final Map<String,CachedResponseString> cache_load = new HashMap<>();
+
     public Resolution load() throws Exception {
         HttpServletRequest request = getContext().getRequest();
         JSONArray response = new JSONArray();
@@ -98,16 +118,25 @@ public class KladblokActionBean implements ActionBean {
             return new ErrorResolution(HttpServletResponse.SC_FORBIDDEN);
         }
 
-        try {
-            List<Map<String,Object>> results = DB.qr().query("select to_char(dtg, 'YYYY-MM-DD HH24:MI:SS') as DTG, case when coalesce(s.value, 'false') = 'false' then '(' || COALESCE(vehicle, username) || ') ' || inhoud when coalesce(s.value, 'false') = 'true' then '(' || username || ') ' || inhoud end as Inhoud from safetymaps.kladblok k left join safetymaps.settings s on s.name = 'show_user_in_chat' where incident = ?", new MapListHandler(), incident);
+        synchronized(cache_load) {
+          CachedResponseString cache = cache_load.get(this.incident);
+          
+          try {
+            if (!cache_load.containsKey(this.incident) || cache == null || cache.isOutDated()) {
+              List<Map<String,Object>> results = DB.qr().query("select to_char(dtg, 'YYYY-MM-DD HH24:MI:SS') as DTG, case when coalesce(s.value, 'false') = 'false' then '(' || COALESCE(vehicle, username) || ') ' || inhoud when coalesce(s.value, 'false') = 'true' then '(' || username || ') ' || inhoud end as Inhoud from safetymaps.kladblok k left join safetymaps.settings s on s.name = 'show_user_in_chat' where incident = ?", new MapListHandler(), incident);
 
-            for (Map<String, Object> resultRow : results) {
-                response.put(rowToJson(resultRow, false, false));
+              for (Map<String, Object> resultRow : results) {
+                  response.put(rowToJson(resultRow, false, false));
+              }
+
+              cache = new CachedResponseString(response.toString());
+              cache_load.put(this.incident, cache);
             }
 
-            return new StreamingResolution("application/json", response.toString());
-        } catch(Exception e) {
+            return new StreamingResolution("application/json", cache.response);
+          } catch(Exception e) {
             return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
+          }
         }
     }
 

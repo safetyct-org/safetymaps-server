@@ -39,6 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -149,6 +150,23 @@ public class FotoFunctionActionBean implements ActionBean {
 
     public void setPicture(FileBean picture) {
         this.picture = picture;
+    }
+
+    private class CachedResponseString {
+      Date created;
+      String response; 
+
+      public CachedResponseString(String response) {
+        this.created = new Date();
+        this.response = response;
+      }
+
+      public boolean isOutDated() {
+        int outdatedAfterSecondes = 10;
+        Date now = new Date();
+        Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
+        return this.created.before(outDated);
+      }
     }
 
     @DefaultHandler
@@ -282,16 +300,27 @@ public class FotoFunctionActionBean implements ActionBean {
         return new StreamingResolution(mimeType, new FileInputStream(f));
     }
 
+    private static final Map<String,CachedResponseString> cache_load = new HashMap<>();
+
     public Resolution fotoForIncident() throws Exception {      
         JSONArray response = new JSONArray();
 
-        List<Map<String, Object>> rows = getFromDb();
+        synchronized(cache_load) {
+          CachedResponseString cache = cache_load.get(this.incidentNummer);
 
-        for (Map<String, Object> row : rows) {
-            response.put(rowToJson(row, false, false));
+          if (!cache_load.containsKey(this.incidentNummer) || cache == null || cache.isOutDated()) {
+            List<Map<String, Object>> rows = getFromDb();
+
+            for (Map<String, Object> row : rows) {
+                response.put(rowToJson(row, false, false));
+            }
+
+            cache = new CachedResponseString(response.toString());
+            cache_load.put(this.incidentNummer, cache);
+          }
+          
+          return new StreamingResolution("application/json", cache.response);
         }
-
-        return new StreamingResolution("application/json", response.toString());
     }
 
     public void insertIntoDb() throws Exception {
