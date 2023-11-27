@@ -81,11 +81,7 @@ public class MessageActionBean implements ActionBean {
   }
 
   private void CleanupCacheDef() {
-    cache_def.forEach((key, value) -> {
-      if (value.isReadyToCleanup()) {
-        cache_def.remove(key, value);
-      }
-    });
+    cache_def.values().removeIf(value -> value.isReadyToCleanup());
   }
 
   private static final Map<String,CachedResponseString> cache_def = new HashMap<>();

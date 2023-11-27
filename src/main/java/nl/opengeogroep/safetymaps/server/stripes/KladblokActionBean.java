@@ -118,11 +118,7 @@ public class KladblokActionBean implements ActionBean {
     private static final Map<String,CachedResponseString> cache_load = new HashMap<>();
 
     private void CleanupCacheLoad() {
-      cache_load.forEach((key, value) -> {
-        if (value.isReadyToCleanup()) {
-          cache_load.remove(key, value);
-        }
-      });
+      cache_load.values().removeIf(value -> value.isReadyToCleanup());
     }
 
     public Resolution load() throws Exception {

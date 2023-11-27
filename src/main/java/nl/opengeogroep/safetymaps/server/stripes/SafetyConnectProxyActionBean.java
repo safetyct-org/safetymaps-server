@@ -114,11 +114,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     }
 
     private void CleanupCacheProxy() {
-      cache_proxy.forEach((key, value) -> {
-        if (value.isReadyToCleanup()) {
-          cache_proxy.remove(key, value);
-        }
-      });
+      cache_proxy.values().removeIf(value -> value.isReadyToCleanup());
     }
 
     private static final Map<String,CachedResponseString> cache_proxy = new HashMap<>();

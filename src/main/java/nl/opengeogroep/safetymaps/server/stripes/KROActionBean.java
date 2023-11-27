@@ -111,7 +111,12 @@ public class KROActionBean implements ActionBean {
     }
 
     private void CleanupCache() {
-      cache_kro.forEach((key, value) -> {
+      cache_kro.values().removeIf(value -> value.isReadyToCleanup());
+      cache_config.values().removeIf(value -> value.isReadyToCleanup());
+      cache_address.values().removeIf(value -> value.isReadyToCleanup());
+      cache_pand.values().removeIf(value -> value.isReadyToCleanup());
+
+      /*cache_kro.forEach((key, value) -> {
         if (value.isReadyToCleanup()) {
           cache_kro.remove(key, value);
         }
@@ -133,7 +138,7 @@ public class KROActionBean implements ActionBean {
         if (value.isReadyToCleanup()) {
           cache_pand.remove(key, value);
         }
-      });
+      });*/
     }
 
     private static final Map<String,CachedResponseString> cache_kro = new HashMap<>();

@@ -438,11 +438,7 @@ public class ViewerApiActionBean implements ActionBean {
   }
 
   private void CleanupCacheOrganisation() {
-    cache_organisation.forEach((key, value) -> {
-      if (value.isReadyToCleanup()) {
-        cache_organisation.remove(key, value);
-      }
-    });
+    cache_organisation.values().removeIf(value -> value.isReadyToCleanup());
   }
 
   private static final Map<String,CachedResponseString> cache_organisation = new HashMap<>();
