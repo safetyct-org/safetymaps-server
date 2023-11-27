@@ -17,7 +17,7 @@ import static nl.opengeogroep.safetymaps.server.db.DB.qr;
  * @author Matthijs Laan
  */
 public class Cfg {
-    private static final long CACHE_FRESHNESS = 30 * 1000; // Cache setting values for 30 seconds
+    private static final long CACHE_FRESHNESS = 60 * 60 * 1000; // Cache setting values for 1 hour
 
     static class CachedValue {
         private long timestamp;

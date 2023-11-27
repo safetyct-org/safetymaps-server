@@ -89,6 +89,40 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         this.path = path;
     }
 
+    private class CachedResponseString {
+      Date created;
+      String response; 
+
+      public CachedResponseString(String response) {
+        this.created = new Date();
+        this.response = response;
+      }
+
+      public boolean isOutDated() {
+        int outdatedAfterSecondes = 10;
+        Date now = new Date();
+        Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
+        return this.created.before(outDated);
+      }
+
+      public boolean isReadyToCleanup() {
+        int outdatedAfterHours = 1;
+        Date now = new Date();
+        Date outDated = new Date(now.getTime() - outdatedAfterHours * 60 * 60 * 1000);
+        return this.created.before(outDated);
+      }
+    }
+
+    private void CleanupCacheProxy() {
+      cache_proxy.forEach((key, value) -> {
+        if (value.isReadyToCleanup()) {
+          cache_proxy.remove(key, value);
+        }
+      });
+    }
+
+    private static final Map<String,CachedResponseString> cache_proxy = new HashMap<>();
+
     public Resolution proxy() throws Exception {
         if(requestIs(INCIDENT_REQUEST) && !context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
             return unAuthorizedResolution();
@@ -335,79 +369,92 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
         String uri = url + "/" + path + (regioCode == null ? (qs == null ? "" : "?") : "?regioCode=" + regioCode + (qs == null ? "" : "&")) + qs;
         final HttpUriRequest req;
-        
-        if (requestIs(KLADBLOKREGEL_REQUEST)) {
-            req = RequestBuilder.post()
-                .setUri(uri)
-                .addHeader("Authorization", authorization)
-                .addHeader("Content-Type", "none")
-                .setEntity(new StringEntity(""))
-                .build();
-        } else {
-            req = RequestBuilder.get()
-                .setUri(uri)
-                .addHeader("Authorization", authorization)
-                .build();
-        }
+        final String content;
+        String responseContent = "";
 
-        try(CloseableHttpClient client = HttpClients.createDefault()) {
-            final MutableObject<String> contentType = new MutableObject<>("text/plain");
-            final String responseContent = client.execute(req, new ResponseHandler<String>() {
-                @Override
-                public String handleResponse(HttpResponse hr) {
-                    log.debug("proxy for user " + context.getRequest().getRemoteUser() + " URL " + req.getURI() + ", response: " + hr.getStatusLine().getStatusCode() + " " + hr.getStatusLine().getReasonPhrase());
-                    
-                    if (hr.getEntity() != null && hr.getEntity().getContentType() != null) {
-                        contentType.setValue(hr.getEntity().getContentType().getValue());
+        synchronized(cache_proxy) {
+          CleanupCacheProxy();
+          CachedResponseString cache = cache_proxy.get(uri);
+
+          final MutableObject<String> contentType = new MutableObject<>("text/plain");
+
+          if (!cache_proxy.containsKey(uri) || cache == null || cache.isOutDated()) {
+            if (requestIs(KLADBLOKREGEL_REQUEST)) {
+                req = RequestBuilder.post()
+                  .setUri(uri)
+                  .addHeader("Authorization", authorization)
+                  .addHeader("Content-Type", "none")
+                  .setEntity(new StringEntity(""))
+                  .build();
+            } else {
+                req = RequestBuilder.get()
+                  .setUri(uri)
+                  .addHeader("Authorization", authorization)
+                  .build();
+            }
+
+            try(CloseableHttpClient client = HttpClients.createDefault()) {
+                responseContent = client.execute(req, new ResponseHandler<String>() {
+                    @Override
+                    public String handleResponse(HttpResponse hr) {
+                        log.debug("proxy for user " + context.getRequest().getRemoteUser() + " URL " + req.getURI() + ", response: " + hr.getStatusLine().getStatusCode() + " " + hr.getStatusLine().getReasonPhrase());
+                        
+                        if (hr.getEntity() != null && hr.getEntity().getContentType() != null) {
+                            contentType.setValue(hr.getEntity().getContentType().getValue());
+                        }
+                        try {
+                            return IOUtils.toString(hr.getEntity().getContent(), "UTF-8");
+                        } catch(IOException e) {
+                            log.error("Exception reading HTTP content", e);
+                            return "Exception " + e.getClass() + ": " + e.getMessage();
+                        }
                     }
-                    try {
-                        return IOUtils.toString(hr.getEntity().getContent(), "UTF-8");
-                    } catch(IOException e) {
-                        log.error("Exception reading HTTP content", e);
-                        return "Exception " + e.getClass() + ": " + e.getMessage();
-                    }
-                }
-            });
-            
-            final String content;
+                });
+              } catch(IOException e) {
+                log.error("Failed to request SafetyConnect:", e);
+                return null;
+              }
+
+              cache = new CachedResponseString(responseContent);
+              cache_proxy.put(uri, cache);
+            }
+                
+            String cachedResponse = cache.response;
             // Filter response from the webservice to remove any data that the user is not authorized for
             if (requestIs(INCIDENT_REQUEST)) {
-                content = applyAuthorizationToIncidentContent(responseContent);
+                content = applyAuthorizationToIncidentContent(cachedResponse);
             } else if (requestIs(EENHEIDLOCATIE_REQUEST)) {
-                content = applyFilterToEenheidLocatieContent(responseContent);
+                content = applyFilterToEenheidLocatieContent(cachedResponse);
             } else if (requestIs(KLADBLOKREGEL_REQUEST)) {
-                content = responseContent;
+                content = cachedResponse;
             } else if (keepRequestUnmodified()) {
-                content = responseContent;
+                content = cachedResponse;
             } else {
                 return unAuthorizedResolution();
             }
 
             return new Resolution() {
-                @Override
-                public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
-                    String encoding = "UTF-8";
+              @Override
+              public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+                String encoding = "UTF-8";
 
-                    response.setCharacterEncoding(encoding);
-                    response.setContentType(contentType.getValue());
+                response.setCharacterEncoding(encoding);
+                response.setContentType(contentType.getValue());
 
-                    OutputStream out;
-                    String acceptEncoding = request.getHeader("Accept-Encoding");
-                    if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
-                        response.setHeader("Content-Encoding", "gzip");
-                        out = new GZIPOutputStream(response.getOutputStream(), true);
-                    } else {
-                        out = response.getOutputStream();
-                    }
-                    IOUtils.copy(new StringReader(content), out, encoding);
-                    out.flush();
-                    out.close();
+                OutputStream out;
+                String acceptEncoding = request.getHeader("Accept-Encoding");
+                if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+                    response.setHeader("Content-Encoding", "gzip");
+                    out = new GZIPOutputStream(response.getOutputStream(), true);
+                } else {
+                    out = response.getOutputStream();
                 }
+                IOUtils.copy(new StringReader(content), out, encoding);
+                out.flush();
+                out.close();
+              }
             };
-        } catch(IOException e) {
-            log.error("Failed to write output:", e);
-            return null;
-        }
+        }        
     }
 
     private Map<String, String> getQueryStringMap(String query) {  

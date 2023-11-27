@@ -108,7 +108,7 @@ public class KladblokActionBean implements ActionBean {
       }
 
       public boolean isReadyToCleanup() {
-        int outdatedAfterHours = 6;
+        int outdatedAfterHours = 1;
         Date now = new Date();
         Date outDated = new Date(now.getTime() - outdatedAfterHours * 60 * 60 * 1000);
         return this.created.before(outDated);
