@@ -282,7 +282,10 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     if (
       // SMVNG-711 : only filter on tenant // incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true ||
       incidentIsForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true ||
-      incidentHasUnitForMe(incident, Arrays.asList(RQ_REGIONS.split(","))) == true
+      (
+        incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true &&
+        incidentHasUnitForMe(incident, Arrays.asList(RQ_REGIONS.split(","))) == true
+      )
     ) {
 
       String incidentId = incident.getString("incidentId");
