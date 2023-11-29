@@ -34,6 +34,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private static ServletContext CONTEXT;
   private static String RQ_SENDERS;
   private static String RQ_TENANTS;
+  private static String RQ_REGIONS;
   private static String RQ_HOST;
   private static String RQ_VHOSTS;
   private static String RQ_USER;
@@ -142,6 +143,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     RQ_SENDERS = Cfg.getSetting("safetyconnect_rq_senders", "");
     RQ_TENANTS = Cfg.getSetting("safetyconnect_rq_tenants", "");
     RQ_PARAMS = Cfg.getSetting("safetyconnect_rq_params", "");
+    RQ_REGIONS = Cfg.getSetting("safetyconnect_rq_regios", "");
 
     if (RQ_HOST == null || RQ_USER == null || RQ_PASS == null) {
       throw new Exception("One or more required 'safetyconnect_rq' settings are empty.");
@@ -279,7 +281,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     
     if (
       // SMVNG-711 : only filter on tenant // incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true ||
-      incidentIsForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true
+      incidentIsForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true ||
+      incidentHasUnitForMe(incident, Arrays.asList(RQ_REGIONS.split(","))) == true
     ) {
 
       String incidentId = incident.getString("incidentId");
@@ -408,6 +411,27 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     matched = valuesToCheck.contains(keyValue);
     
+    return matched;
+  }
+
+  private static boolean incidentHasUnitForMe(JSONObject incident, List<String> regionCodes) {
+    boolean matched = false;
+
+    JSONArray units = incident.has("betrokkenEenheden") 
+      ? incident.getJSONArray("betrokkenEenheden") 
+      : new JSONArray();
+
+    for(int i=0; i<units.length(); i++) {
+      JSONObject unit = (JSONObject)units.get(i);
+      String unitName = unit.has("roepnaam") ? unit.getString("roepnaam") : "&^%BNGDF(*)";
+      String unitRegion = unitName.substring(0, 2);
+
+      boolean found = regionCodes.contains(unitRegion);
+      if (found) { 
+        matched = true;
+      }
+    }
+
     return matched;
   }
 

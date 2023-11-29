@@ -234,7 +234,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                         incident.put("kladblokregels", new JSONArray()); 
                       }
 
-                      if (checkDate.before(startDtg))
+                      if (checkDate.before(startDtg) || incident.getString("status") == "operationeel")
                       {
                         if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
                           incidents.put(incident); 
