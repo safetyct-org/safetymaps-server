@@ -214,7 +214,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     try {
       // Is message for me
-      if (unitIsForMe(move, "customer", Arrays.asList(RQ_TENANTS.split(",")), true) == true) {
+      //if (unitIsForMe(move, "customer", Arrays.asList(RQ_TENANTS.split(",")), true) == true) {
+      if (unitIsForMyRegion(move, Arrays.asList(RQ_REGIONS.split(",")))) {
         Double lon = move.getDouble("lon");
         Double lat = move.getDouble("lat");
         Integer speed = move.has("speed") && move.get("speed").toString() != "null" ? move.getInt("speed") : 0;
@@ -284,7 +285,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       incidentIsForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true ||
       (
         incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true &&
-        incidentHasUnitForMe(incident, Arrays.asList(RQ_REGIONS.split(","))) == true
+        incidentHasUnitForMe(incident, Arrays.asList(RQ_REGIONS.split(",")).stream().filter(reg -> reg.startsWith("(EM)") == false).collect(Collectors.toList())) == true
       )
     ) {
 
@@ -459,6 +460,19 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       matched = valuesToCheck.contains(keyValueString);
     }
     
+    return matched;
+  }
+
+  private static boolean unitIsForMyRegion(JSONObject unit, List<String> regionCodes) {
+    String unitName = unit.has("unit") ? unit.getString("unit") : "&^%BNGDF(*)";
+    String unitRegion = unitName.substring(0, 2);
+
+    boolean matched = false;
+    boolean found = regionCodes.contains(unitRegion) || regionCodes.contains("(EM)" + unitRegion);
+    if (found) { 
+      matched = true;
+    }
+
     return matched;
   }
 
