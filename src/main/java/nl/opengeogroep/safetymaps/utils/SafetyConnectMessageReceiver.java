@@ -279,13 +279,17 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private static void handleIncidentChangedMessage(String vhost, String msgBody) {
     JSONObject incident = extractObjectFromMessage(msgBody);
+    List<String> regions = Arrays.asList(RQ_REGIONS.split(","))
+      .stream()
+      .filter(reg -> !reg.startsWith("(EM)"))
+      .collect(Collectors.toList());
     
     if (
       // SMVNG-711 : only filter on tenant // incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true ||
       incidentIsForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true ||
       (
         incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true &&
-        incidentHasUnitForMe(incident, Arrays.asList(RQ_REGIONS.split(",")).stream().filter(reg -> reg.startsWith("(EM)") == false).collect(Collectors.toList())) == true
+        incidentHasUnitForMe(incident, regions) == true
       )
     ) {
 
@@ -427,7 +431,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     for(int i=0; i<units.length(); i++) {
       JSONObject unit = (JSONObject)units.get(i);
-      String unitName = unit.has("roepnaam") ? unit.getString("roepnaam") : "&^%BNGDF(*)";
+      String unitName = unit.has("roepnaam") ? unit.getString("roepnaam") : "aaaaaaaaaa";
       String unitRegion = unitName.substring(0, 2);
 
       boolean found = regionCodes.contains(unitRegion);
@@ -464,7 +468,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   }
 
   private static boolean unitIsForMyRegion(JSONObject unit, List<String> regionCodes) {
-    String unitName = unit.has("unit") ? unit.getString("unit") : "&^%BNGDF(*)";
+    String unitName = unit.has("unit") ? unit.getString("unit") : "aaaaaaaaaa";
     String unitRegion = unitName.substring(0, 2);
 
     boolean matched = false;
