@@ -141,6 +141,10 @@ public class KROActionBean implements ActionBean {
       });*/
     }
 
+    private String getCacheKey() {
+      return (this.address == null ?  "" : this.address) + (this.bagPandId == null ? "" : this.bagPandId);
+    }
+
     private static final Map<String,CachedResponseString> cache_kro = new HashMap<>();
 
     @DefaultHandler
@@ -151,9 +155,9 @@ public class KROActionBean implements ActionBean {
 
         synchronized(cache_kro) {
           CleanupCache();
-          CachedResponseString cache = cache_kro.get(this.address);
+          CachedResponseString cache = cache_kro.get(getCacheKey());
 
-          if (!cache_kro.containsKey(this.address) || cache == null) {
+          if (!cache_kro.containsKey(getCacheKey()) || cache == null) {
             JSONArray response = new JSONArray();
             List<Map<String, Object>> rows = getKroFromDb();
             for (Map<String, Object> row : rows) {
@@ -194,7 +198,7 @@ public class KROActionBean implements ActionBean {
             }
 
             cache = new CachedResponseString(response.toString());
-            cache_kro.put(this.address, cache);
+            cache_kro.put(getCacheKey(), cache);
           }
 
           return new StreamingResolution("application/json", cache.response);
@@ -210,9 +214,9 @@ public class KROActionBean implements ActionBean {
 
         synchronized(cache_config) {
           CleanupCache();
-          CachedResponseString cache = cache_config.get(this.address);
+          CachedResponseString cache = cache_config.get(getCacheKey());
 
-          if (!cache_config.containsKey(this.address) || cache == null) {
+          if (!cache_config.containsKey(getCacheKey()) || cache == null) {
             JSONArray response = new JSONArray();
             List<Map<String, Object>> rows;
             rows = getConfigFromDb();
@@ -222,7 +226,7 @@ public class KROActionBean implements ActionBean {
             }
 
             cache = new CachedResponseString(response.toString());
-            cache_config.put(this.address, cache);
+            cache_config.put(getCacheKey(), cache);
           }
 
           return new StreamingResolution("application/json", cache.response);
@@ -238,9 +242,9 @@ public class KROActionBean implements ActionBean {
         
         synchronized(cache_address) {
           CleanupCache();
-          CachedResponseString cache = cache_address.get(this.address);
+          CachedResponseString cache = cache_address.get(getCacheKey());
 
-          if (!cache_address.containsKey(this.address) || cache == null) {
+          if (!cache_address.containsKey(getCacheKey()) || cache == null) {
             List<Map<String, Object>> rows;
             List<String> orderedTypes = new ArrayList<String>();
             rows = getObjectTypesOrderedPerScoreFromDb();
@@ -256,7 +260,7 @@ public class KROActionBean implements ActionBean {
             }
 
             cache = new CachedResponseString(response.toString());
-            cache_address.put(this.address, cache);
+            cache_address.put(getCacheKey(), cache);
           }
 
           return new StreamingResolution("application/json", cache.response);
@@ -272,9 +276,9 @@ public class KROActionBean implements ActionBean {
 
         synchronized(cache_pand) {
           CleanupCache();
-          CachedResponseString cache = cache_pand.get(this.address);
+          CachedResponseString cache = cache_pand.get(getCacheKey());
 
-          if (!cache_pand.containsKey(this.address) || cache == null) {
+          if (!cache_pand.containsKey(getCacheKey()) || cache == null) {
             QueryRunner qr = DB.bagQr();
             List<Map<String, Object>> result = qr.query("select st_astext(st_force2d(geovlak)) as pandgeo from bag_actueel.pandactueelbestaand_filter where identificatie=?", new MapListHandler(), getBagPandId());
             
@@ -285,7 +289,7 @@ public class KROActionBean implements ActionBean {
             }
 
             cache = new CachedResponseString(response.toString());
-            cache_pand.put(this.address, cache);
+            cache_pand.put(getCacheKey(), cache);
           }
 
           return new StreamingResolution("application/json", cache.response);
