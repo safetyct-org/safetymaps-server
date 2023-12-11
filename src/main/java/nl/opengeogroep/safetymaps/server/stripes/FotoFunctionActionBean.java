@@ -308,11 +308,7 @@ public class FotoFunctionActionBean implements ActionBean {
     }
 
     private void CleanupCacheLoad() {
-      cache_load.forEach((key, value) -> {
-        if (value.isReadyToCleanup()) {
-          cache_load.remove(key, value);
-        }
-      });
+      cache_load.values().removeIf(value -> value.isReadyToCleanup());
     }
 
     private static final Map<String,CachedResponseString> cache_load = new HashMap<>();
