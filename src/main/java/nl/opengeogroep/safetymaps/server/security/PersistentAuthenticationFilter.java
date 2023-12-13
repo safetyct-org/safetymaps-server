@@ -313,7 +313,7 @@ public class PersistentAuthenticationFilter implements Filter {
             if(persistentSession != null) {
                 // persistentSession was found and not expired
                 String obfuscatedSession = obfuscateSessionId((String)persistentSession.get("id"));
-                log.info(request.getRequestURI() + ": Using authentication from cookie session for user " + persistentSession.get("username") + " from session id " + obfuscatedSession + ", saving principal in session: " + request.getRequestURI());
+                log.trace(request.getRequestURI() + ": Using authentication from cookie session for user " + persistentSession.get("username") + " from session id " + obfuscatedSession + ", saving principal in session: " + request.getRequestURI());
 
                 // Make sure principal has role from login source if different from DEFAULT_LOGIN_SOURCE,
                 // so UpdatableLoginSessionFilter can get roles using that role name as username
