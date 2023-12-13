@@ -115,30 +115,6 @@ public class KROActionBean implements ActionBean {
       cache_config.values().removeIf(value -> value.isReadyToCleanup());
       cache_address.values().removeIf(value -> value.isReadyToCleanup());
       cache_pand.values().removeIf(value -> value.isReadyToCleanup());
-
-      /*cache_kro.forEach((key, value) -> {
-        if (value.isReadyToCleanup()) {
-          cache_kro.remove(key, value);
-        }
-      });
-
-      cache_config.forEach((key, value) -> {
-        if (value.isReadyToCleanup()) {
-          cache_config.remove(key, value);
-        }
-      });
-
-      cache_address.forEach((key, value) -> {
-        if (value.isReadyToCleanup()) {
-          cache_address.remove(key, value);
-        }
-      });
-
-      cache_pand.forEach((key, value) -> {
-        if (value.isReadyToCleanup()) {
-          cache_pand.remove(key, value);
-        }
-      });*/
     }
 
     private String getCacheKey() {
@@ -176,7 +152,7 @@ public class KROActionBean implements ActionBean {
                     delimitedBagPandTypes += (String)bagPandType.get(COLUMN_OBJECTTYPERING);
                 }
                 List<String> orderedObjectTypes = getAndCountObjectTypesOrderedByScore(delimitedBagPandTypes, true);
-                List<String> orderedAddressObjectTypes = getAndCountObjectTypesOrderedByScore(combinedObjectTypes, false);
+                List<String> orderedAddressObjectTypes = getAndCountObjectTypesOrderedByScore(combinedObjectTypes, true);
 
                 if (orderedObjectTypes.size() > 0) {
                     kroFromDb.put("pand_objecttypering_ordered", orderedObjectTypes);
@@ -310,16 +286,19 @@ public class KROActionBean implements ActionBean {
 
     private List<Map<String, Object>> getKroFromDb() throws NamingException, SQLException {
         QueryRunner qr = DB.kroQr();
-        String sql = "select * from " + getViewObjectInfo("oovkro.object_info") + " where ";
+        //String sql = "select * from " + getViewObjectInfo("oovkro.object_info") + " where ";
+        
+        String wherePartOfSql = "";
+
         Object[] qparams;
         if (useBagId()) {
-            sql += COLUMN_BAGVBID + "=?";
+            wherePartOfSql += COLUMN_BAGVBID + "=?";
             qparams = new Object[] {
                 this.bagVboId
             };
         } else {
             String[] address = splitAddress();
-            sql += COLUMN_HUISNR + "=? and " + COLUMN_HUISLET + "=? and " + COLUMN_HUISTOEV + "=? and (" + COLUMN_PC + "=? or (" + COLUMN_PLAATS + "=? and " + COLUMN_STRAAT + "=?))";
+            wherePartOfSql += COLUMN_HUISNR + "=? and " + COLUMN_HUISLET + "=? and " + COLUMN_HUISTOEV + "=? and (" + COLUMN_PC + "=? or (" + COLUMN_PLAATS + "=? and " + COLUMN_STRAAT + "=?))";
             Integer nr = 0;
 
             try {
@@ -332,13 +311,22 @@ public class KROActionBean implements ActionBean {
                 nr, address[2], address[3], address[5], address[4], address[0]
             };
         }
+
+        String sql = "select bagvboid, bagpandid, straatnaam, huisnr, huisletter, huistoevg, plaatsnaam, gemnaam, pand_bouwjaar, adres_oppervlak, pand_status, pand_maxhoogte, pand_bouwlagen, adres, monument, postcode," +
+          "string_agg(aanzien_objecttypering, '||') aanzien_objecttypering, " +
+          "string_agg(adres_objecttypering, '||') adres_objecttypering, " +
+          "string_agg(adres_bedrijfsnaam, ', ') adres_bedrijfsnaam " +
+          "from " + getViewObjectInfo("oovkro.object_info") + " " +
+          "where " + wherePartOfSql + " " +
+          "group by bagvboid, bagpandid, straatnaam, huisnr, huisletter, huistoevg, plaatsnaam, gemnaam, pand_bouwjaar, adres_oppervlak, pand_status, pand_maxhoogte, pand_bouwlagen, adres, monument, postcode;";
+
         List<Map<String, Object>> rows = qr.query(sql, new MapListHandler(), qparams);
         return rows;
     }
 
     private List<Map<String, Object>> getObjectTypesOrderedPerScoreFromDb() throws NamingException, SQLException {
         QueryRunner qr = DB.kroQr();
-        return qr.query("select code, omschrijving_aangepast, risico_score from " + getViewObjectInfo("oovkro.objecttypering_type") + " ot " +
+        return qr.query("select code2 as code, omschrijving_aangepast, risico_score from " + getViewObjectInfo("oovkro.objecttypering_type") + " ot " +
             "union select 'woonfunctie' as code, 'woonfunctie' as omschrijving_aangepast, -1 as risico_score " +
             "union select 'bijeenkomstfunctie' as code, 'bijeenkomstfunctie' as omschrijving_aangepast, -1 as risico_score " +
             "union select 'celfunctie' as code, 'celfunctie' as omschrijving_aangepast, -1 as risico_score " +
@@ -396,10 +384,11 @@ public class KROActionBean implements ActionBean {
     private List<Map<String, Object>> getObjectTypesForBagPandId(String bagPandId) throws Exception {
         QueryRunner qr = DB.kroQr();
         String sql = 
-            "select case when adres_objecttypering is not null or aanzien_objecttypering is not null " +
-                "then concat(adres_objecttypering, '||', aanzien_objecttypering::text) " +
-                "else null::text " +
-                "end as " + COLUMN_OBJECTTYPERING + " " +
+            "select case when adres_objecttypering <> '' and aanzien_objecttypering <> '' then concat(adres_objecttypering, '||', aanzien_objecttypering::text)" +
+            " when adres_objecttypering <> '' then adres_objecttypering " +
+            " when aanzien_objecttypering <> '' then aanzien_objecttypering " +
+            " else null::text " +
+            " end as " + COLUMN_OBJECTTYPERING + " " +
             "from " + getViewObjectInfo("oovkro.object_info") + " " +
             "where " + COLUMN_BAGPANDID + " = ? " +
             "group by adres, adres_objecttypering, aanzien_objecttypering";
