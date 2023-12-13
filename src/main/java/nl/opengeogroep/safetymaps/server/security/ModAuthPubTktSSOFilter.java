@@ -154,7 +154,7 @@ public class ModAuthPubTktSSOFilter implements Filter {
         cookie.setHttpOnly(true);
         cookie.setSecure(request.getScheme().equals("https"));
         addCookieWithSameSite(response, cookie, "None");
-        LOG.info("Added cookie with ticket for domain " + domain + " (SameSite=None) valid until " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(validUntil.getTime()));
+        LOG.info("Added cookie with ticket for user " + user + " domain " + domain + " (SameSite=None) valid until " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(validUntil.getTime()));
 
         request.getSession().setAttribute(SESSION_COOKIE_EXPIRY, cookieExpiry);
     }
