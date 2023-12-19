@@ -183,32 +183,28 @@ public class ViewerApiActionBean implements ActionBean {
             return new Resolution() {
                 @Override
                 public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
-                    String encoding = "UTF-8";
-                    response.setCharacterEncoding(encoding);
-                    response.setContentType("application/json");
-                    response.addHeader("ETag", etag);
+                    try {
+                      String encoding = "UTF-8";
+                      response.setCharacterEncoding(encoding);
+                      response.setContentType("application/json");
+                      response.addHeader("ETag", etag);
 
-                    OutputStream out;
-                    String acceptEncoding = request.getHeader("Accept-Encoding");
-                    if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
-                        response.setHeader("Content-Encoding", "gzip");
-                        out = new GZIPOutputStream(response.getOutputStream(), true);
-                    } else {
-                        out = response.getOutputStream();
+                      OutputStream out;
+                      String acceptEncoding = request.getHeader("Accept-Encoding");
+                      if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+                          response.setHeader("Content-Encoding", "gzip");
+                          out = new GZIPOutputStream(response.getOutputStream(), true);
+                      } else {
+                          out = response.getOutputStream();
+                      }
+                      IOUtils.copy(new StringReader(o.toString(indent)), out, encoding);
+                      out.flush();
+                      out.close();
+                    } catch (IOException e) {
+                      // Do nothing
                     }
-                    IOUtils.copy(new StringReader(o.toString(indent)), out, encoding);
-                    out.flush();
-                    out.close();
                 }
-            };
-        } catch (IOException e) {
-          String exceptionSimpleName = e.getCause().getClass().getSimpleName();
-
-          if ("ClientAbortException".equals(exceptionSimpleName)) {
-            return null;
-          } else {
-            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error getting viewer objects", e).toString(indent));
-          }
+            };        
         } catch(Exception e) {
             return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error getting viewer objects", e).toString(indent));
         }

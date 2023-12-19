@@ -121,7 +121,6 @@ public class SafetyConnectProxyActionBean implements ActionBean {
     private static final Map<String,CachedResponseString> cache_proxy = new HashMap<>();
 
     public Resolution proxy() throws Exception {
-        try {
           if(requestIs(INCIDENT_REQUEST) && !context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
               return unAuthorizedResolution();
           }
@@ -251,10 +250,14 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                       }
                     }
 
-                    IOUtils.copy(new StringReader(incidents.toString()), out, "UTF-8");
+                    try {
+                      IOUtils.copy(new StringReader(incidents.toString()), out, "UTF-8");
 
-                    out.flush();
-                    out.close();
+                      out.flush();
+                      out.close();
+                    } catch (IOException e) {
+                      // Do nothing
+                    }
                 }
               };
           }
@@ -292,10 +295,14 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                       else if (getUserVehicleList().contains(unitId)) { units.put(unit); }
                     }
                     
-                    IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
+                    try {
+                      IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
 
-                    out.flush();
-                    out.close();
+                      out.flush();
+                      out.close();
+                    } catch (IOException e) {
+                      // Do nothing
+                    }
                 }
             };
         }
@@ -359,11 +366,14 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
                                   //cache = new CachedResponseString(responseContent);
                                   //cache_proxy.put(uri, cache);
-                    
-                    IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
+                    try {
+                      IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
 
-                    out.flush();
-                    out.close();
+                      out.flush();
+                      out.close();
+                    } catch (IOException e) {
+                      // Do nothing
+                    }
                 }
             };
         }
@@ -406,7 +416,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                         try {
                             return IOUtils.toString(hr.getEntity().getContent(), "UTF-8");
                         } catch(IOException e) {
-                            log.error("Exception reading HTTP content", e);
+                            //log.error("Exception reading HTTP content", e);
                             return "Exception " + e.getClass() + ": " + e.getMessage();
                         }
                     }
@@ -450,15 +460,16 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                 } else {
                     out = response.getOutputStream();
                 }
-                IOUtils.copy(new StringReader(content), out, encoding);
-                out.flush();
-                out.close();
+                try {
+                  IOUtils.copy(new StringReader(content), out, encoding);
+                  out.flush();
+                  out.close();
+                } catch (IOException e) {
+                  // Do nothing
+                }
               }
             };
-        }
-      } catch (IOException e) {
-       return null;
-      }        
+        }      
     }
 
     private Map<String, String> getQueryStringMap(String query) {  
@@ -598,28 +609,33 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
     // Applies filter to /eenheidLocatie to filter out locations for vehicles not attached to an incident
     private String applyFilterToEenheidLocatieContent(String contentFromResponse) throws Exception {
-        JSONObject content = new JSONObject(contentFromResponse);
-        JSONArray features = (JSONArray)content.get("features");
-        JSONArray authorizedFeatures = new JSONArray();
+        try {
+          JSONObject content = new JSONObject(contentFromResponse);
+          JSONArray features = (JSONArray)content.get("features");
+          JSONArray authorizedFeatures = new JSONArray();
 
-        for(int i=0; i<features.length(); i++) {
-            JSONObject feature = (JSONObject)features.get(i);
-            JSONObject props = (JSONObject)feature.get("properties");
-            Integer incidentnr = (Integer)props.get("incidentNummer");
+          for(int i=0; i<features.length(); i++) {
+              JSONObject feature = (JSONObject)features.get(i);
+              JSONObject props = (JSONObject)feature.get("properties");
+              Integer incidentnr = (Integer)props.get("incidentNummer");
 
-            boolean authorizedForEenheidLocatie = true;
+              boolean authorizedForEenheidLocatie = true;
 
-            if (incidentnr == null || incidentnr == 0) {
-                authorizedForEenheidLocatie = false;
-            }
+              if (incidentnr == null || incidentnr == 0) {
+                  authorizedForEenheidLocatie = false;
+              }
 
-            if(authorizedForEenheidLocatie) {
-                authorizedFeatures.put(feature);
-            }
+              if(authorizedForEenheidLocatie) {
+                  authorizedFeatures.put(feature);
+              }
+          }
+
+          content.put("features", authorizedFeatures);
+
+          return content.toString();
+        } catch (Exception e) {
+          // Do nothing
+          return "";
         }
-
-        content.put("features", authorizedFeatures);
-
-        return content.toString();
     }
 }
