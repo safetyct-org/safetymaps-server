@@ -281,30 +281,34 @@ public class FotoFunctionActionBean implements ActionBean {
     }
 
     public Resolution download() throws Exception {
-        // First pathname security check: must exist in db
-        boolean exists = DB.qr().query("select 1 from wfs." + TABLE + " where filename = ?", new ScalarHandler<>(), fileName) != null;
+        try {
+          // First pathname security check: must exist in db
+          boolean exists = DB.qr().query("select 1 from wfs." + TABLE + " where filename = ?", new ScalarHandler<>(), fileName) != null;
 
-        // Second security check: No path breaker like /../ in filename
-        if(!exists || fileName.contains("..")) {
-            return new ErrorMessageResolution(HttpServletResponse.SC_NOT_FOUND, "Foto '" + fileName + "' niet gevonden");
+          // Second security check: No path breaker like /../ in filename
+          if(!exists || fileName.contains("..")) {
+              return new ErrorMessageResolution(HttpServletResponse.SC_NOT_FOUND, "Foto '" + fileName + "' niet gevonden");
+          }
+
+          String fotoPath = Cfg.getSetting("fotofunctie");
+          File fotoPathDir = new File(fotoPath);
+          File f = new File(fotoPath + File.separator + fileName);
+
+          // Third security check: resulting path parent file must be the foto directory,
+          // not another directory using path breakers like /../ etc.
+          if(!f.getParentFile().equals(fotoPathDir)) {
+              return new ErrorMessageResolution(HttpServletResponse.SC_BAD_REQUEST, "Filename contains path breaker: " + fileName);
+          }
+
+          if(!f.exists() || !f.canRead()) {
+              return new ErrorMessageResolution(HttpServletResponse.SC_NOT_FOUND, "Foto '" + fileName + "' niet gevonden");
+          }
+
+          String mimeType = Files.probeContentType(f.toPath());
+          return new StreamingResolution(mimeType, new FileInputStream(f));
+        } catch (IOException e) {
+          return null;
         }
-
-        String fotoPath = Cfg.getSetting("fotofunctie");
-        File fotoPathDir = new File(fotoPath);
-        File f = new File(fotoPath + File.separator + fileName);
-
-        // Third security check: resulting path parent file must be the foto directory,
-        // not another directory using path breakers like /../ etc.
-        if(!f.getParentFile().equals(fotoPathDir)) {
-            return new ErrorMessageResolution(HttpServletResponse.SC_BAD_REQUEST, "Filename contains path breaker: " + fileName);
-        }
-
-        if(!f.exists() || !f.canRead()) {
-            return new ErrorMessageResolution(HttpServletResponse.SC_NOT_FOUND, "Foto '" + fileName + "' niet gevonden");
-        }
-
-        String mimeType = Files.probeContentType(f.toPath());
-        return new StreamingResolution(mimeType, new FileInputStream(f));
     }
 
     private void CleanupCacheLoad() {
@@ -313,7 +317,8 @@ public class FotoFunctionActionBean implements ActionBean {
 
     private static final Map<String,CachedResponseString> cache_load = new HashMap<>();
 
-    public Resolution fotoForIncident() throws Exception {      
+    public Resolution fotoForIncident() throws Exception {
+      try {      
         JSONArray response = new JSONArray();
 
         synchronized(cache_load) {
@@ -333,6 +338,9 @@ public class FotoFunctionActionBean implements ActionBean {
           
           return new StreamingResolution("application/json", cache.response);
         }
+      } catch (IOException e) {
+        return null;
+      }
     }
 
     public void insertIntoDb() throws Exception {

@@ -1,5 +1,6 @@
 package nl.opengeogroep.safetymaps.server.stripes;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -94,46 +95,54 @@ public class MessageActionBean implements ActionBean {
    */  
   @DefaultHandler
   public Resolution def() {
-    JSONArray response = new JSONArray();
-    Date now = new Date();
-    CachedResponseString cache = new CachedResponseString("");
+      JSONArray response = new JSONArray();
+      Date now = new Date();
+      CachedResponseString cache = new CachedResponseString("");
 
-    synchronized(cache_def) {
-      CleanupCacheDef();
-      try {
-        if("all".equals(path)) {
-          cache = cache_def.get("all");
+      synchronized(cache_def) {
+        CleanupCacheDef();
+        try {
+          if("all".equals(path)) {
+            cache = cache_def.get("all");
 
-          if (!cache_def.containsKey("all") || cache == null || cache.isOutDated()) {
-            List<Map<String,Object>> results = DB.qr().query("SELECT * FROM safetymaps.messages", new MapListHandler());
-            for (Map<String, Object> resultRow : results) {
-              response.put(rowToJson(resultRow, false, false));
+            if (!cache_def.containsKey("all") || cache == null || cache.isOutDated()) {
+              List<Map<String,Object>> results = DB.qr().query("SELECT * FROM safetymaps.messages", new MapListHandler());
+              for (Map<String, Object> resultRow : results) {
+                response.put(rowToJson(resultRow, false, false));
+              }
+
+              cache = new CachedResponseString(response.toString());
+              cache_def.put("all", cache);
             }
-
-            cache = new CachedResponseString(response.toString());
-            cache_def.put("all", cache);
           }
-        }
 
-        if("active".equals(path)) {
-          cache = cache_def.get("active");
+          if("active".equals(path)) {
+            cache = cache_def.get("active");
 
-          if (!cache_def.containsKey("active") || cache == null || cache.isOutDated()) {
-            List<Map<String,Object>> results = DB.qr().query("SELECT * FROM safetymaps.messages WHERE dtgstart<=? AND dtgend >?", new MapListHandler(), new java.sql.Timestamp(now.getTime()), new java.sql.Timestamp(now.getTime()));
-            for (Map<String, Object> resultRow : results) {
-              response.put(rowToJson(resultRow, false, false));
+            if (!cache_def.containsKey("active") || cache == null || cache.isOutDated()) {
+              List<Map<String,Object>> results = DB.qr().query("SELECT * FROM safetymaps.messages WHERE dtgstart<=? AND dtgend >?", new MapListHandler(), new java.sql.Timestamp(now.getTime()), new java.sql.Timestamp(now.getTime()));
+              for (Map<String, Object> resultRow : results) {
+                response.put(rowToJson(resultRow, false, false));
+              }
+
+              cache = new CachedResponseString(response.toString());
+              cache_def.put("active", cache);          
             }
-
-            cache = new CachedResponseString(response.toString());
-            cache_def.put("active", cache);          
           }
-        }
 
-        return new StreamingResolution("application/json", cache.response);
-      } catch(Exception e) {
-        return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
-      } 
-    }
+          return new StreamingResolution("application/json", cache.response);
+        } catch (IOException e) {
+          String exceptionSimpleName = e.getCause().getClass().getSimpleName();
+
+          if ("ClientAbortException".equals(exceptionSimpleName)) {
+            return null;
+          } else {
+            return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
+          }
+        } catch(Exception e) {
+          return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
+        } 
+      }  
   }
   
 }

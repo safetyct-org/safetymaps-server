@@ -1,5 +1,6 @@
 package nl.opengeogroep.safetymaps.server.stripes;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -218,6 +219,14 @@ public class VrhWaterwinningApiActionBean implements ActionBean {
             r.put("success", true);
             r.put("value", waterwinningInfo);
             return new StreamingResolution("application/json", r.toString(indent));
+        } catch (IOException e) {
+          String exceptionSimpleName = e.getCause().getClass().getSimpleName();
+
+          if ("ClientAbortException".equals(exceptionSimpleName)) {
+            return null;
+          } else {
+            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
+          }
         } catch(Exception e) {
             return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
         }

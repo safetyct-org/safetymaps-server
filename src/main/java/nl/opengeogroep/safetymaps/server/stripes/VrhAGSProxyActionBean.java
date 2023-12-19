@@ -158,7 +158,7 @@ public class VrhAGSProxyActionBean implements ActionBean {
 
             //return new StreamingResolution(contentType.getValue(), new StringReader(content));
         } catch(IOException e) {
-            log.error("Failed to write output:", e);
+            //log.error("Failed to write output:", e);
             return null;
         }
     }

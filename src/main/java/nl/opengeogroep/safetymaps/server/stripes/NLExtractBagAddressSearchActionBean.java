@@ -5,6 +5,7 @@
  */
 package nl.opengeogroep.safetymaps.server.stripes;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
@@ -102,9 +103,10 @@ public class NLExtractBagAddressSearchActionBean  implements ActionBean {
             }
 
             return new StreamingResolution("application/json", new StringReader(result.toString(4)));
+        } catch (IOException e) {
+          return null;
         } catch(Exception e) {
-            return new ErrorMessageResolution(logExceptionAndReturnJSONObject(log, "Error searching BAG database for address", e).toString(4));
-            
+          return new ErrorMessageResolution(logExceptionAndReturnJSONObject(log, "Error searching BAG database for address", e).toString(4)); 
         }
     }
     

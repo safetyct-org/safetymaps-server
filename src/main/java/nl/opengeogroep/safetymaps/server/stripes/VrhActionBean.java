@@ -1,5 +1,6 @@
 package nl.opengeogroep.safetymaps.server.stripes;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.math.BigDecimal;
@@ -185,6 +186,14 @@ public class VrhActionBean implements ActionBean {
             }
 
             return new ErrorResolution(HttpServletResponse.SC_NOT_FOUND, "Not found: " + getContext().getRequest().getRequestURI());
+        } catch (IOException e) {
+          String exceptionSimpleName = e.getCause().getClass().getSimpleName();
+
+          if ("ClientAbortException".equals(exceptionSimpleName)) {
+            return null;
+          } else {
+            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
+          }
         } catch(Exception e) {
             return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
         }

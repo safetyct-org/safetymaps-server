@@ -1,5 +1,6 @@
 package nl.opengeogroep.safetymaps.server.stripes;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.sql.Connection;
@@ -153,6 +154,14 @@ public class ViewerApiActionBean implements ActionBean {
             }
 
             return new ErrorResolution(HttpServletResponse.SC_NOT_FOUND, "Not found: /api/" + path);
+        } catch (IOException e) {
+          String exceptionSimpleName = e.getCause().getClass().getSimpleName();
+
+          if ("ClientAbortException".equals(exceptionSimpleName)) {
+            return null;
+          } else {
+            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on /api/" + path, e).toString(indent));
+          }
         } catch(Exception e) {
             return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on /api/" + path, e).toString(indent));
         }
@@ -192,7 +201,14 @@ public class ViewerApiActionBean implements ActionBean {
                     out.close();
                 }
             };
+        } catch (IOException e) {
+          String exceptionSimpleName = e.getCause().getClass().getSimpleName();
 
+          if ("ClientAbortException".equals(exceptionSimpleName)) {
+            return null;
+          } else {
+            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error getting viewer objects", e).toString(indent));
+          }
         } catch(Exception e) {
             return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error getting viewer objects", e).toString(indent));
         }
