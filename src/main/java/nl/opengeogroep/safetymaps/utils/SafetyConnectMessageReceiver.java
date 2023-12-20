@@ -40,6 +40,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private static String RQ_USER;
   private static String RQ_PASS;
   private static String RQ_PARAMS;
+  private static String RQ_OPTIONAL_ONLY_UNITS;
   
   private static HashMap<String, Connection> RQ_CONNECTIONS = new HashMap<String, Connection>();
   private static HashMap<String, Channel> RQ_CHANNELS = new HashMap<String, Channel>();
@@ -68,6 +69,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     List<String> users = Arrays.asList(RQ_USER.split(","));
     List<String> passes = Arrays.asList(RQ_PASS.split(","));
 
+    Boolean onlyUnitSubscription = "true".equals(RQ_OPTIONAL_ONLY_UNITS);
+
     vhosts.forEach((vhost) -> {
       String matchVhost = "[" + vhost + "]:";
       Optional<String> host = hosts.stream().filter(h -> h.startsWith(matchVhost)).findFirst();
@@ -85,11 +88,13 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         log.error("Exception while exec 'initiateRabbitMqConnection(" + vhost + ")': ", e);
       }
 
-      try {
-        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_INCIDENT_CHANGED, "incident_changed");
-        log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_INCIDENT_CHANGED + "') initialized.");
-      } catch (Exception e) {
-        log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_INCIDENT_CHANGED + ")'", e);
+      if (onlyUnitSubscription == false) {
+        try {
+          initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_INCIDENT_CHANGED, "incident_changed");
+          log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_INCIDENT_CHANGED + "') initialized.");
+        } catch (Exception e) {
+          log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_INCIDENT_CHANGED + ")'", e);
+        }
       }
 
       try {
@@ -144,6 +149,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     RQ_TENANTS = Cfg.getSetting("safetyconnect_rq_tenants", "");
     RQ_PARAMS = Cfg.getSetting("safetyconnect_rq_params", "");
     RQ_REGIONS = Cfg.getSetting("safetyconnect_rq_regios", "");
+    RQ_OPTIONAL_ONLY_UNITS = Cfg.getSetting("safetyconnect_rq_optional_only_units", "false");
 
     if (RQ_HOST == null || RQ_USER == null || RQ_PASS == null) {
       throw new Exception("One or more required 'safetyconnect_rq' settings are empty.");
