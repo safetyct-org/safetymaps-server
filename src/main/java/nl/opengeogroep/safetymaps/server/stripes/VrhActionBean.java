@@ -140,9 +140,13 @@ public class VrhActionBean implements ActionBean {
                 } else {
                     out = response.getOutputStream();
                 }
-                IOUtils.copy(new StringReader(j.toString(indent)), out, encoding);
-                out.flush();
-                out.close();
+                try {
+                  IOUtils.copy(new StringReader(j.toString(indent)), out, encoding);
+                  out.flush();
+                  out.close();
+                } catch (IOException e) {
+                  // Do nothing
+                }
             }
         };
     }
