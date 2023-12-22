@@ -41,6 +41,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private static String RQ_PASS;
   private static String RQ_PARAMS;
   private static String RQ_OPTIONAL_ONLY_UNITS;
+  private static String RQ_OPTIONAL_NAME_PREFIX;
   
   private static HashMap<String, Connection> RQ_CONNECTIONS = new HashMap<String, Connection>();
   private static HashMap<String, Channel> RQ_CHANNELS = new HashMap<String, Channel>();
@@ -150,6 +151,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     RQ_PARAMS = Cfg.getSetting("safetyconnect_rq_params", "");
     RQ_REGIONS = Cfg.getSetting("safetyconnect_rq_regios", "");
     RQ_OPTIONAL_ONLY_UNITS = Cfg.getSetting("safetyconnect_rq_optional_only_units", "false");
+    RQ_OPTIONAL_NAME_PREFIX = Cfg.getSetting("safetyconnect_rq_optional_name_prefix", "");
 
     if (RQ_HOST == null || RQ_USER == null || RQ_PASS == null) {
       throw new Exception("One or more required 'safetyconnect_rq' settings are empty.");
@@ -381,7 +383,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private static String nameQueue(Channel channel, String rqMb, String event, String vhost, String host) {
     String name = null;
-    String checkByName = RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
+    String checkByName = RQ_OPTIONAL_NAME_PREFIX + "_" + RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
     
     try {
       name = DB.qr().query("select queuenname from safetymaps.rq where queuenname = ?", new ScalarHandler<String>(), checkByName);
