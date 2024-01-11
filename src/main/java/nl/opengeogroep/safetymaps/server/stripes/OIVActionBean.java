@@ -25,6 +25,7 @@ import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
+import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.DB;
 
 @UrlBinding("/viewer/api/oiv/{path}")
@@ -71,7 +72,7 @@ public class OIVActionBean implements ActionBean {
         return new ErrorResolution(404, "Not found: /oiv/" + path);
       }
     } catch(Exception e) {
-      return null;
+      return new ErrorMessageResolution(500, "Error: " + e.getClass() + ": " + e.getMessage());
     }
   }
 
