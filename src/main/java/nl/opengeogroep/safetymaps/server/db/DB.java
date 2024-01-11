@@ -22,7 +22,7 @@ public class DB {
     private static final String JNDI_NAME = "java:/comp/env/jdbc/safetymaps-server";
     private static final String JNDI_NAME_BAG = "java:/comp/env/jdbc/nlextract-bag";
     private static final String JNDI_NAME_KRO = "java:/comp/env/jdbc/kro";
-    private static final String JNDI_NAME_OIV = "java:/comp/env/jdbc/oib";
+    private static final String JNDI_NAME_OIV = "java:/comp/env/jdbc/oiv";
     private static final String JNDI_NAME_MAPTRIP = "java:/comp/env/jdbc/maptrip";
 
     public static final String USER_TABLE = "safetymaps.user_ ";
