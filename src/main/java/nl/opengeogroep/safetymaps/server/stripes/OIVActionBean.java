@@ -26,7 +26,6 @@ import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
 import nl.opengeogroep.safetymaps.server.db.DB;
 
-@StrictBinding
 @UrlBinding("/viewer/api/oiv/{path}")
 public class OIVActionBean implements ActionBean {
   private static final Log log = LogFactory.getLog(OIVActionBean.class);
@@ -58,6 +57,7 @@ public class OIVActionBean implements ActionBean {
     this.path = path;
   }
 
+  @DefaultHandler
   public Resolution oiv() {
     try(Connection c = DB.getOIVConnection()) {
       if (OBJECTS.equals(path)) {
