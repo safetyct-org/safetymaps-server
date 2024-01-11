@@ -27,7 +27,7 @@ import net.sourceforge.stripes.validation.Validate;
 import nl.opengeogroep.safetymaps.server.db.DB;
 
 @StrictBinding
-@UrlBinding("/viewer/oiv/{path}")
+@UrlBinding("/viewer/api/oiv/{path}")
 public class OIVActionBean implements ActionBean {
   private static final Log log = LogFactory.getLog(OIVActionBean.class);
   
