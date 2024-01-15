@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+import javax.naming.NamingException;
+
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.logging.Log;
@@ -61,13 +63,13 @@ public class OIVActionBean implements ActionBean {
 
   @DefaultHandler
   public Resolution oiv() {
-    try(Connection c = DB.getOIVConnection()) {
+    try {
       if (OBJECTS.equals(path)) {
-        return objects(c);
+        return objects();
       } else if (OBJECT.equals(path)) {
-        return object(c);
+        return object();
       } else if (STYLES.equals(path)) {
-        return styles(c);
+        return styles();
       } else {
         return new ErrorResolution(404, "Not found: /oiv/" + path);
       }
@@ -76,8 +78,8 @@ public class OIVActionBean implements ActionBean {
     }
   }
 
-  private Resolution objects(Connection c) throws SQLException {
-    List<Map<String,Object>> dbks = new QueryRunner().query(c,
+  private Resolution objects() throws SQLException, NamingException {
+    List<Map<String,Object>> dbks = DB.oivQr().query(
         "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, geom, basisreg_identifier as bid, bron, bron_tabel, max_bouwlaag, min_bouwlaag " +
         "from objecten.view_objectgegevens vo " +
         "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
@@ -111,11 +113,11 @@ public class OIVActionBean implements ActionBean {
     return new StreamingResolution("application/json", results.toString());
   }
 
-  private Resolution object(Connection c) {
+  private Resolution object() {
     return new ErrorResolution(400, "Not implemented yet!");
   }
 
-  private Resolution styles(Connection c) {
+  private Resolution styles() {
     return new ErrorResolution(400, "Not implemented yet!");
   }
 }
