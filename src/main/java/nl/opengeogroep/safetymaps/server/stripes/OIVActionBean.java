@@ -83,7 +83,7 @@ public class OIVActionBean implements ActionBean {
         "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, geom, basisreg_identifier as bid, bron, bron_tabel, max_bouwlaag, min_bouwlaag " +
         "from objecten.view_objectgegevens vo " +
         "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
-        "inner join algemeen.\"symbols\" s on s.symbol_name = ot.symbol_name"
+        "inner join objecten.view_algemeen_symbols s on s.symbol_name = ot.symbol_name"
       , new MapListHandler());
     JSONArray results = new JSONArray();
 
