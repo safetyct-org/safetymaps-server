@@ -84,6 +84,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     try {
       CACHE.InitializeIncidentCache();
       CACHE.InitializeUnitCache();
+
+      LOG.info("Incident- and UnitCache initialized.");
     } catch (Exception e) {
       LOG.error("Exception while initializing Incident- and UnitCache: ", e);
     }
@@ -119,6 +121,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
         SCHEDULER.scheduleJob(cacheCleanJob, cacheCleanTrigger);
         SCHEDULER.scheduleJob(cacheSaveJob, cacheSaveTrigger);
+
+        LOG.info("Incident- and UnitCache schedule configred.");
     } catch (Exception e) {
       LOG.error("Exception while configuring schedules for Incident- and UnitCache: ", e);
     }
