@@ -102,8 +102,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         .withDescription("Save incidents and units from cache into db each 5 minutes")
         .build(); 
 
-      CronExpression ceCacheClean = new CronExpression("0 6 * * *");
-      CronExpression ceCacheSave = new CronExpression("*/5 * * * *");
+      CronExpression ceCacheClean = new CronExpression("0 6 * * * *");
+      CronExpression ceCacheSave = new CronExpression("*/5 * * * * *");
 
       CronScheduleBuilder csCacheClean = CronScheduleBuilder.cronSchedule(ceCacheClean);
       CronScheduleBuilder csCacheSave = CronScheduleBuilder.cronSchedule(ceCacheSave);
