@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.naming.NamingException;
 
@@ -330,11 +331,11 @@ public class CACHE {
   }
 
   public static final List<Map<String, Object>> GetUnits(String sourceEnv) {
-    return CACHE.units.stream().filter(u -> u.GetSourceEnvId().equals(sourceEnv)).map(u -> u.ConvertToMap()).toList();
+    return CACHE.units.stream().filter(u -> u.GetSourceEnvId().equals(sourceEnv)).map(u -> u.ConvertToMap()).collect(Collectors.toList());
   }
 
   public static final List<UnitCacheItem> GetDirtyUnits() {
-    return CACHE.units.stream().filter(u -> u.IsDirty()).toList();
+    return CACHE.units.stream().filter(u -> u.IsDirty()).collect(Collectors.toList());
   }
 
   public static final void UpdateUnit(String sourceEnvId, UnitCacheItem ci) {
@@ -356,15 +357,15 @@ public class CACHE {
   }
 
   public static final List<Map<String, Object>> GetIncidents(String sourceEnv) {
-    return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnv)).map(i -> i.ConvertToMap()).toList();
+    return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnv)).map(i -> i.ConvertToMap()).collect(Collectors.toList());
   }
 
   public static final List<IncidentCacheItem> GetDirtyIncidents() {
-    return CACHE.incidents.stream().filter(u -> u.IsDirty()).toList();
+    return CACHE.incidents.stream().filter(u -> u.IsDirty()).collect(Collectors.toList());
   }
 
   public static final List<IncidentCacheItem> GetReadyToCleanupIncidents() {
-    return CACHE.incidents.stream().filter(u -> u.IsReadyForCleanup()).toList();
+    return CACHE.incidents.stream().filter(u -> u.IsReadyForCleanup()).collect(Collectors.toList());
   }
 
   public static final void UpdateIncident(String sourceEnvId, IncidentCacheItem ci) {
