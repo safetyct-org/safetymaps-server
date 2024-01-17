@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -19,19 +20,34 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.quartz.CronExpression;
+import org.quartz.CronScheduleBuilder;
+import org.quartz.JobBuilder;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.quartz.impl.StdSchedulerFactory;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DeliverCallback;
 
+import nl.opengeogroep.safetymaps.server.cache.CACHE;
+import nl.opengeogroep.safetymaps.server.cache.CacheCleanJob;
+import nl.opengeogroep.safetymaps.server.cache.CacheSaveJob;
+import nl.opengeogroep.safetymaps.server.cache.CACHE.IncidentCacheItem;
+import nl.opengeogroep.safetymaps.server.cache.CACHE.UnitCacheItem;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
 
 public class SafetyConnectMessageReceiver implements ServletContextListener {
-  private static final Log log = LogFactory.getLog(SafetyConnectMessageReceiver.class);
+  private static final Log LOG = LogFactory.getLog(SafetyConnectMessageReceiver.class);
 
   private static ServletContext CONTEXT;
+  private static Scheduler SCHEDULER = null;
   private static String RQ_SENDERS;
   private static String RQ_TENANTS;
   private static String RQ_REGIONS;
@@ -61,8 +77,50 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     try {
       getConfigFromDb();
     } catch (Exception e) {
-      log.error("Exception while exec 'getConfigFromDb()': ", e);
+      LOG.error("Exception while exec 'getConfigFromDb()': ", e);
       return;
+    }
+
+    try {
+      CACHE.InitializeIncidentCache();
+      CACHE.InitializeUnitCache();
+    } catch (Exception e) {
+      LOG.error("Exception while initializing Incident- and UnitCache: ", e);
+    }
+
+    try {
+      SCHEDULER = getSchedulerInstance();
+
+      JobDetail cacheCleanJob = JobBuilder.newJob(CacheCleanJob.class)
+        .withIdentity("CacheClean job")
+        .withDescription("Clean incidents from cache each day at 6")
+        .build();
+      JobDetail cacheSaveJob = JobBuilder.newJob(CacheSaveJob.class)
+        .withIdentity("CacheSave job")
+        .withDescription("Save incidents and units from cache into db each 5 minutes")
+        .build(); 
+
+      CronExpression ceCacheClean = new CronExpression("0 6 * * *");
+      CronExpression ceCacheSave = new CronExpression("*/5 * * * *");
+
+      CronScheduleBuilder csCacheClean = CronScheduleBuilder.cronSchedule(ceCacheClean);
+      CronScheduleBuilder csCacheSave = CronScheduleBuilder.cronSchedule(ceCacheSave);
+
+      Trigger cacheCleanTrigger = TriggerBuilder.newTrigger()
+        .withIdentity("CacheClean trigger")
+        .startNow()
+        .withSchedule(csCacheClean)
+        .build();
+      Trigger cacheSaveTrigger = TriggerBuilder.newTrigger()
+        .withIdentity("CacheSave trigger")
+        .startNow()
+        .withSchedule(csCacheSave)
+        .build();
+
+        SCHEDULER.scheduleJob(cacheCleanJob, cacheCleanTrigger);
+        SCHEDULER.scheduleJob(cacheSaveJob, cacheSaveTrigger);
+    } catch (Exception e) {
+      LOG.error("Exception while configuring schedules for Incident- and UnitCache: ", e);
     }
 
     List<String> vhosts = Arrays.asList(RQ_VHOSTS.split(","));
@@ -82,38 +140,38 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         if (host.isPresent() && user.isPresent() && pass.isPresent()) {
           initiateRabbitMqConnection(vhost, host.get().replace(matchVhost, ""), user.get().replace(matchVhost, ""), pass.get().replace(matchVhost, ""));
         } else {
-          log.error("Missing host/user/pass combination for 'initiateRabbitMqConnection(" + vhost + ")': ");
+          LOG.error("Missing host/user/pass combination for 'initiateRabbitMqConnection(" + vhost + ")': ");
         }
-        log.info("SafetyConnectMessageReceiver RabbitMqConnection initialized.");
+        LOG.info("SafetyConnectMessageReceiver RabbitMqConnection initialized.");
       } catch (Exception e) {
-        log.error("Exception while exec 'initiateRabbitMqConnection(" + vhost + ")': ", e);
+        LOG.error("Exception while exec 'initiateRabbitMqConnection(" + vhost + ")': ", e);
       }
 
       if (onlyUnitSubscription == false) {
         try {
           initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_INCIDENT_CHANGED, "incident_changed");
-          log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_INCIDENT_CHANGED + "') initialized.");
+          LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_INCIDENT_CHANGED + "') initialized.");
         } catch (Exception e) {
-          log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_INCIDENT_CHANGED + ")'", e);
+          LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_INCIDENT_CHANGED + ")'", e);
         }
       }
 
       try {
         initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_UNIT_CHANGED, "unit_changed");
-        log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_CHANGED + "') initialized.");
+        LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_CHANGED + "') initialized.");
       } catch (Exception e) {
-        log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_CHANGED + ")'", e);
+        LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_CHANGED + ")'", e);
       }
 
       try {
         initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_UNIT_MOVED, "unit_moved");
-        log.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_MOVED + "') initialized.");
+        LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_MOVED + "') initialized.");
       } catch (Exception e) {
-        log.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_MOVED + ")'", e);
+        LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_MOVED + ")'", e);
       }
     });
 
-    log.info("SafetyConnectMessageReceiver initialized for all vhosts.");
+    LOG.info("SafetyConnectMessageReceiver initialized for all vhosts.");
   }
 
   @Override
@@ -122,7 +180,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       try { 
         RQ_CHANNELS.get(key).close();
       } catch (Exception e) {
-        log.error("Exception on 'RQ_CHANNELS.get(" + key + ").close()'", e);
+        LOG.error("Exception on 'RQ_CHANNELS.get(" + key + ").close()'", e);
       }
     });
 
@@ -130,14 +188,14 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       try { 
         RQ_CONNECTIONS.get(key).close();
       } catch (Exception e) {
-        log.error("Exception on 'RQ_CONNECTIONS.get(" + key + ").close()'", e);
+        LOG.error("Exception on 'RQ_CONNECTIONS.get(" + key + ").close()'", e);
       }
     });
 
     try {
       DB.qr().update("DELETE FROM safetymaps.rq");
     } catch (Exception e) {
-      log.error("Exception while cleaning up after contextDestroyed: ", e);
+      LOG.error("Exception while cleaning up after contextDestroyed: ", e);
     }
   }
 
@@ -207,7 +265,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
             break;
         }
       } catch(Exception e) {
-        log.error(e.getMessage());
+        LOG.error(e.getMessage());
       } finally {
         RQ_CHANNELS.get(channelName).basicAck(delivery.getEnvelope().getDeliveryTag(), false);
       }
@@ -222,7 +280,6 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     try {
       // Is message for me
-      //if (unitIsForMe(move, "customer", Arrays.asList(RQ_TENANTS.split(",")), true) == true) {
       if (unitIsForMyRegion(move, Arrays.asList(RQ_REGIONS.split(",")))) {
         Double lon = move.getDouble("lon");
         Double lat = move.getDouble("lat");
@@ -230,13 +287,20 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         Integer heading = move.has("heading") && move.get("heading").toString() != "null" ? move.getInt("heading") : 0;
         Integer eta = move.has("eta") && move.get("eta").toString() != "null" ? move.getInt("eta") : 0;
 
-        DB.qr().update(
+        /*DB.qr().update(
           "INSERT INTO safetymaps.units (source, sourceEnv, sourceId, sourceEnvId, lon, lat, speed, heading, eta, geom) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)) ON CONFLICT (sourceEnvId) DO UPDATE SET lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)",
           vhost, moveId, envId, lon, lat, speed, heading, eta, lon, lat, lon, lat, speed, heading, eta, lon, lat
-        );
+        );*/
+
+        Optional<UnitCacheItem> oci = CACHE.FindUnit(envId);
+        if (oci.isPresent()) {
+          UnitCacheItem ci = oci.get();
+          ci.UpdateLocation(lon, lat, speed, heading, eta);
+          CACHE.UpdateUnit(envId, ci);
+        }
       }
     } catch (Exception e) {
-      log.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
+      LOG.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
       throw new RuntimeException(e);
     }
   }
@@ -262,14 +326,24 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         addOrUpdateDbUnit(vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString(), post);
       }
     } catch(Exception e) {
-      log.error("Exception while updating unit(" + envId + ") in database: ", e);
+      LOG.error("Exception while updating unit(" + envId + ") in database: ", e);
       throw new RuntimeException(e);
     }
   }
 
   private static void addOrUpdateDbUnit(String vhost, String unitId, String envId, Integer gmsStatusCode, String sender, String primairevoertuigsoort, String abbs, String post) {
     try {
-      if (post.equals("")) {
+      Optional<UnitCacheItem> oci = CACHE.FindUnit(envId);
+      if (oci.isPresent()) {
+        UnitCacheItem ci = oci.get();
+        ci.UpdateUnit(gmsStatusCode, primairevoertuigsoort, sender, post, abbs);
+        CACHE.UpdateUnit(envId, ci);
+      } else {
+        UnitCacheItem ci = new UnitCacheItem(vhost, envId, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, post);
+        CACHE.AddUnit(ci);
+      }
+
+      /*if (post.equals("")) {
         DB.qr().update("INSERT INTO safetymaps.units " +
           "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs) VALUES('sc', ?, ?, ?, ?, ?, ?, ?) " +
           " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?",
@@ -279,9 +353,9 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs, post) VALUES('sc', ?, ?, ?, ?, ?, ?, ?, ?) " +
           " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?, post = ?",
           vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, post, gmsStatusCode, primairevoertuigsoort, abbs, post);
-      }
+      }*/
     } catch (Exception e) {
-      log.error("Exception while upserting unit(" + envId + ") in database: ", e);
+      LOG.error("Exception while upserting unit(" + envId + ") in database: ", e);
     }
   }
 
@@ -305,8 +379,10 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       String envId = vhost + '-' + incidentId;
       
       try {
-        List<Map<String, Object>> dbIncidents = DB.qr().query("SELECT * FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
-        JSONObject dbIncident = dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidents.get(0)) : new JSONObject();
+        /*List<Map<String, Object>> dbIncidents = DB.qr().query("SELECT * FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
+        JSONObject dbIncident = dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidents.get(0)) : new JSONObject();*/
+        Optional<IncidentCacheItem> oci = CACHE.FindIncident(envId);
+        JSONObject dbIncident = oci.isPresent() ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(oci.get().ConvertToMap()) : new JSONObject();
         
         Integer number = incident.getInt("incidentNummer");
         String tenantId = incident.getString("tenantIndentifier");
@@ -350,10 +426,10 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           String unitId = unit.getString("roepnaam");
           String unitEnvId = vhost + '-' + unitId;
           Integer gmsStatusCode = unit.getInt("statusCode");
-          String primairevoertuigsoort = unit.has("primaireVoertuigSoort") ? unit.getString("primaireVoertuigSoort") : "";
+          String primairevoertuigsoort = unit.has("primaireVoertuigSoort") ? unit.getString("primaireVoertuigSoort") : null;
           JSONArray abbs = unit.has("meldkamerStatusAbonnementen") ? unit.getJSONArray("meldkamerStatusAbonnementen") : new JSONArray();
 
-          addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString(), "");
+          addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString(), null);
 
           List<Map<String, Object>> dbUnits = DB.qr().query("SELECT * FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), unitEnvId);
           JSONObject dbUnit = dbUnits.size() > 0 ? SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnits.get(0)) : new JSONObject();
@@ -362,13 +438,23 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           modifiedUnits.put(unit);
         }
 
+        /*
         DB.qr().update("INSERT INTO safetymaps.incidents " + 
           "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid, talkinggroups) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
           " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?, tenantId = ?, talkinggroups = ?", 
           vhost, incidentId, envId, status, sender, number, notes.toString(), modifiedUnits.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId, talkinggroups.toString(), status, notes.toString(), modifiedUnits.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId, talkinggroups.toString());
+        */
 
+        if (oci.isPresent()) {
+          IncidentCacheItem ci = oci.get();
+          ci.UpdateIncident(notes.toString(), modifiedUnits.toString(), location.toString(), discipline.toString(), status, characts.toString(), talkinggroups.toString());
+          CACHE.UpdateIncident(envId, ci);
+        } else {
+          IncidentCacheItem ci = new IncidentCacheItem("sc", vhost, incidentId, envId, notes.toString(), modifiedUnits.toString(), location.toString(), discipline.toString(), status, sender, characts.toString(), tenantId, talkinggroups.toString(), number);
+          CACHE.AddIncident(ci);
+        }
       } catch (Exception e) {
-        log.error("Exception while upserting incident(" + envId + ") in database: ", e);
+        LOG.error("Exception while upserting incident(" + envId + ") in database: ", e);
         throw new RuntimeException(e);
       }
     }
@@ -412,7 +498,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         return name;
       }
     } catch (Exception e) {
-      log.error("Exception while executing nameQueue('" + rqMb + "', '" + event + "'): ", e);
+      LOG.error("Exception while executing nameQueue('" + rqMb + "', '" + event + "'): ", e);
       return null;
     }
   }
@@ -494,9 +580,23 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
       return "true".equals(useRabbitMq);
     } catch (Exception e) {
-      log.error("Exception while checking isEnabled(): ", e);
+      LOG.error("Exception while checking isEnabled(): ", e);
     }
 
     return false;
   }
+
+  public static Scheduler getSchedulerInstance() throws SchedulerException {
+      if (SCHEDULER == null) {
+        Properties props = new Properties();
+        props.put("org.quartz.scheduler.instanceName", "CleanupCacheScheduler");
+        props.put("org.quartz.threadPool.threadCount", "1");
+        props.put("org.quartz.scheduler.interruptJobsOnShutdownWithWait", "true");
+        props.put("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
+        SCHEDULER = new StdSchedulerFactory(props).getScheduler();
+        SCHEDULER.start();
+      }
+
+      return SCHEDULER;
+    }
 }

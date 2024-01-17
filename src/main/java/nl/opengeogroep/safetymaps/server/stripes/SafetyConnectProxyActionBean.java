@@ -6,6 +6,7 @@ import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.UrlBinding;
 import nl.b3p.web.stripes.ErrorMessageResolution;
+import nl.opengeogroep.safetymaps.server.cache.CACHE;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
 import nl.opengeogroep.safetymaps.utils.SafetyConnectMessageUtil;
@@ -162,7 +163,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           if ("true".equals(useRabbitMq) && requestIs(INCIDENT_REQUEST)) {
             String numString = path.substring(path.lastIndexOf('/') + 1);
             Integer number = 0;
-            String daysInPast = getQueryStringMap(qs).get("daysInPast") != null ? getQueryStringMap(qs).get("daysInPast") : "5";
+            String daysInPast = getQueryStringMap(qs).get("daysInPast") != null ? getQueryStringMap(qs).get("daysInPast") : "2";
 
             if (numString.equals("incident") == false) {
               number = Integer.parseInt(numString);
@@ -186,7 +187,9 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     }
 
                     JSONArray incidents = new JSONArray();
-                    List<Map<String, Object>> results = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
+                    //List<Map<String, Object>> results = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
+
+                    List<Map<String, Object>> results = CACHE.GetIncidents(rabbitMqSource);
                     
                     for (Map<String, Object> res : results) {
                       JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res);
@@ -281,9 +284,14 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     }
 
                     JSONArray units = new JSONArray();
-                    List<Map<String, Object>> results = DB.qr().query("select u.*, mds.gmsstatustext from safetymaps.units u left join safetymaps.mdstatusses mds on mds.gmsstatuscode = u.gmsstatuscode where u.source='sc' and u.sourceenv=?", new MapListHandler(), rabbitMqSource);
-                    
+                    //List<Map<String, Object>> results = DB.qr().query("select u.*, mds.gmsstatustext from safetymaps.units u left join safetymaps.mdstatusses mds on mds.gmsstatuscode = u.gmsstatuscode where u.source='sc' and u.sourceenv=?", new MapListHandler(), rabbitMqSource);
+                    List<Map<String, Object>> results = CACHE.GetUnits(rabbitMqSource);
+                    Map<Integer, String> unitStatusList = CACHE.GetUnitStatusList();
+
                     for (Map<String, Object> res : results) {
+                      Integer gmsStatusCode = (Integer)res.get("gmsstatuscode");
+                      String gmsStatusText = unitStatusList.get(gmsStatusCode);
+                      res.put("gmsstatustext", gmsStatusText);
                       JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(res);
 
                       /*
@@ -324,9 +332,12 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     }
 
                     JSONArray units = new JSONArray();
-                    List<Map<String, Object>> dbUnits = DB.qr().query("select * from safetymaps.units where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
-                    List<Map<String, Object>> dbIncidents = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=? and status='operationeel'", new MapListHandler(), rabbitMqSource);
+                    //List<Map<String, Object>> dbUnits = DB.qr().query("select * from safetymaps.units where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
+                    //List<Map<String, Object>> dbIncidents = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=? and status='operationeel'", new MapListHandler(), rabbitMqSource);
                     
+                    List<Map<String, Object>> dbUnits = CACHE.GetUnits(rabbitMqSource);
+                    List<Map<String, Object>> dbIncidents = CACHE.GetIncidents(rabbitMqSource);
+
                     for (Map<String, Object> dbUnit : dbUnits) {
                       JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnit);
                       JSONObject unitOnIncident = SafetyConnectMessageUtil.IncidentDbRowHasActiveUnit(dbIncidents, unit.getString("roepnaam"));
