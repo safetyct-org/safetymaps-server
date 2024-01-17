@@ -11,8 +11,6 @@ import java.util.Optional;
 import javax.naming.NamingException;
 
 import org.apache.commons.dbutils.handlers.MapListHandler;
-import org.json.JSONObject;
-import org.quartz.Job;
 
 import nl.opengeogroep.safetymaps.server.db.DB;
 
