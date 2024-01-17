@@ -589,7 +589,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   public static Scheduler getSchedulerInstance() throws SchedulerException {
       if (SCHEDULER == null) {
         Properties props = new Properties();
-        props.put("org.quartz.scheduler.instanceName", "CleanupCacheScheduler");
+        props.put("org.quartz.scheduler.instanceName", "IncidentUnitCacheScheduler");
         props.put("org.quartz.threadPool.threadCount", "1");
         props.put("org.quartz.scheduler.interruptJobsOnShutdownWithWait", "true");
         props.put("org.quartz.jobStore.class", "org.quartz.simpl.RAMJobStore");
