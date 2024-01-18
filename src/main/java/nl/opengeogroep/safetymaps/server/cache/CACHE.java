@@ -155,8 +155,8 @@ public class CACHE {
     private Integer gmsstatuscode;
     private String sender;
     private String primairevoertuigsoort;
-    private BigDecimal lon;
-    private BigDecimal lat;
+    private Double lon;
+    private Double lat;
     private Integer speed;
     private Integer heading;
     private Integer eta;
@@ -196,8 +196,8 @@ public class CACHE {
       this.Renew();
     }
 
-    public void UpdateLocation(BigDecimal lon,
-      BigDecimal lat,
+    public void UpdateLocation(Double lon,
+    Double lat,
       Integer speed,
       Integer heading,
       Integer eta
@@ -302,8 +302,8 @@ public class CACHE {
 
       if (dbItem.get("lon") != null) {
         ci.UpdateLocation(
-          (BigDecimal)dbItem.get("lon"),
-          (BigDecimal)dbItem.get("lat"),
+          (Double)dbItem.get("lon"),
+          (Double)dbItem.get("lat"),
           (Integer)dbItem.get("speed"),
           (Integer)dbItem.get("heading"),
           (Integer)dbItem.get("eta")
