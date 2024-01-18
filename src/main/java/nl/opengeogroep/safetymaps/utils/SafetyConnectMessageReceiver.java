@@ -1,6 +1,7 @@
 package nl.opengeogroep.safetymaps.utils;
 
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -285,8 +286,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     try {
       // Is message for me
       if (unitIsForMyRegion(move, Arrays.asList(RQ_REGIONS.split(",")))) {
-        Double lon = move.getDouble("lon");
-        Double lat = move.getDouble("lat");
+        BigDecimal lon = (BigDecimal)move.get("lon");
+        BigDecimal lat = (BigDecimal)move.get("lat");
         Integer speed = move.has("speed") && move.get("speed").toString() != "null" ? move.getInt("speed") : 0;
         Integer heading = move.has("heading") && move.get("heading").toString() != "null" ? move.getInt("heading") : 0;
         Integer eta = move.has("eta") && move.get("eta").toString() != "null" ? move.getInt("eta") : 0;
