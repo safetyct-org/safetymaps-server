@@ -197,7 +197,7 @@ public class CACHE {
     }
 
     public void UpdateLocation(Double lon,
-    Double lat,
+      Double lat,
       Integer speed,
       Integer heading,
       Integer eta
@@ -302,8 +302,8 @@ public class CACHE {
 
       if (dbItem.get("lon") != null) {
         ci.UpdateLocation(
-          (Double)dbItem.get("lon"),
-          (Double)dbItem.get("lat"),
+          ((BigDecimal)dbItem.get("lon")).doubleValue(),
+          ((BigDecimal)dbItem.get("lat")).doubleValue(),
           (Integer)dbItem.get("speed"),
           (Integer)dbItem.get("heading"),
           (Integer)dbItem.get("eta")
