@@ -39,8 +39,8 @@ import com.rabbitmq.client.DeliverCallback;
 import nl.opengeogroep.safetymaps.server.cache.CACHE;
 import nl.opengeogroep.safetymaps.server.cache.CacheCleanJob;
 import nl.opengeogroep.safetymaps.server.cache.CacheSaveJob;
-import nl.opengeogroep.safetymaps.server.cache.CACHE.IncidentCacheItem;
-import nl.opengeogroep.safetymaps.server.cache.CACHE.UnitCacheItem;
+import nl.opengeogroep.safetymaps.server.cache.IncidentCacheItem;
+import nl.opengeogroep.safetymaps.server.cache.UnitCacheItem;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
 
@@ -286,8 +286,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     try {
       // Is message for me
       if (unitIsForMyRegion(move, Arrays.asList(RQ_REGIONS.split(",")))) {
-        Double lon = (Double)move.get("lon");
-        Double lat = (Double)move.get("lat");
+        Double lon = (Double)move.getDouble("lon");
+        Double lat = (Double)move.getDouble("lat");
         Integer speed = move.has("speed") && move.get("speed").toString() != "null" ? move.getInt("speed") : 0;
         Integer heading = move.has("heading") && move.get("heading").toString() != "null" ? move.getInt("heading") : 0;
         Integer eta = move.has("eta") && move.get("eta").toString() != "null" ? move.getInt("eta") : 0;
