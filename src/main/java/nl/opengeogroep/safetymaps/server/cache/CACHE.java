@@ -139,6 +139,7 @@ public class CACHE {
     }
 
     public String GetSourceEnvId() { return this.sourceEnvId; }
+    public String GetSourceEnv() { return this.sourceEnv; }
 
     public Boolean IsReadyForCleanup() {
       return !IsDirty() && IsExpiredAfter(1 * 60 * 24 * 5);
@@ -246,6 +247,7 @@ public class CACHE {
     }
 
     public String GetSourceEnvId() { return this.sourceEnvId; }
+    public String GetSourceEnv() { return this.sourceEnv; }
   }
 
   private static Date incidentCacheInitialized = null;
@@ -331,7 +333,7 @@ public class CACHE {
   }
 
   public static final List<Map<String, Object>> GetUnits(String sourceEnv) {
-    return CACHE.units.stream().filter(u -> u.GetSourceEnvId().equals(sourceEnv)).map(u -> u.ConvertToMap()).collect(Collectors.toList());
+    return CACHE.units.stream().filter(u -> u.GetSourceEnv().equals(sourceEnv)).map(u -> u.ConvertToMap()).collect(Collectors.toList());
   }
 
   public static final List<UnitCacheItem> GetDirtyUnits() {
@@ -357,7 +359,7 @@ public class CACHE {
   }
 
   public static final List<Map<String, Object>> GetIncidents(String sourceEnv) {
-    return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnv)).map(i -> i.ConvertToMap()).collect(Collectors.toList());
+    return CACHE.incidents.stream().filter(i -> i.GetSourceEnv().equals(sourceEnv)).map(i -> i.ConvertToMap()).collect(Collectors.toList());
   }
 
   public static final List<IncidentCacheItem> GetDirtyIncidents() {
