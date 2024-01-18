@@ -69,8 +69,8 @@ public class SafetyConnectMessageUtil {
     unit.put("gmsStatusText", (String)unitDbRow.get("gmsstatustext"));
     unit.put("primaireVoertuigSoort", (String)unitDbRow.get("primairevoertuigsoort"));
     unit.put("post", (String)unitDbRow.get("post"));
-    unit.put("lon", (BigDecimal)unitDbRow.get("lon"));
-    unit.put("lat", (BigDecimal)unitDbRow.get("lat"));
+    unit.put("lon", (Double)unitDbRow.get("lon"));
+    unit.put("lat", (Double)unitDbRow.get("lat"));
     unit.put("speed", (Integer)unitDbRow.get("speed"));
     unit.put("heading", (Integer)unitDbRow.get("heading"));
     unit.put("eta", (Integer)unitDbRow.get("eta"));
