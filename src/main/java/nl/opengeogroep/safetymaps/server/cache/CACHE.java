@@ -110,9 +110,9 @@ public class CACHE {
       Map<String, Object> cacheObject = new HashMap<String, Object>();
 
       cacheObject.put("source", this.source);
-      cacheObject.put("sourceEnv", this.sourceEnv);
-      cacheObject.put("sourceId", this.sourceId);
-      cacheObject.put("sourceEnvId", this.sourceEnvId);
+      cacheObject.put("sourceenv", this.sourceEnv);
+      cacheObject.put("sourceid", this.sourceId);
+      cacheObject.put("sourceenvid", this.sourceEnvId);
       cacheObject.put("notes", this.notes);
       cacheObject.put("units", this.units);
       cacheObject.put("location", this.location);
@@ -214,9 +214,9 @@ public class CACHE {
       Map<String, Object> cacheObject = new HashMap<String, Object>();
 
       cacheObject.put("source", this.source);
-      cacheObject.put("sourceEnv", this.sourceEnv);
-      cacheObject.put("sourceId", this.sourceId);
-      cacheObject.put("sourceEnvId", this.sourceEnvId);
+      cacheObject.put("sourceenv", this.sourceEnv);
+      cacheObject.put("sourceid", this.sourceId);
+      cacheObject.put("sourceenvid", this.sourceEnvId);
       cacheObject.put("gmsstatuscode", this.gmsstatuscode);
       cacheObject.put("sender", this.sender);
       cacheObject.put("primairevoertuigsoort", this.primairevoertuigsoort);
