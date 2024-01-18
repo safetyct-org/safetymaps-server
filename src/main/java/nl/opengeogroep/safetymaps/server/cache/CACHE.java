@@ -299,13 +299,16 @@ public class CACHE {
         (String)dbItem.get("abbssender"), 
         (String)dbItem.get("post")
       );
-      ci.UpdateLocation(
-        (BigDecimal)dbItem.get("lon"),
-        (BigDecimal)dbItem.get("lat"),
-        (Integer)dbItem.get("speed"),
-        (Integer)dbItem.get("heading"),
-        (Integer)dbItem.get("eta")
-      );
+
+      if (dbItem.get("lon") != null) {
+        ci.UpdateLocation(
+          (BigDecimal)dbItem.get("lon"),
+          (BigDecimal)dbItem.get("lat"),
+          (Integer)dbItem.get("speed"),
+          (Integer)dbItem.get("heading"),
+          (Integer)dbItem.get("eta")
+        );
+      }
 
       CACHE.AddUnit(ci);
     }
