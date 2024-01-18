@@ -1,8 +1,8 @@
 package nl.opengeogroep.safetymaps.utils;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.math.BigDecimal;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -69,8 +69,8 @@ public class SafetyConnectMessageUtil {
     unit.put("gmsStatusText", (String)unitDbRow.get("gmsstatustext"));
     unit.put("primaireVoertuigSoort", (String)unitDbRow.get("primairevoertuigsoort"));
     unit.put("post", (String)unitDbRow.get("post"));
-    unit.put("lon", (Double)unitDbRow.get("lon"));
-    unit.put("lat", (Double)unitDbRow.get("lat"));
+    unit.put("lon", (BigDecimal)unitDbRow.get("lon"));
+    unit.put("lat", (BigDecimal)unitDbRow.get("lat"));
     unit.put("speed", (Integer)unitDbRow.get("speed"));
     unit.put("heading", (Integer)unitDbRow.get("heading"));
     unit.put("eta", (Integer)unitDbRow.get("eta"));

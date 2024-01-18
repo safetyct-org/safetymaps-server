@@ -1,5 +1,6 @@
 package nl.opengeogroep.safetymaps.server.cache;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -154,8 +155,8 @@ public class CACHE {
     private Integer gmsstatuscode;
     private String sender;
     private String primairevoertuigsoort;
-    private Double lon;
-    private Double lat;
+    private BigDecimal lon;
+    private BigDecimal lat;
     private Integer speed;
     private Integer heading;
     private Integer eta;
@@ -195,8 +196,8 @@ public class CACHE {
       this.Renew();
     }
 
-    public void UpdateLocation(Double lon,
-      Double lat,
+    public void UpdateLocation(BigDecimal lon,
+      BigDecimal lat,
       Integer speed,
       Integer heading,
       Integer eta
@@ -299,8 +300,8 @@ public class CACHE {
         (String)dbItem.get("post")
       );
       ci.UpdateLocation(
-        (Double)dbItem.get("lon"),
-        (Double)dbItem.get("lat"),
+        (BigDecimal)dbItem.get("lon"),
+        (BigDecimal)dbItem.get("lat"),
         (Integer)dbItem.get("speed"),
         (Integer)dbItem.get("heading"),
         (Integer)dbItem.get("eta")
