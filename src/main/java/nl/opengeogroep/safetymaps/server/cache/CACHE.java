@@ -63,7 +63,7 @@ public class CACHE {
         (Integer)dbItem.get("gmsstatuscode"), 
         (String)dbItem.get("sender"), 
         (String)dbItem.get("primairevoertuigsoort"),  
-        (String)dbItem.get("abbssender"), 
+        (String)dbItem.get("abbs"), 
         (String)dbItem.get("post")
       );
 
@@ -79,7 +79,7 @@ public class CACHE {
 
       CACHE.AddUnit(ci);
     }
-
+    
     CACHE.unitCacheInitialized = new Date();
   }
 
