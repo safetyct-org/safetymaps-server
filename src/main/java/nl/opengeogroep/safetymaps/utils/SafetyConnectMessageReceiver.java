@@ -344,7 +344,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         ci.UpdateUnit(gmsStatusCode, primairevoertuigsoort, sender, post, abbs);
         CACHE.UpdateUnit(envId, ci);
       } else {
-        UnitCacheItem ci = new UnitCacheItem(vhost, envId, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, post);
+        UnitCacheItem ci = new UnitCacheItem("sc", vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, post);
         CACHE.AddUnit(ci);
       }
 
