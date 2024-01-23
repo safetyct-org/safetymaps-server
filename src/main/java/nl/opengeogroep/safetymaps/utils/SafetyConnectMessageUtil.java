@@ -22,7 +22,7 @@ public class SafetyConnectMessageUtil {
         if (unit.has("roepnaam") && unitSourceId.equals(unit.getString("roepnaam"))) {
           activeUnitFound = unit;
           activeUnitFound.put("incidentId", incidentId);
-          activeUnitFound.put("incidentRol", unit.has("voertuigSoort") ? unit.get("voertuigSoort") : "");
+          activeUnitFound.put("incidentRol", unit.has("inzetrol") ? unit.get("inzetrol") : "");
         }
       }
     }
