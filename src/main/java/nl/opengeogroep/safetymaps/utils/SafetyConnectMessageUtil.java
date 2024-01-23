@@ -64,13 +64,27 @@ public class SafetyConnectMessageUtil {
     String abbsString = (String)unitDbRow.get("abbs");
     JSONArray abbs = unitDbRow.get("abbs") != null ? new JSONArray(abbsString) : new JSONArray();
 
+    Object lon = unitDbRow.get("lon");
+    Object lat = unitDbRow.get("lat");
+
     unit.put("roepnaam", (String)unitDbRow.get("sourceid"));
     unit.put("gmsStatusCode", (Integer)unitDbRow.get("gmsstatuscode"));
     unit.put("gmsStatusText", (String)unitDbRow.get("gmsstatustext"));
     unit.put("primaireVoertuigSoort", (String)unitDbRow.get("primairevoertuigsoort"));
     unit.put("post", (String)unitDbRow.get("post"));
-    unit.put("lon", (Double)unitDbRow.get("lon"));
-    unit.put("lat", (Double)unitDbRow.get("lat"));
+
+    if (lon instanceof BigDecimal) {
+      unit.put("lon", ((BigDecimal)lon).doubleValue());
+    } else {
+      unit.put("lon", (Double)lon);
+    }
+
+    if (lat instanceof BigDecimal) {
+      unit.put("lat", ((BigDecimal)lat).doubleValue());
+    } else {
+      unit.put("lat", (Double)lat);
+    }
+
     unit.put("speed", (Integer)unitDbRow.get("speed"));
     unit.put("heading", (Integer)unitDbRow.get("heading"));
     unit.put("eta", (Integer)unitDbRow.get("eta"));

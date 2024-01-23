@@ -1,7 +1,5 @@
 package nl.opengeogroep.safetymaps.utils;
 
-import java.lang.reflect.Array;
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
