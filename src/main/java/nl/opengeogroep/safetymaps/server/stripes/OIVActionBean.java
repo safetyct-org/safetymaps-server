@@ -101,6 +101,8 @@ public class OIVActionBean implements ActionBean {
             , new MapListHandler(), bid);
           
           result.put("adressen", new JSONArray(dbkAdresses.toString()));
+        } else {
+          result.put("adressen", new JSONArray());
         }
 
         results.put(result);
