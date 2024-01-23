@@ -45,6 +45,7 @@ public class CACHE {
         (Integer)dbItem.get("number")
       );
 
+      ci.Save();
       CACHE.AddIncident(ci);
     }
     
@@ -77,6 +78,7 @@ public class CACHE {
         );
       }
 
+      ci.Save();
       CACHE.AddUnit(ci);
     }
     
