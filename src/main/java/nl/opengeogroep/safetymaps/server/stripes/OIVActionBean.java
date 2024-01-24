@@ -104,7 +104,7 @@ public class OIVActionBean implements ActionBean {
           for(Map<String, Object> da: dbkAdresses) {
             addresses.put(rowToJson(da, true, false));
           }
-          result.put("adressen", new JSONArray(addresses));
+          result.put("adressen", addresses);
         } else {
           result.put("adressen", new JSONArray());
         }
