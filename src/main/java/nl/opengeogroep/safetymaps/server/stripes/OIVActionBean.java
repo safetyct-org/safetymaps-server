@@ -95,16 +95,16 @@ public class OIVActionBean implements ActionBean {
 
         if ("BAG".equals(source)) {
           List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
-              "select huisnummer, coalesce(huisletter, '') huisletter, coalesce(huisnummertoevoeging, ''), postcode, woonplaatsnaam " +
+              "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam " +
               "from bagactueel.adres_full " +
               "where pandid = ?"
             , new MapListHandler(), bid);
           
-          if (dbkAdresses.size() > 0) {
-            result.put("adressen", new JSONArray(dbkAdresses.toString()));
-          } else {
-            result.put("adressen", new JSONArray());
+          JSONArray addresses = new JSONArray();
+          for(Map<String, Object> da: dbkAdresses) {
+            addresses.put(rowToJson(da, true, false));
           }
+          result.put("adressen", new JSONArray(addresses));
         } else {
           result.put("adressen", new JSONArray());
         }
