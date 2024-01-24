@@ -95,7 +95,7 @@ public class OIVActionBean implements ActionBean {
 
         if ("BAG".equals(source)) {
           List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
-              "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam" +
+              "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam " +
               "from bagactueel.adres_full " +
               "where pandid = ?"
             , new MapListHandler(), bid);
