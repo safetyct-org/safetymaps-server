@@ -566,7 +566,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
   private static boolean unitIsForMyRegion(JSONObject unit, List<String> regionCodes) {
     String unitName = unit.has("unit") ? unit.getString("unit") : "aaaaaaaaaa";
-    String unitRegion = unitName.substring(0, 2);
+    String unitRegion = unitName.length() > 2 ? unitName.substring(0, 2) : "notfound";
 
     boolean matched = false;
     boolean found = regionCodes.contains(unitRegion) || regionCodes.contains("(EM)" + unitRegion);
