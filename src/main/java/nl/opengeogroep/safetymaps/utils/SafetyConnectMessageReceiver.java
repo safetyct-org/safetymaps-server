@@ -581,7 +581,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     try {
       String useRabbitMq = Cfg.getSetting("safetyconnect_rq", "false");
 
-      return "true".equals(useRabbitMq);
+      //return "true".equals(useRabbitMq);
+      return false;
     } catch (Exception e) {
       LOG.error("Exception while checking isEnabled(): ", e);
     }

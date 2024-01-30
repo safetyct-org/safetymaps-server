@@ -146,7 +146,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           Boolean useOpl = context.getRequest().isUserInRole(ROLE_OPL);
           Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST);
 
-          String useRabbitMq = Cfg.getSetting("safetyconnect_rq", "false");
+          String useRabbitMq = "false"; //Cfg.getSetting("safetyconnect_rq", "false");
           String rabbitMqSourceDefault = "prod".equals(defaultApi) ? "productie" : "opl".equals(defaultApi) ? "opleiding" : "test".equals(defaultApi) ? "test" : null;
           String rabbitMqSource = useAdmin ? rabbitMqSourceDefault : useProd ?  "productie" : useOpl ? "opleiding" : useTest ? "test" : rabbitMqSourceDefault;
 
