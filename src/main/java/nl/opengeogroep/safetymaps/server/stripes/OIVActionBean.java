@@ -80,10 +80,12 @@ public class OIVActionBean implements ActionBean {
 
   private Resolution objects() throws SQLException, NamingException {
     List<Map<String,Object>> dbks = DB.oivQr().query(
-        "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(geom) geom, basisreg_identifier as bid, bron, bron_tabel, max_bouwlaag, min_bouwlaag " +
+        "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, max_bouwlaag, min_bouwlaag " +
         "from objecten.view_objectgegevens vo " +
         "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
-        "inner join algemeen.symbols s on s.symbol_name = ot.symbol_name "
+        "inner join algemeen.symbols s on s.symbol_name = ot.symbol_name " + 
+        "left join (select distinct object_id, pand_id from objecten.view_bouwlagen) vb on vb.object_id = vo.id " +
+        "left join algemeen.bag_extent be on vb.pand_id = be.identificatie "
       , new MapListHandler());
     JSONArray results = new JSONArray();
 
