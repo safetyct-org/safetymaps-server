@@ -2,13 +2,17 @@ package nl.opengeogroep.safetymaps.server.stripes;
 
 import static nl.opengeogroep.safetymaps.server.db.DB.bagQr;
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
+import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowsToJson;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.naming.NamingException;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
@@ -16,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import net.sourceforge.stripes.action.ActionBean;
@@ -66,7 +71,7 @@ public class OIVActionBean implements ActionBean {
     try {
       if (OBJECTS.equals(path)) {
         return objects();
-      } else if (OBJECT.equals(path)) {
+      } else if (path.indexOf(OBJECT) == 0) {
         return object();
       } else if (STYLES.equals(path)) {
         return styles();
@@ -80,11 +85,11 @@ public class OIVActionBean implements ActionBean {
 
   private Resolution objects() throws SQLException, NamingException {
     List<Map<String,Object>> dbks = DB.oivQr().query(
-        "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, max_bouwlaag, min_bouwlaag " +
+        "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag " +
         "from objecten.view_objectgegevens vo " +
         "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
         "inner join algemeen.symbols s on s.symbol_name = ot.symbol_name " + 
-        "left join (select distinct object_id, pand_id from objecten.view_bouwlagen) vb on vb.object_id = vo.id " +
+        "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.view_bouwlagen) vb on vb.object_id = vo.id " +
         "left join algemeen.bag_extent be on vb.pand_id = be.identificatie "
       , new MapListHandler());
     JSONArray results = new JSONArray();
@@ -121,8 +126,34 @@ public class OIVActionBean implements ActionBean {
     return new StreamingResolution("application/json", results.toString());
   }
 
-  private Resolution object() {
-    return new ErrorResolution(400, "Not implemented yet!");
+  private Resolution object() throws JSONException, Exception {
+    Pattern p = Pattern.compile("object\\/([0-9]+)\\/([0-9]+)");
+    Matcher m = p.matcher(path);
+
+    if(!m.find()) {
+      return new ErrorResolution(404, "No object id found: /api/" + path);
+    }
+
+    int id = Integer.parseInt(m.group(1));
+    int layer = Integer.parseInt(m.group(2));
+
+    List<Map<String,Object>> gs = DB.oivQr().query(
+        "select vn_nr, gevi_nr, eric_kaart, hoeveelheid, eenheid, toestand, omschrijving, st_astext(geom) geom, coalesce(rotatie, 0) rotatie, size, " +
+        "vgb.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+        "from objecten.view_gevaarlijkestof_bouwlaag vgb" +
+        "inner join algemeen.symbols s on s.symbol_name = vgb.symbol_name " +
+        "where object_id = ? and bouwlaag = ? " +
+        "union select vn_nr, gevi_nr, eric_kaart, hoeveelheid, eenheid, toestand, omschrijving, st_astext(geom) geom, coalesce(rotatie, 0) rotatie, size, " +
+        "vgr.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+        "from objecten.view_gevaarlijkestof_ruimtelijk vgr " +
+        "inner join algemeen.symbols s on s.symbol_name = vgr.symbol_name"
+      , new MapListHandler(), id, layer);
+    JSONObject dbk = new JSONObject();
+
+
+    dbk.put("gevaarlijkestoffen", rowsToJson(gs, false, false));
+
+    return new StreamingResolution("application/json", dbk.toString());
   }
 
   private Resolution styles() {

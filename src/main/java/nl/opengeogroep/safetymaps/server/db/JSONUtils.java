@@ -1,5 +1,6 @@
 package nl.opengeogroep.safetymaps.server.db;
 
+import java.util.List;
 import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -10,6 +11,17 @@ import org.json.JSONObject;
  * @author matthijsln
  */
 public class JSONUtils {
+    public static JSONArray rowsToJson(List<Map<String, Object>> rows, boolean skipNull, boolean skipEmptyString) throws Exception {
+      JSONArray a = new JSONArray();
+
+      for (Map<String, Object> row : rows) {
+        JSONObject o = rowToJson(row, skipNull, skipEmptyString);
+        a.put(o);
+      }
+
+      return a;
+    }
+
     public static JSONObject rowToJson(Map<String, Object> row, boolean skipNull, boolean skipEmptyString) throws Exception {
         JSONObject o = new JSONObject();
         for(Map.Entry<String,Object> e: row.entrySet()) {
