@@ -161,6 +161,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           }
 
           if ("true".equals(useRabbitMq) && requestIs(INCIDENT_REQUEST)) {
+            HttpServletRequest request = context.getRequest();
             String numString = path.substring(path.lastIndexOf('/') + 1);
             Integer number = 0;
             String daysInPast = getQueryStringMap(qs).get("daysInPast") != null ? getQueryStringMap(qs).get("daysInPast") : "2";
@@ -170,6 +171,73 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             }
 
             final Integer incidentNummer = number;
+
+            JSONArray incidents = new JSONArray();
+            //List<Map<String, Object>> results = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
+
+            List<Map<String, Object>> results = CACHE.GetIncidents(rabbitMqSource);
+            
+            for (Map<String, Object> res : results) {
+              JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res);
+
+              /**
+              * smvng_incident_hidenotepad	Kladblok verbergen
+              * smvng_incident_ownvehiclenumber	Gebruiker mag eigen voertuignummer wijzigen.
+              * smvng_incident_prio45	Toon incidenten met prio 4 of 5 en koppel voertuigen aan deze incidenten.
+              * smvng_incident_samengevoegd Toon samengevoegde incidenten en koppel voertuigen aan deze incidenten.
+              * smvng_incident_trainingincident	Toon training incidenten en koppel voertuigen aan deze incidenten.
+              */
+              String hideNotepadOnTerm = Cfg.getSetting("kladblok_hidden_on_term", "#&*^@&^#&*&HGDGJFGS8F778ASDxcvsdfdfsdfsd");
+              boolean isauthfor_hidenotepad = request.isUserInRole("smvng_incident_hidenotepad");
+              boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
+              boolean isauthfor_prio45 = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_prio45");
+              boolean isauthfor_concatted = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_samengevoegd");
+              boolean isauthfor_trainingincident = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_trainingincident");
+              boolean isauthfor_im = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
+              boolean isauthfor_incident = incidentIsForUserVehicle(incident) != "" || isauthfor_im ||  isauthfor_ownvehiclenumber;
+
+              if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { 
+                JSONObject discipline = incident.has("brwDisciplineGegevens") ? (JSONObject)incident.get("brwDisciplineGegevens") : null;
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date checkDate = DateUtils.addDays(new Date(), (-1 * Integer.parseInt(daysInPast)));
+                Date startDtg = discipline.has("startDtg") ? sdf.parse(discipline.getString("startDtg").replaceAll("T", " ")) : checkDate;
+                String closureCode = discipline.has("afsluitCode") ? discipline.getString("afsluitCode") : "";
+                String concattedClosureCode = "Samengevoegd incident";
+                boolean incIsNotConcattedOrIsUserisAuthForConcatted = closureCode != concattedClosureCode || (closureCode == concattedClosureCode && isauthfor_concatted);
+
+                JSONArray notepad;
+                if (incident.has("kladblokregels") && !JSONObject.NULL.equals(incident.get("kladblokregels"))) {
+                  notepad = (JSONArray)incident.get("kladblokregels");
+                } else {
+                  notepad = new JSONArray();
+                }
+                boolean hideNotepad = false;
+                for(int v=0; v<notepad.length(); v++) {
+                    JSONObject notepadrule = (JSONObject)notepad.get(v);
+                    String inhoud = notepadrule.has("inhoud") ? notepadrule.getString("inhoud") : notepadrule.has("Inhoud") ? notepadrule.getString("Inhoud") : "";
+                    if (inhoud.toLowerCase().startsWith(hideNotepadOnTerm.toLowerCase())) {
+                      hideNotepad = true;
+                    }
+                }
+
+                if (isauthfor_hidenotepad || hideNotepad || incidentNummer == 0) { 
+                  incident.put("kladblokregels", new JSONArray()); 
+                }
+
+                if (checkDate.before(startDtg) || incident.getString("status") == "operationeel")
+                {
+                  if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
+                    incidents.put(incident); 
+                  } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
+                    incidents.put(incident); 
+                  } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
+                    incidents.put(incident); 
+                  } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
+                    incidents.put(incident); 
+                  }
+                }
+              }
+            }
 
             return new Resolution() {
                 @Override
@@ -185,74 +253,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     } else {
                         out = response.getOutputStream();
                     }
-
-                    JSONArray incidents = new JSONArray();
-                    //List<Map<String, Object>> results = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
-
-                    List<Map<String, Object>> results = CACHE.GetIncidents(rabbitMqSource);
-                    
-                    for (Map<String, Object> res : results) {
-                      JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res);
-
-                      /**
-                      * smvng_incident_hidenotepad	Kladblok verbergen
-                      * smvng_incident_ownvehiclenumber	Gebruiker mag eigen voertuignummer wijzigen.
-                      * smvng_incident_prio45	Toon incidenten met prio 4 of 5 en koppel voertuigen aan deze incidenten.
-                      * smvng_incident_samengevoegd Toon samengevoegde incidenten en koppel voertuigen aan deze incidenten.
-                      * smvng_incident_trainingincident	Toon training incidenten en koppel voertuigen aan deze incidenten.
-                      */
-                      String hideNotepadOnTerm = Cfg.getSetting("kladblok_hidden_on_term", "#&*^@&^#&*&HGDGJFGS8F778ASDxcvsdfdfsdfsd");
-                      boolean isauthfor_hidenotepad = request.isUserInRole("smvng_incident_hidenotepad");
-                      boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
-                      boolean isauthfor_prio45 = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_prio45");
-                      boolean isauthfor_concatted = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_samengevoegd");
-                      boolean isauthfor_trainingincident = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_trainingincident");
-                      boolean isauthfor_im = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
-                      boolean isauthfor_incident = incidentIsForUserVehicle(incident) != "" || isauthfor_im ||  isauthfor_ownvehiclenumber;
-
-                      if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { 
-                        JSONObject discipline = incident.has("brwDisciplineGegevens") ? (JSONObject)incident.get("brwDisciplineGegevens") : null;
-                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        Date checkDate = DateUtils.addDays(new Date(), (-1 * Integer.parseInt(daysInPast)));
-                        Date startDtg = discipline.has("startDtg") ? sdf.parse(discipline.getString("startDtg").replaceAll("T", " ")) : checkDate;
-                        String closureCode = discipline.has("afsluitCode") ? discipline.getString("afsluitCode") : "";
-                        String concattedClosureCode = "Samengevoegd incident";
-                        boolean incIsNotConcattedOrIsUserisAuthForConcatted = closureCode != concattedClosureCode || (closureCode == concattedClosureCode && isauthfor_concatted);
-
-                        JSONArray notepad;
-                        if (incident.has("kladblokregels") && !JSONObject.NULL.equals(incident.get("kladblokregels"))) {
-                          notepad = (JSONArray)incident.get("kladblokregels");
-                        } else {
-                          notepad = new JSONArray();
-                        }
-                        boolean hideNotepad = false;
-                        for(int v=0; v<notepad.length(); v++) {
-                            JSONObject notepadrule = (JSONObject)notepad.get(v);
-                            String inhoud = notepadrule.has("inhoud") ? notepadrule.getString("inhoud") : notepadrule.has("Inhoud") ? notepadrule.getString("Inhoud") : "";
-                            if (inhoud.toLowerCase().startsWith(hideNotepadOnTerm.toLowerCase())) {
-                              hideNotepad = true;
-                            }
-                        }
-
-                        if (isauthfor_hidenotepad || hideNotepad || incidentNummer == 0) { 
-                          incident.put("kladblokregels", new JSONArray()); 
-                        }
-
-                        if (checkDate.before(startDtg) || incident.getString("status") == "operationeel")
-                        {
-                          if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
-                            incidents.put(incident); 
-                          } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
-                            incidents.put(incident); 
-                          } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
-                            incidents.put(incident); 
-                          } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
-                            incidents.put(incident); 
-                          }
-                        }
-                      }
-                    }
-
+                  
                     try {
                       IOUtils.copy(new StringReader(incidents.toString()), out, "UTF-8");
 
@@ -266,7 +267,27 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           }
 
           if ("true".equals(useRabbitMq) && requestIs(EENHEIDSTATUS_REQUEST)) {
+            HttpServletRequest request = context.getRequest();
             String unitId = context.getRequest().getQueryString().replaceAll("id=", "");
+            JSONArray units = new JSONArray();
+            //List<Map<String, Object>> results = DB.qr().query("select u.*, mds.gmsstatustext from safetymaps.units u left join safetymaps.mdstatusses mds on mds.gmsstatuscode = u.gmsstatuscode where u.source='sc' and u.sourceenv=?", new MapListHandler(), rabbitMqSource);
+            List<Map<String, Object>> results = CACHE.GetUnits(rabbitMqSource);
+            Map<Integer, String> unitStatusList = CACHE.GetUnitStatusList();
+
+            for (Map<String, Object> res : results) {
+              Integer gmsStatusCode = (Integer)res.get("gmsstatuscode");
+              String gmsStatusText = unitStatusList.get(gmsStatusCode);
+              res.put("gmsstatustext", gmsStatusText);
+              JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(res);
+
+              /*
+              * smvng_incident_ownvehiclenumber	Gebruiker mag eigen voertuignummer wijzigen.
+              */
+              boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
+
+              if (isauthfor_ownvehiclenumber && unitId.equals(unit.getString("roepnaam"))) { units.put(unit); }
+              else if (getUserVehicleList().contains(unitId)) { units.put(unit); }
+            }
             
             return new Resolution() {
                 @Override
@@ -281,27 +302,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                         out = new GZIPOutputStream(response.getOutputStream(), true);
                     } else {
                         out = response.getOutputStream();
-                    }
-
-                    JSONArray units = new JSONArray();
-                    //List<Map<String, Object>> results = DB.qr().query("select u.*, mds.gmsstatustext from safetymaps.units u left join safetymaps.mdstatusses mds on mds.gmsstatuscode = u.gmsstatuscode where u.source='sc' and u.sourceenv=?", new MapListHandler(), rabbitMqSource);
-                    List<Map<String, Object>> results = CACHE.GetUnits(rabbitMqSource);
-                    Map<Integer, String> unitStatusList = CACHE.GetUnitStatusList();
-
-                    for (Map<String, Object> res : results) {
-                      Integer gmsStatusCode = (Integer)res.get("gmsstatuscode");
-                      String gmsStatusText = unitStatusList.get(gmsStatusCode);
-                      res.put("gmsstatustext", gmsStatusText);
-                      JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(res);
-
-                      /*
-                      * smvng_incident_ownvehiclenumber	Gebruiker mag eigen voertuignummer wijzigen.
-                      */
-                      boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
-
-                      if (isauthfor_ownvehiclenumber && unitId.equals(unit.getString("roepnaam"))) { units.put(unit); }
-                      else if (getUserVehicleList().contains(unitId)) { units.put(unit); }
-                    }
+                    }                    
                     
                     try {
                       IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
@@ -316,78 +317,77 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         }
         
         if ("true".equals(useRabbitMq) && requestIs(EENHEIDLOCATIE_REQUEST)) {
-          return new Resolution() {
-                @Override
-                public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
-                    response.setCharacterEncoding("UTF-8");
-                    response.setContentType("application/json");
+          HttpServletRequest request = context.getRequest();
+          JSONArray units = new JSONArray();
+          //List<Map<String, Object>> dbUnits = DB.qr().query("select * from safetymaps.units where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
+          //List<Map<String, Object>> dbIncidents = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=? and status='operationeel'", new MapListHandler(), rabbitMqSource);
+          
+          List<Map<String, Object>> dbUnits = CACHE.GetUnits(rabbitMqSource);
+          List<Map<String, Object>> dbIncidents = CACHE.GetIncidents(rabbitMqSource);
 
-                    OutputStream out;
-                    String acceptEncoding = request.getHeader("Accept-Encoding");
-                    if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
-                        response.setHeader("Content-Encoding", "gzip");
-                        out = new GZIPOutputStream(response.getOutputStream(), true);
-                    } else {
-                        out = response.getOutputStream();
-                    }
+          for (Map<String, Object> dbUnit : dbUnits) {
+            JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnit);
+            JSONObject unitOnIncident = SafetyConnectMessageUtil.IncidentDbRowHasActiveUnit(dbIncidents, unit.getString("roepnaam"));
 
-                    JSONArray units = new JSONArray();
-                    //List<Map<String, Object>> dbUnits = DB.qr().query("select * from safetymaps.units where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
-                    //List<Map<String, Object>> dbIncidents = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=? and status='operationeel'", new MapListHandler(), rabbitMqSource);
-                    
-                    List<Map<String, Object>> dbUnits = CACHE.GetUnits(rabbitMqSource);
-                    List<Map<String, Object>> dbIncidents = CACHE.GetIncidents(rabbitMqSource);
+            if (unitOnIncident != null) {
+              unit.put("incidentId", unitOnIncident.get("incidentId"));
+              unit.put("incidentRol", unitOnIncident.get("incidentRol"));
+            }
 
-                    for (Map<String, Object> dbUnit : dbUnits) {
-                      JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnit);
-                      JSONObject unitOnIncident = SafetyConnectMessageUtil.IncidentDbRowHasActiveUnit(dbIncidents, unit.getString("roepnaam"));
+            /**
+             * smvng_vehicleinfo_unasigned	Toon locaties van alle voertuigen die niet aan een incident gekoppeld zijn.
+             * smvng_vehicleinfo_maplocations	Toon locaties van alle voertuigen die aan een incident gekoppeld zijn.
+             * smvng_vehicleinfo_incidentlocations	Toon locaties van betrokken voertuigen wanner het incident is geopend.
+             * smvng_incident_ownvehiclenumber   Mag eigen voertuignummer wijzigen
+             */
+            boolean isauthfor_unasigned = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_unasigned");
+            boolean isauthfor_maplocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_maplocations");
+            boolean isauthfor_incidentlocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations");
+            boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
 
-                      if (unitOnIncident != null) {
-                        unit.put("incidentId", unitOnIncident.get("incidentId"));
-                        unit.put("incidentRol", unitOnIncident.get("incidentRol"));
-                      }
-
-                      /**
-                       * smvng_vehicleinfo_unasigned	Toon locaties van alle voertuigen die niet aan een incident gekoppeld zijn.
-                       * smvng_vehicleinfo_maplocations	Toon locaties van alle voertuigen die aan een incident gekoppeld zijn.
-                       * smvng_vehicleinfo_incidentlocations	Toon locaties van betrokken voertuigen wanner het incident is geopend.
-                       * smvng_incident_ownvehiclenumber   Mag eigen voertuignummer wijzigen
-                       */
-                      boolean isauthfor_unasigned = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_unasigned");
-                      boolean isauthfor_maplocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_maplocations");
-                      boolean isauthfor_incidentlocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations");
-                      boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
-
-                      if (isauthfor_unasigned && unit.has("incidentId") == false) {
-                        units.put(unit);
-                      } else if (isauthfor_maplocations && unit.has("incidentId")) {
-                        units.put(unit);
-                      } else if (isauthfor_ownvehiclenumber && unit.has("incidentId")) {
-                        units.put(unit);
-                      } else if (isauthfor_incidentlocations && unit.has("incidentId") && unitOnIncident != null) {
-                        /*for (Map<String, Object> dbIncident : dbIncidents) {
-                          JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncident);
-                          Integer incidentId = (Integer)incident.get("incidentNummer"); //incidentIsForUserVehicle(incident);
-                          if (incidentId == unit.get("incidentId")) {
-                            units.put(unit);
-                          }
-                        }*/
-                        units.put(unit);
-                      }
-                    }
-
-                                  //cache = new CachedResponseString(responseContent);
-                                  //cache_proxy.put(uri, cache);
-                    try {
-                      IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
-
-                      out.flush();
-                      out.close();
-                    } catch (IOException e) {
-                      // Do nothing
-                    }
+            if (isauthfor_unasigned && unit.has("incidentId") == false) {
+              units.put(unit);
+            } else if (isauthfor_maplocations && unit.has("incidentId")) {
+              units.put(unit);
+            } else if (isauthfor_ownvehiclenumber && unit.has("incidentId")) {
+              units.put(unit);
+            } else if (isauthfor_incidentlocations && unit.has("incidentId") && unitOnIncident != null) {
+              /*for (Map<String, Object> dbIncident : dbIncidents) {
+                JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncident);
+                Integer incidentId = (Integer)incident.get("incidentNummer"); //incidentIsForUserVehicle(incident);
+                if (incidentId == unit.get("incidentId")) {
+                  units.put(unit);
                 }
-            };
+              }*/
+              units.put(unit);
+            }
+          }
+
+          return new Resolution() {
+            @Override
+            public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+                response.setCharacterEncoding("UTF-8");
+                response.setContentType("application/json");
+
+                OutputStream out;
+                String acceptEncoding = request.getHeader("Accept-Encoding");
+                if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+                    response.setHeader("Content-Encoding", "gzip");
+                    out = new GZIPOutputStream(response.getOutputStream(), true);
+                } else {
+                    out = response.getOutputStream();
+                }
+
+                try {
+                  IOUtils.copy(new StringReader(units.toString()), out, "UTF-8");
+
+                  out.flush();
+                  out.close();
+                } catch (IOException e) {
+                  // Do nothing
+                }
+            }
+          };
         }
 
         String uri = url + "/" + path + (regioCode == null ? (qs == null ? "" : "?") : "?regioCode=" + regioCode + (qs == null ? "" : "&")) + qs;
