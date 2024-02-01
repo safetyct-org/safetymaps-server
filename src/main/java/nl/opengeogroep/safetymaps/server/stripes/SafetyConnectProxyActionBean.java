@@ -364,14 +364,15 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                         units.put(unit);
                       } else if (isauthfor_ownvehiclenumber && unit.has("incidentId")) {
                         units.put(unit);
-                      } else if (isauthfor_incidentlocations && unit.has("incidentId")) {
-                        for (Map<String, Object> dbIncident : dbIncidents) {
+                      } else if (isauthfor_incidentlocations && unit.has("incidentId") && unitOnIncident != null) {
+                        /*for (Map<String, Object> dbIncident : dbIncidents) {
                           JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncident);
                           Integer incidentId = (Integer)incident.get("incidentNummer"); //incidentIsForUserVehicle(incident);
                           if (incidentId == unit.get("incidentId")) {
                             units.put(unit);
                           }
-                        }
+                        }*/
+                        units.put(unit);
                       }
                     }
 
