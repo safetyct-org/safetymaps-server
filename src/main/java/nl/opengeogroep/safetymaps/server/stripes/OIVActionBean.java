@@ -147,7 +147,7 @@ public class OIVActionBean implements ActionBean {
         "vgr.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
         "from objecten.view_gevaarlijkestof_ruimtelijk vgr " +
         "inner join algemeen.symbols s on s.symbol_name = vgr.symbol_name " +
-        "where bject_id = ?"
+        "where object_id = ?"
       , new MapListHandler(), id, layer, id);
     JSONObject dbk = new JSONObject();
 
