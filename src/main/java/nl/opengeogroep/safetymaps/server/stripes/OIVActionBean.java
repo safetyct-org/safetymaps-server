@@ -140,14 +140,15 @@ public class OIVActionBean implements ActionBean {
     List<Map<String,Object>> gs = DB.oivQr().query(
         "select vn_nr, gevi_nr, eric_kaart, hoeveelheid, eenheid, toestand, omschrijving, st_astext(geom) geom, coalesce(rotatie, 0) rotatie, size, " +
         "vgb.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
-        "from objecten.view_gevaarlijkestof_bouwlaag vgb" +
+        "from objecten.view_gevaarlijkestof_bouwlaag vgb " +
         "inner join algemeen.symbols s on s.symbol_name = vgb.symbol_name " +
         "where object_id = ? and bouwlaag = ? " +
         "union select vn_nr, gevi_nr, eric_kaart, hoeveelheid, eenheid, toestand, omschrijving, st_astext(geom) geom, coalesce(rotatie, 0) rotatie, size, " +
         "vgr.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
         "from objecten.view_gevaarlijkestof_ruimtelijk vgr " +
-        "inner join algemeen.symbols s on s.symbol_name = vgr.symbol_name"
-      , new MapListHandler(), id, layer);
+        "inner join algemeen.symbols s on s.symbol_name = vgr.symbol_name " +
+        "where bject_id = ?"
+      , new MapListHandler(), id, layer, id);
     JSONObject dbk = new JSONObject();
 
 
