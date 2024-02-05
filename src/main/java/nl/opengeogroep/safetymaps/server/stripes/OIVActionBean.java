@@ -15,6 +15,7 @@ import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -85,12 +86,13 @@ public class OIVActionBean implements ActionBean {
 
   private Resolution objects() throws SQLException, NamingException {
     List<Map<String,Object>> dbks = DB.oivQr().query(
-        "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag " +
+        "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
         "from objecten.view_objectgegevens vo " +
         "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
         "inner join algemeen.symbols s on s.symbol_name = ot.symbol_name " + 
         "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.view_bouwlagen) vb on vb.object_id = vo.id " +
-        "left join algemeen.bag_extent be on vb.pand_id = be.identificatie "
+        "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
+        "left join objecten.terrein t on vo.id = t.object_id "
       , new MapListHandler());
     JSONArray results = new JSONArray();
 
@@ -137,6 +139,16 @@ public class OIVActionBean implements ActionBean {
     int id = Integer.parseInt(m.group(1));
     int layer = Integer.parseInt(m.group(2));
 
+    Map<String,Object> dbk = DB.oivQr().query(
+        "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
+        "from objecten.view_objectgegevens vo " +
+        "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
+        "inner join algemeen.symbols s on s.symbol_name = ot.symbol_name " + 
+        "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.view_bouwlagen) vb on vb.object_id = vo.id " +
+        "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
+        "left join objecten.terrein t on vo.id = t.object_id "
+      , new MapHandler());
+
     List<Map<String,Object>> gs = DB.oivQr().query(
         "select vn_nr, gevi_nr, eric_kaart, hoeveelheid, eenheid, toestand, omschrijving, st_astext(geom) geom, coalesce(rotatie, 0) rotatie, size, " +
         "vgb.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
@@ -149,10 +161,10 @@ public class OIVActionBean implements ActionBean {
         "inner join algemeen.symbols s on s.symbol_name = vgr.symbol_name " +
         "where object_id = ?"
       , new MapListHandler(), id, layer, id);
-    JSONObject dbk = new JSONObject();
+    JSONObject dbkJSON = rowToJson(dbk, false, false);
 
 
-    dbk.put("gevaarlijkestoffen", rowsToJson(gs, false, false));
+    dbkJSON.put("gevaarlijkestoffen", rowsToJson(gs, false, false));
 
     return new StreamingResolution("application/json", dbk.toString());
   }
