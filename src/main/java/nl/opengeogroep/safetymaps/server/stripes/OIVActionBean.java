@@ -166,7 +166,7 @@ public class OIVActionBean implements ActionBean {
 
     dbkJSON.put("gevaarlijkestoffen", rowsToJson(gs, false, false));
 
-    return new StreamingResolution("application/json", dbk.toString());
+    return new StreamingResolution("application/json", dbkJSON.toString());
   }
 
   private Resolution styles() {
