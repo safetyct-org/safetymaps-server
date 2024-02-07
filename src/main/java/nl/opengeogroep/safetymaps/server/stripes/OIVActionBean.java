@@ -97,7 +97,7 @@ public class OIVActionBean implements ActionBean {
   }
 
   private Resolution object() throws JSONException, Exception {
-    Pattern p = Pattern.compile("object\\/([0-9]+)\\/([0-9]+)");
+    Pattern p = Pattern.compile("object\\/([0-9]+)\\/([0-9]+)\\/([0-9]+)");
     Matcher m = p.matcher(path);
 
     if(!m.find()) {
@@ -106,6 +106,7 @@ public class OIVActionBean implements ActionBean {
 
     int id = Integer.parseInt(m.group(1));
     int layer = Integer.parseInt(m.group(2));
+    String bagid = m.group(3);
 
     JSONArray dbks = new JSONArray();
     dbks = dbkWithAddresList(id);
@@ -245,6 +246,16 @@ public class OIVActionBean implements ActionBean {
 
     JSONObject dbkJSON = rowToJson(dbk, false, false);
 
+    if (!"0".equals(bagid)) {
+      Map<String,Object> dbkAdres = DB.bagQr().query(
+        "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam " +
+        "from bagactueel.adres_full " +
+        "where pandid = ?"
+      , new MapHandler(), bagid);
+
+      dbkJSON.put("adres", rowToJson(dbkAdres, false, false));
+    }
+
     dbkJSON.put("id", id);
     dbkJSON.put("bouwlaag", layer);
     dbkJSON.put("panden", dbks);
@@ -284,7 +295,7 @@ public class OIVActionBean implements ActionBean {
 
         if ("BAG".equals(source)) {
           List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
-              "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam " +
+              "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam " +
               "from bagactueel.adres_full " +
               "where pandid = ?"
             , new MapListHandler(), bid);
