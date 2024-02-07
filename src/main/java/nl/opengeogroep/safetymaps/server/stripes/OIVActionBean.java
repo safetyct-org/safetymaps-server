@@ -164,7 +164,7 @@ public class OIVActionBean implements ActionBean {
       , new MapListHandler(), id, layer, id);
 
     List<Map<String,Object>> ber = DB.oivQr().query(
-      "select b.*, s.* " +
+      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl" +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_bereikbaarheid vb " +
@@ -173,34 +173,102 @@ public class OIVActionBean implements ActionBean {
       "left join algemeen.styles s on s.id = b.styleid "
     , new MapListHandler(), id);
 
+    List<Map<String,Object>> ruimten = DB.oivQr().query(
+      "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl" +
+      "from ( " +
+        "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+        "from objecten.view_ruimten vr " +
+        "where vr.object_id = ? " +
+      ") b " +
+      "left join algemeen.styles s on s.id = b.styleid "
+    , new MapListHandler(), id);
+
+    List<Map<String,Object>> sect = DB.oivQr().query(
+      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl" +
+      "from ( " +
+        "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+        "from objecten.view_sectoren vs " +
+        "where vs.object_id = ? " +
+      ") b " +
+      "left join algemeen.styles s on s.id = b.styleid "
+    , new MapListHandler(), id);
+
+    List<Map<String,Object>> veilighbouwk = DB.oivQr().query(
+      "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl " +
+      "from ( " +
+      "  select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+      "  from objecten.view_veiligh_bouwk vvb " +
+      "  where vvb.object_id = ? " +
+      "    and vvb.bouwlaag = ? " +
+      ") b " +
+      "left join algemeen.styles s on s.id = b.styleid "
+    , new MapListHandler(), id, layer);
+
     List<Map<String,Object>> cont = DB.oivQr().query(
       "select telefoonnummer, soort, 'onbekend' as naam " +
       "from objecten.view_contactpersoon vc " +
       "where vc.object_id = ? "
     , new MapListHandler(), id);
 
-    List<Map<String,Object>> drei = DB.oivQr().query(
-      "select rotatie, label, soort, size, st_astext(geom) geom, vdb.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
-      "from objecten.view_dreiging_bouwlaag vdb " +
-      "inner join algemeen.symbols s on s.symbol_name = vdb.symbol_name " +
+    List<Map<String,Object>> symbols = DB.oivQr().query(
+      "select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "from objecten.view_afw_binnendekking vab " +
+      "inner join algemeen.symbols s on s.symbol_name = vab.symbol_name " +
       "where object_id = ? " +
-      "  and bouwlaag = ? " +
-      "union select rotatie, label, soort, size, st_astext(geom) geom, vdr.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
-      "from objecten.view_dreiging_ruimtelijk vdr " +
-      "inner join algemeen.symbols s on s.symbol_name = vdr.symbol_name " +
-      "where object_id = ? "
-    , new MapListHandler(), id, layer, id);
-
-    List<Map<String,Object>> ing = DB.oivQr().query(
-      "select rotatie, label, soort, size, st_astext(geom) geom, vib.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "from objecten.view_opstelplaats vo " +
+      "inner join algemeen.symbols s on s.symbol_name = vo.symbol_name " +
+      "where vo.object_id = ? " +
+      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
       "from objecten.view_ingang_bouwlaag vib " +
       "inner join algemeen.symbols s on s.symbol_name = vib.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, soort, size, st_astext(geom) geom, vir.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
       "from objecten.view_ingang_ruimtelijk vir " +
       "inner join algemeen.symbols s on s.symbol_name = vir.symbol_name " +
-      "where object_id = ? "
+      "where object_id = ? " +
+      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "from objecten.view_dreiging_bouwlaag vdb " +
+      "inner join algemeen.symbols s on s.symbol_name = vdb.symbol_name " +
+      "where object_id = ? " +
+      "  and bouwlaag = ? " +
+      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "from objecten.view_dreiging_ruimtelijk vdr " +
+      "inner join algemeen.symbols s on s.symbol_name = vdr.symbol_name " +
+      "where object_id = ? " +
+      "select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "from objecten.view_points_of_interest vpoi " +
+      "inner join algemeen.symbols s on s.symbol_name = vpoi.symbol_name " +
+      "where vpoi.object_id = ? " +
+      "select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "from objecten.view_sleutelkluis_bouwlaag vsb " +
+      "inner join algemeen.symbols s on s.symbol_name = vsb.symbol_name " +
+      "where object_id = ? " +
+      "  and bouwlaag = ? " +
+      "union select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "from objecten.view_sleutelkluis_ruimtelijk vsr " +
+      "inner join algemeen.symbols s on s.symbol_name = vsr.symbol_name " +
+      "where object_id = ? " +
+      "select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "from objecten.view_veiligh_install vvi " +
+      "inner join algemeen.symbols s on s.symbol_name = vvi.symbol_name " +
+      "where object_id = ? " +
+      "  and bouwlaag = ? " +
+      "union select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "from objecten.view_veiligh_ruimtelijk vvr " +
+      "inner join algemeen.symbols s on s.symbol_name = vvr.symbol_name " +
+      "where object_id = ?"
+    , new MapListHandler(), id, id, id, layer, id, id, layer, id, id, id, layer, id, id, layer, id);  
+
+    List<Map<String,Object>> labels = DB.oivQr().query(
+      "select omschrijving, rotatie, size, st_astext(geom) geom " +
+      "from objecten.view_label_bouwlaag vlb " +
+      "where vlb.object_id = ? " +
+      "  and vlb.bouwlaag = ? " +
+      "union select omschrijving, rotatie, size, st_astext(geom) geom " +
+      "from objecten.view_label_ruimtelijk vlr " +
+      "where vlr.object_id = ?"
     , new MapListHandler(), id, layer, id);
 
     JSONObject dbkJSON = new JSONObject();
@@ -208,9 +276,12 @@ public class OIVActionBean implements ActionBean {
     dbkJSON.put("panden", rowsToJson(dbks, false, false));
     dbkJSON.put("conactpersonen", rowsToJson(cont, false, false));
     dbkJSON.put("bereikbaarheid", rowsToJson(ber, false, false));
+    dbkJSON.put("ruimten", rowsToJson(ruimten, false, false));
+    dbkJSON.put("sectoren", rowsToJson(sect, false, false));
+    dbkJSON.put("veilighbouwkaders", rowsToJson(veilighbouwk, false, false));
     dbkJSON.put("gevaarlijkestoffen", rowsToJson(gs, false, false));
-    dbkJSON.put("dreiging", rowsToJson(drei, false, false));
-    dbkJSON.put("ingang", rowsToJson(ing, false, false));
+    dbkJSON.put("symbolen", rowsToJson(symbols, false, false));
+    dbkJSON.put("labels", rowsToJson(labels, false, false));
 
     return new StreamingResolution("application/json", dbkJSON.toString());
   }
