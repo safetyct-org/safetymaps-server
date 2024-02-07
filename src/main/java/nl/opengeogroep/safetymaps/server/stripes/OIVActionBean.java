@@ -241,21 +241,21 @@ public class OIVActionBean implements ActionBean {
       "from objecten.view_points_of_interest vpoi " +
       "inner join algemeen.symbols s on s.symbol_name = vpoi.symbol_name " +
       "where vpoi.object_id = ? " +
-      "union select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
       "from objecten.view_sleutelkluis_bouwlaag vsb " +
       "inner join algemeen.symbols s on s.symbol_name = vsb.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
       "from objecten.view_sleutelkluis_ruimtelijk vsr " +
       "inner join algemeen.symbols s on s.symbol_name = vsr.symbol_name " +
       "where object_id = ? " +
-      "union select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
       "from objecten.view_veiligh_install vvi " +
       "inner join algemeen.symbols s on s.symbol_name = vvi.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
       "from objecten.view_veiligh_ruimtelijk vvr " +
       "inner join algemeen.symbols s on s.symbol_name = vvr.symbol_name " +
       "where object_id = ?"
