@@ -164,7 +164,7 @@ public class OIVActionBean implements ActionBean {
       , new MapListHandler(), id, layer, id);
 
     List<Map<String,Object>> ber = DB.oivQr().query(
-      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl" +
+      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_bereikbaarheid vb " +
@@ -174,7 +174,7 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id);
 
     List<Map<String,Object>> ruimten = DB.oivQr().query(
-      "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl" +
+      "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_ruimten vr " +
@@ -184,7 +184,7 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id);
 
     List<Map<String,Object>> sect = DB.oivQr().query(
-      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl" +
+      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_sectoren vs " +
@@ -237,11 +237,11 @@ public class OIVActionBean implements ActionBean {
       "from objecten.view_dreiging_ruimtelijk vdr " +
       "inner join algemeen.symbols s on s.symbol_name = vdr.symbol_name " +
       "where object_id = ? " +
-      "select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
       "from objecten.view_points_of_interest vpoi " +
       "inner join algemeen.symbols s on s.symbol_name = vpoi.symbol_name " +
       "where vpoi.object_id = ? " +
-      "select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "union select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
       "from objecten.view_sleutelkluis_bouwlaag vsb " +
       "inner join algemeen.symbols s on s.symbol_name = vsb.symbol_name " +
       "where object_id = ? " +
@@ -250,7 +250,7 @@ public class OIVActionBean implements ActionBean {
       "from objecten.view_sleutelkluis_ruimtelijk vsr " +
       "inner join algemeen.symbols s on s.symbol_name = vsr.symbol_name " +
       "where object_id = ? " +
-      "select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
+      "union select rotatie, label, soort, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol " +
       "from objecten.view_veiligh_install vvi " +
       "inner join algemeen.symbols s on s.symbol_name = vvi.symbol_name " +
       "where object_id = ? " +
