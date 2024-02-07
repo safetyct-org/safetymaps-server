@@ -111,7 +111,7 @@ public class OIVActionBean implements ActionBean {
     dbks = dbkWithAddresList();
 
     Map<String,Object> dbk = DB.oivQr().query(
-      "select formelenaam, bl.min_bouwlaag, bl.max_bouwlaag, vo.typeobject " +
+      "select ot.formelenaam, bl.min_bouwlaag, bl.max_bouwlaag, vo.typeobject " +
       "from objecten.object_terrein ot " +
       "inner join objecten.view_objectgegevens vo on vo.id = ot.object_id " + 
       "left join ( " +
