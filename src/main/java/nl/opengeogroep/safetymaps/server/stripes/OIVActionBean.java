@@ -253,7 +253,9 @@ public class OIVActionBean implements ActionBean {
         "where pandid = ?"
       , new MapHandler(), bagid);
 
-      dbkJSON.put("adres", rowToJson(dbkAdres, false, false));
+      if (dbkAdres != null) {
+        dbkJSON.put("adres", rowToJson(dbkAdres, false, false));
+      }
     }
 
     dbkJSON.put("id", id);
