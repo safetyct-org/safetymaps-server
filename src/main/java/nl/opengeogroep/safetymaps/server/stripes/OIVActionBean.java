@@ -257,6 +257,7 @@ public class OIVActionBean implements ActionBean {
     }
 
     dbkJSON.put("id", id);
+    dbkJSON.put("bid", bagid);
     dbkJSON.put("bouwlaag", layer);
     dbkJSON.put("panden", dbks);
     dbkJSON.put("contactpersonen", rowsToJson(cont, false, false));
