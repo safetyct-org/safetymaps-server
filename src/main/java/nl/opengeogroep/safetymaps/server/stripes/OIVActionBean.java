@@ -85,41 +85,10 @@ public class OIVActionBean implements ActionBean {
   }
 
   private Resolution objects() throws SQLException, NamingException {
-    List<Map<String,Object>> dbks = DB.oivQr().query(
-      "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
-      "from objecten.view_objectgegevens vo " +
-      "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
-      "inner join algemeen.symbols s on s.symbol_name = ot.symbol_name " + 
-      "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.view_bouwlagen) vb on vb.object_id = vo.id " +
-      "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
-      "left join objecten.terrein t on vo.id = t.object_id "
-    , new MapListHandler());
     JSONArray results = new JSONArray();
 
     try {
-      for(Map<String, Object> dbk: dbks) {
-          String source = (String)dbk.get("bron");
-          String bid = (String)dbk.get("bid");
-          JSONObject result = rowToJson(dbk, false, false);
-
-          if ("BAG".equals(source)) {
-            List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
-                "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam " +
-                "from bagactueel.adres_full " +
-                "where pandid = ?"
-              , new MapListHandler(), bid);
-            
-            JSONArray addresses = new JSONArray();
-            for(Map<String, Object> da: dbkAdresses) {
-              addresses.put(rowToJson(da, true, false));
-            }
-            result.put("adressen", addresses);
-          } else {
-            result.put("adressen", new JSONArray());
-          }
-
-          results.put(result);
-      }
+      results = dbkWithAddresList(0);
     } catch(Exception e) {
       log.error("Error while handling object in OVIActionBean.objects", e);
     }
@@ -139,7 +108,7 @@ public class OIVActionBean implements ActionBean {
     int layer = Integer.parseInt(m.group(2));
 
     JSONArray dbks = new JSONArray();
-    dbks = dbkWithAddresList();
+    dbks = dbkWithAddresList(id);
 
     Map<String,Object> dbk = DB.oivQr().query(
       "select ot.formelenaam, bl.min_bouwlaag, bl.max_bouwlaag, vo.typeobject " +
@@ -295,7 +264,8 @@ public class OIVActionBean implements ActionBean {
     return new ErrorResolution(400, "Not implemented yet!");
   }
 
-  private JSONArray dbkWithAddresList() throws Exception {
+  private JSONArray dbkWithAddresList(Integer id) throws Exception {
+    String where = id > 0 ? "where vo.id = ?" : "";
     List<Map<String,Object>> dbks = DB.oivQr().query(
         "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
         "from objecten.view_objectgegevens vo " +
@@ -303,8 +273,8 @@ public class OIVActionBean implements ActionBean {
         "inner join algemeen.symbols s on s.symbol_name = ot.symbol_name " + 
         "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.view_bouwlagen) vb on vb.object_id = vo.id " +
         "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
-        "left join objecten.terrein t on vo.id = t.object_id "
-      , new MapListHandler());
+        "left join objecten.terrein t on vo.id = t.object_id " + where
+      , new MapListHandler(), id);
     JSONArray results = new JSONArray();
 
     for(Map<String, Object> dbk: dbks) {
