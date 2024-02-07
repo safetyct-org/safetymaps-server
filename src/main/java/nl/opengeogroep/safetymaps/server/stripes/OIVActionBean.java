@@ -265,7 +265,7 @@ public class OIVActionBean implements ActionBean {
   }
 
   private JSONArray dbkWithAddresList(Integer id) throws Exception {
-    String where = id > 0 ? "where vo.id = ?" : "";
+    String where = id > 0 ? "where vo.id = ?" : "where vo.id <> ?";
     List<Map<String,Object>> dbks = DB.oivQr().query(
         "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
         "from objecten.view_objectgegevens vo " +
