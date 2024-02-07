@@ -93,7 +93,7 @@ public class OIVActionBean implements ActionBean {
       log.error("Error while handling object in OVIActionBean.objects", e);
     }
 
-    return new StreamingResolution("application/json", results.toString());
+    return new ErrorResolution(200, results.toString());
   }
 
   private Resolution object() throws JSONException, Exception {
@@ -248,7 +248,7 @@ public class OIVActionBean implements ActionBean {
     dbkJSON.put("id", id);
     dbkJSON.put("bouwlaag", layer);
     dbkJSON.put("panden", dbks);
-    dbkJSON.put("conactpersonen", rowsToJson(cont, false, false));
+    dbkJSON.put("contactpersonen", rowsToJson(cont, false, false));
     dbkJSON.put("bereikbaarheid", rowsToJson(ber, false, false));
     dbkJSON.put("ruimten", rowsToJson(ruimten, false, false));
     dbkJSON.put("sectoren", rowsToJson(sect, false, false));
