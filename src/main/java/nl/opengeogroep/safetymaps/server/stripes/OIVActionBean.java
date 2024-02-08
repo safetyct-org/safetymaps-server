@@ -161,7 +161,7 @@ public class OIVActionBean implements ActionBean {
         "from objecten.view_bereikbaarheid vb " +
         "where vb.object_id = ? " +
       ") b " +
-      "left join algemeen.styles s on s.id = b.styleid "
+      "left join algemeen.vw_styles s on s.id = b.styleid "
     , new MapListHandler(), id);
 
     List<Map<String,Object>> ruimten = DB.oivQr().query(
@@ -171,7 +171,7 @@ public class OIVActionBean implements ActionBean {
         "from objecten.view_ruimten vr " +
         "where vr.object_id = ? " +
       ") b " +
-      "left join algemeen.styles s on s.id = b.styleid "
+      "left join algemeen.vw_styles s on s.id = b.styleid "
     , new MapListHandler(), id);
 
     List<Map<String,Object>> sect = DB.oivQr().query(
@@ -181,7 +181,7 @@ public class OIVActionBean implements ActionBean {
         "from objecten.view_sectoren vs " +
         "where vs.object_id = ? " +
       ") b " +
-      "left join algemeen.styles s on s.id = b.styleid "
+      "left join algemeen.vw_styles s on s.id = b.styleid "
     , new MapListHandler(), id);
 
     List<Map<String,Object>> veilighbouwk = DB.oivQr().query(
@@ -192,7 +192,7 @@ public class OIVActionBean implements ActionBean {
       "  where vvb.object_id = ? " +
       "    and vvb.bouwlaag = ? " +
       ") b " +
-      "left join algemeen.styles s on s.id = b.styleid "
+      "left join algemeen.vw_styles s on s.id = b.styleid "
     , new MapListHandler(), id, layer);
 
     List<Map<String,Object>> cont = DB.oivQr().query(
