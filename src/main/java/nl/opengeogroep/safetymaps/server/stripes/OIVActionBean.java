@@ -84,6 +84,24 @@ public class OIVActionBean implements ActionBean {
     }
   }
 
+  private Resolution styles() throws Exception {
+    List<Map<String,Object>> symbols = DB.oivQr().query(
+      "select symbol_name, concat('data:image/png;base64,', encode(symbol, 'base64')) as symbol from algemeen.symbols"
+    , new MapListHandler());
+
+    JSONObject result = new JSONObject();
+    JSONObject result_symbols = new JSONObject();
+
+    for(Map<String, Object> symbol: symbols) {
+      JSONObject result_symbol = rowToJson(symbol, false, false);
+      result_symbols.put((String)symbol.get("symbol_name"), result_symbol);
+    }
+
+    result.put("symbols", symbols);
+    
+    return new StreamingResolution("application/json", result.toString());
+  }
+
   private Resolution objects() throws SQLException, NamingException {
     JSONArray results = new JSONArray();
 
@@ -184,51 +202,51 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id);
 
     List<Map<String,Object>> symbols = DB.oivQr().query(
-      "select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vab.symbol_name " +
+      "select rotatie, label, size, st_astext(geom) geom, soort, vab.symbol_name " +
       "from objecten.view_afw_binnendekking vab " +
       "inner join algemeen.symbols s on s.symbol_name = vab.symbol_name " +
       "where object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.symbol_name " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vo.symbol_name " +
       "from objecten.view_opstelplaats vo " +
       "inner join algemeen.symbols s on s.symbol_name = vo.symbol_name " +
       "where vo.object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vib.symbol_name " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vib.symbol_name " +
       "from objecten.view_ingang_bouwlaag vib " +
       "inner join algemeen.symbols s on s.symbol_name = vib.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vir.symbol_name " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vir.symbol_name " +
       "from objecten.view_ingang_ruimtelijk vir " +
       "inner join algemeen.symbols s on s.symbol_name = vir.symbol_name " +
       "where object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vdb.symbol_name " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vdb.symbol_name " +
       "from objecten.view_dreiging_bouwlaag vdb " +
       "inner join algemeen.symbols s on s.symbol_name = vdb.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vdr.symbol_name " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vdr.symbol_name " +
       "from objecten.view_dreiging_ruimtelijk vdr " +
       "inner join algemeen.symbols s on s.symbol_name = vdr.symbol_name " +
       "where object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vpoi.symbol_name " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vpoi.symbol_name " +
       "from objecten.view_points_of_interest vpoi " +
       "inner join algemeen.symbols s on s.symbol_name = vpoi.symbol_name " +
       "where vpoi.object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vsb.symbol_name " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vsb.symbol_name " +
       "from objecten.view_sleutelkluis_bouwlaag vsb " +
       "inner join algemeen.symbols s on s.symbol_name = vsb.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vsr.symbol_name " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vsr.symbol_name " +
       "from objecten.view_sleutelkluis_ruimtelijk vsr " +
       "inner join algemeen.symbols s on s.symbol_name = vsr.symbol_name " +
       "where object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vvi.symbol_name " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vvi.symbol_name " +
       "from objecten.view_veiligh_install vvi " +
       "inner join algemeen.symbols s on s.symbol_name = vvi.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vvr.symbol_name " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vvr.symbol_name " +
       "from objecten.view_veiligh_ruimtelijk vvr " +
       "inner join algemeen.symbols s on s.symbol_name = vvr.symbol_name " +
       "where object_id = ?"
@@ -274,17 +292,12 @@ public class OIVActionBean implements ActionBean {
     return new StreamingResolution("application/json", dbkJSON.toString());
   }
 
-  private Resolution styles() {
-    return new ErrorResolution(400, "Not implemented yet!");
-  }
-
   private JSONArray dbkWithAddresList(Integer id) throws Exception {
     String where = id > 0 ? "where vo.id = ?" : "where vo.id <> ?";
     List<Map<String,Object>> dbks = DB.oivQr().query(
-        "select typeobject, ot.symbol_name, concat('data:image/png;base64,', encode(s.symbol, 'base64')) as symbol, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
+        "select typeobject, ot.symbol_name, vo.id, formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
         "from objecten.view_objectgegevens vo " +
-        "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
-        "inner join algemeen.symbols s on s.symbol_name = ot.symbol_name " + 
+        "inner join objecten.object_type ot on ot.naam = vo.typeobject " + 
         "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.view_bouwlagen) vb on vb.object_id = vo.id " +
         "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
         "left join objecten.terrein t on vo.id = t.object_id " + where
