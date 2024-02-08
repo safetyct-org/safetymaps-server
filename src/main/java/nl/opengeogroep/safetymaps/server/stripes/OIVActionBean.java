@@ -97,7 +97,7 @@ public class OIVActionBean implements ActionBean {
       result_symbols.put((String)symbol.get("symbol_name"), result_symbol);
     }
 
-    result.put("symbols", symbols);
+    result.put("symbols", result_symbols);
     
     return new StreamingResolution("application/json", result.toString());
   }
