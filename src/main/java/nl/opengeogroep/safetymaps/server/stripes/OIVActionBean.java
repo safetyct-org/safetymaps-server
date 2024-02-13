@@ -155,7 +155,7 @@ public class OIVActionBean implements ActionBean {
       , new MapListHandler(), id, layer, id);
 
     List<Map<String,Object>> ber = DB.oivQr().query(
-      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam " +
+      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_bereikbaarheid vb " +
@@ -165,7 +165,7 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id);
 
     List<Map<String,Object>> ruimten = DB.oivQr().query(
-      "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam " +
+      "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_ruimten vr " +
@@ -175,7 +175,7 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id);
 
     List<Map<String,Object>> sect = DB.oivQr().query(
-      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam " +
+      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_sectoren vs " +
@@ -185,7 +185,7 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id);
 
     List<Map<String,Object>> veilighbouwk = DB.oivQr().query(
-      "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam " +
+      "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
       "  select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
       "  from objecten.view_veiligh_bouwk vvb " +
