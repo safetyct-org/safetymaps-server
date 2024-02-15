@@ -165,29 +165,28 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id);
 
     List<Map<String,Object>> ruimten = DB.oivQr().query(
-      "select '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "select soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_ruimten vr " +
         "where vr.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid " + 
-      "union select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "union select soortnaam, label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_sectoren vs " +
         "where vs.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid " +
-      "union select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "union select soortnaam, label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_gebiedsgerichte_aanpak vs " +
         "where vs.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid " +
-
-      "union select '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "union select soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_schade_cirkel_bouwlaag vs " +
@@ -195,7 +194,7 @@ public class OIVActionBean implements ActionBean {
         " and vs.bouwlaag = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid " + 
-      "union select '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "union select soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_schade_cirkel_ruimtelijk vs " +
