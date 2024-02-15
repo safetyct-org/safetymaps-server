@@ -303,7 +303,6 @@ public class OIVActionBean implements ActionBean {
     dbkJSON.put("contactpersonen", rowsToJson(cont, false, false));
     dbkJSON.put("bereikbaarheid", rowsToJson(ber, false, false));
     dbkJSON.put("ruimten", rowsToJson(ruimten, false, false));
-    dbkJSON.put("sectoren", rowsToJson(sect, false, false));
     dbkJSON.put("veilighbouwkaders", rowsToJson(veilighbouwk, false, false));
     dbkJSON.put("gevaarlijkestoffen", rowsToJson(gs, false, false));
     dbkJSON.put("symbolen", rowsToJson(symbols, false, false));
