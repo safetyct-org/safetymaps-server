@@ -165,24 +165,44 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id);
 
     List<Map<String,Object>> ruimten = DB.oivQr().query(
-      "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "select '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_ruimten vr " +
         "where vr.object_id = ? " +
       ") b " +
-      "left join algemeen.vw_styles s on s.id = b.styleid "
-    , new MapListHandler(), id);
-
-    List<Map<String,Object>> sect = DB.oivQr().query(
-      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "left join algemeen.vw_styles s on s.id = b.styleid " + 
+      "union select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_sectoren vs " +
         "where vs.object_id = ? " +
       ") b " +
+      "left join algemeen.vw_styles s on s.id = b.styleid " +
+      "union select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "from ( " +
+        "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+        "from objecten.view_gebiedsgerichte_aanpak vs " +
+        "where vs.object_id = ? " +
+      ") b " +
+      "left join algemeen.vw_styles s on s.id = b.styleid " +
+
+      "union select '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "from ( " +
+        "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+        "from objecten.view_schade_cirkel_bouwlaag vs " +
+        "where vs.object_id = ? " +
+        " and vs.bouwlaag = ? " +
+      ") b " +
+      "left join algemeen.vw_styles s on s.id = b.styleid " + 
+      "union select '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "from ( " +
+        "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+        "from objecten.view_schade_cirkel_ruimtelijk vs " +
+        "where vs.object_id = ? " +
+      ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid "
-    , new MapListHandler(), id);
+    , new MapListHandler(), id, id, id, id, layer, id);
 
     List<Map<String,Object>> veilighbouwk = DB.oivQr().query(
       "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
