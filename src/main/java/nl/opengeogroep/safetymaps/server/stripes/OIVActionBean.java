@@ -165,7 +165,15 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id);
 
     List<Map<String,Object>> ruimten = DB.oivQr().query(
-      "select soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
+      "select '' as soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
+      "from ( " +
+        "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+        "from objecten.view_bouwlagen bl " +
+        "where bl.object_id = ? " +
+        " and bl.bouwlaag = ?" + 
+      ") b " +
+      "left join algemeen.vw_styles s on s.id = b.styleid " + 
+      "union select soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_ruimten vr " +
@@ -201,7 +209,7 @@ public class OIVActionBean implements ActionBean {
         "where vs.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid "
-    , new MapListHandler(), id, id, id, id, layer, id);
+    , new MapListHandler(), id, layer, id, id, id, id, layer, id);
 
     List<Map<String,Object>> veilighbouwk = DB.oivQr().query(
       "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
