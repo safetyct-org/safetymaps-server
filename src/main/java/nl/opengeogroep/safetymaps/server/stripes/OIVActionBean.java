@@ -162,7 +162,7 @@ public class OIVActionBean implements ActionBean {
         "where vb.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid " +
-      "union select hoogte as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, omschrijving as soortnaam, lijnstijl " +
+      "union select hoogte::varchar(255) as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, omschrijving as soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_isolijnen vb " +
