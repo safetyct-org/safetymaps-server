@@ -169,7 +169,7 @@ public class OIVActionBean implements ActionBean {
         "where vb.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid "
-    , new MapListHandler(), id);
+    , new MapListHandler(), id, id);
 
     List<Map<String,Object>> ruimten = DB.oivQr().query(
       "select '' as soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
