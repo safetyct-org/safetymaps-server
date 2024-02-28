@@ -165,7 +165,18 @@ public class OIVActionBean implements ActionBean {
       "union select hoogte::varchar(255) as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, omschrijving as soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-        "from objecten.view_isolijnen vb " +
+        "from ( " +
+          "SELECT b.id, b.geom, b.datum_aangemaakt, b.datum_gewijzigd, b.hoogte, b.omschrijving, b.object_id, o.formelenaam, st.style_ids " +
+          "FROM objecten.object o " +
+          "JOIN objecten.isolijnen b ON o.id = b.object_id " +
+          "LEFT JOIN objecten.isolijnen_type st ON b.hoogte::text = st.naam::text " +
+          "JOIN ( SELECT DISTINCT historie.object_id, " +
+          "    max(historie.datum_aangemaakt) AS maxdatetime " +
+          "  FROM objecten.historie " +
+          "  WHERE historie.status::text = 'in gebruik'::text AND historie.parent_deleted = 'infinity'::timestamp with time zone AND historie.self_deleted = 'infinity'::timestamp with time zone " +
+          "  GROUP BY historie.object_id) part ON o.id = part.object_id " +
+          "WHERE (o.datum_geldig_vanaf <= now() OR o.datum_geldig_vanaf IS NULL) AND (o.datum_geldig_tot > now() OR o.datum_geldig_tot IS NULL) AND o.self_deleted = 'infinity'::timestamp with time zone AND b.parent_deleted = 'infinity'::timestamp with time zone AND b.self_deleted = 'infinity'::timestamp with time zone " +         
+        ") vb " +
         "where vb.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid "
