@@ -179,7 +179,7 @@ public class OIVActionBean implements ActionBean {
         ") vb " +
         "where vb.object_id = ? " +
       ") b " +
-      "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.soortnaam desc "
+      "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.soortnaam asc "
     , new MapListHandler(), id, id);
 
     List<Map<String,Object>> ruimten = DB.oivQr().query(
@@ -238,7 +238,7 @@ public class OIVActionBean implements ActionBean {
       "  where vvb.object_id = ? " +
       "    and vvb.bouwlaag = ? " +
       ") b " +
-      "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.soortnaam desc "
+      "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.soortnaam asc "
     , new MapListHandler(), id, layer);
 
     List<Map<String,Object>> cont = DB.oivQr().query(
