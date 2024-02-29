@@ -115,7 +115,7 @@ public class OIVActionBean implements ActionBean {
   }
 
   private Resolution object() throws JSONException, Exception {
-    Pattern p = Pattern.compile("object\\/([0-9]+)\\/-?([0-9]+)\\/([0-9]+)");
+    Pattern p = Pattern.compile("object\\/([0-9]+)\\/(-?[0-9]+)\\/([0-9]+)");
     Matcher m = p.matcher(path);
 
     if(!m.find()) {
