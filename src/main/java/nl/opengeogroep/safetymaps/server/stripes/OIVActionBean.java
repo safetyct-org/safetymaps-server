@@ -155,14 +155,14 @@ public class OIVActionBean implements ActionBean {
       , new MapListHandler(), id, layer, id);
 
     List<Map<String,Object>> ber = DB.oivQr().query(
-      "select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "select * from (select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_bereikbaarheid vb " +
         "where vb.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid " +
-      "union select hoogte::varchar(255) as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, omschrijving as soortnaam, lijnstijl " +
+      "union select hoogte::varchar(255) as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from ( " +
@@ -179,7 +179,7 @@ public class OIVActionBean implements ActionBean {
         ") vb " +
         "where vb.object_id = ? " +
       ") b " +
-      "left join algemeen.vw_styles s on s.id = b.styleid "
+      "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.soortnaam desc "
     , new MapListHandler(), id, id);
 
     List<Map<String,Object>> ruimten = DB.oivQr().query(
@@ -196,6 +196,7 @@ public class OIVActionBean implements ActionBean {
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
         "from objecten.view_ruimten vr " +
         "where vr.object_id = ? " +
+        " and vr.bouwlaag = ? " + 
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid " + 
       "union select soortnaam, label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl, 3 as order " +
@@ -227,17 +228,17 @@ public class OIVActionBean implements ActionBean {
         "where vs.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.order asc "
-    , new MapListHandler(), id, layer, id, id, id, id, layer, id);
+    , new MapListHandler(), id, layer, id, layer, id, id, id, layer, id);
 
     List<Map<String,Object>> veilighbouwk = DB.oivQr().query(
-      "select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "select * from (select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
       "  select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
       "  from objecten.view_veiligh_bouwk vvb " +
       "  where vvb.object_id = ? " +
       "    and vvb.bouwlaag = ? " +
       ") b " +
-      "left join algemeen.vw_styles s on s.id = b.styleid "
+      "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.soortnaam desc "
     , new MapListHandler(), id, layer);
 
     List<Map<String,Object>> cont = DB.oivQr().query(
