@@ -18,7 +18,7 @@ public class CacheItem {
 
   public Boolean IsExpiredAfter(Integer minutes) {
     Date now = new Date();
-    Date outDated = new Date(now.getTime() - minutes * 1000 * 60);
+    Date outDated = new Date(now.getTime() - (minutes * 1000 * 60));
     return this.updated.before(outDated);
   }
 }

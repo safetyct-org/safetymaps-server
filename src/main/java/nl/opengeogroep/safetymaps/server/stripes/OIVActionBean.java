@@ -299,13 +299,21 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id, id, id, layer, id, id, layer, id, id, id, layer, id, id, layer, id);  
 
     List<Map<String,Object>> labels = DB.oivQr().query(
-      "select omschrijving, rotatie, size, st_astext(geom) geom " +
-      "from objecten.view_label_bouwlaag vlb " +
-      "where vlb.object_id = ? " +
-      "  and vlb.bouwlaag = ? " +
-      "union select omschrijving, rotatie, size, st_astext(geom) geom " +
-      "from objecten.view_label_ruimtelijk vlr " +
-      "where vlr.object_id = ?"
+      "select omschrijving, rotatie, size, st_astext(geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
+      "from ( " +
+      "  select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+      "  from objecten.view_label_bouwlaag vlb " +
+      "  where vlb.object_id = ? " +
+      "    and vlb.bouwlaag = ? " +
+      ") b " +
+      "left join algemeen.vw_styles s on s.id = b.styleid) sel " + 
+      "union select omschrijving, rotatie, size, st_astext(geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
+      "from ( " +
+      "  select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+      "  from objecten.view_label_ruimtelijk vlr " +
+      "  where vlr.object_id = ? " +
+      ") b " +
+      "left join algemeen.vw_styles s on s.id = b.styleid) sel "
     , new MapListHandler(), id, layer, id);
 
     JSONObject dbkJSON = rowToJson(dbk, false, false);
