@@ -306,7 +306,7 @@ public class OIVActionBean implements ActionBean {
       "  where vlb.object_id = ? " +
       "    and vlb.bouwlaag = ? " +
       ") b " +
-      "left join algemeen.vw_styles s on s.id = b.styleid sel " + 
+      "left join algemeen.vw_styles s on s.id = b.styleid " + 
       "union select omschrijving, rotatie, size, st_astext(geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
       "from ( " +
       "  select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
