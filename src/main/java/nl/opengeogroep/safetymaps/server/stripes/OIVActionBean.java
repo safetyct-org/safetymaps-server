@@ -227,7 +227,7 @@ public class OIVActionBean implements ActionBean {
         "from objecten.view_schade_cirkel_ruimtelijk vs " +
         "where vs.object_id = ? " +
       ") b " +
-      "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.order asc "
+      "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.order asc, sel.soortnaam asc "
     , new MapListHandler(), id, layer, id, layer, id, id, id, layer, id);
 
     List<Map<String,Object>> veilighbouwk = DB.oivQr().query(
