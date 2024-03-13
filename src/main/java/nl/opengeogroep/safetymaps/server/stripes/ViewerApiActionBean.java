@@ -369,14 +369,17 @@ public class ViewerApiActionBean implements ActionBean {
             options.put(prefixSmvng + "Own_Vehiclenumber", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber")); 
             options.put(prefixSmvng + "Incidents_Without_Unit", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_incidentwithoutunit")); 
             options.put(prefixSmvng + "Notepad_From_All_Discs", request.isUserInRole(ROLE_ADMIN) || (request.isUserInRole("smvng_incident_vrh_ags_replica") && request.isUserInRole("smvng_incident_vrh_ags_replica__fullnotepad")) || (!request.isUserInRole("smvng_incident_vrh_ags_replica") && request.isUserInRole("smvng_incident_safetyconnect_webservice")));
-            
+            options.put("userVoertuignummer", details.optString("voertuignummer", null));
+
             if (!request.isUserInRole(ROLE_ADMIN) && !request.isUserInRole("smvng_incident_safetyconnect_webservice") && request.isUserInRole("smvng_incident_vrh_ags_replica")) {
               options.put("api", options.get("_api"));
               options.put("apiUrlIncident", options.get("_apiUrlIncident"));
               options.put("apiUrlIncidentList", options.get("_apiUrlIncidentList"));
             }
             
-            options.put("userVoertuignummer", details.optString("voertuignummer", null));
+            boolean isauthfor_alertation = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_alertation");
+            options.put("useAlertation", isauthfor_alertation);
+            
         } else if (isSmvng && "IncidentMonitor".equals(name)) {
             options.put(prefixSmvng + "LeavingIncidentForLocalVehcile", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incidentmonitor_leaveincident")); 
         } else if (isSmvng && "VehicleInfo".equals(name)) {

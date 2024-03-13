@@ -386,6 +386,11 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         JSONObject dbIncident = dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidents.get(0)) : new JSONObject();*/
         Optional<IncidentCacheItem> oci = CACHE.FindIncident(envId);
         JSONObject dbIncident = oci.isPresent() ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(oci.get().ConvertToMap()) : new JSONObject();
+
+        // TODO : SMVNG-734 - Verder afmaken zodra Rinke ook wat heeft gedaan
+        JSONObject brwDisc = incident.has("brwDisciplineGegevens") ? incident.getJSONObject("brwDisciplineGegevens") : null;
+        JSONObject ambuDisc = incident.has("brwDisciplineGegevens") ? incident.getJSONObject("cpaDisciplineGegevens") : null;
+        JSONObject polDisc = incident.has("brwDisciplineGegevens") ? incident.getJSONObject("polDisciplineGegevens") : null;
         
         Integer number = incident.getInt("incidentNummer");
         String tenantId = incident.getString("tenantIndentifier");
