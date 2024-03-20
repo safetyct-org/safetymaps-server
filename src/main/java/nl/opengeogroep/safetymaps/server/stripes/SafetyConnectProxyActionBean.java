@@ -533,7 +533,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
       Boolean containsBrwUnit = false;
       for(int v=0; v<units.length(); v++) {
         JSONObject vehicle = (JSONObject)units.get(v);
-          String disc = (String)incident.get("discipline");
+          String disc = incident.has("discipline") ? (String)incident.get("discipline") : ".";
           if (disc.equals("B")) {
             containsBrwUnit = true;
           }
