@@ -141,12 +141,22 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
    }
 
    @Validate
-   private Boolean handled;
+   private String solution;
  
-   public Boolean getHandled() {
+   public String getSolution() {
+     return solution;
+   }
+   public void setSolution(String solution) {
+     this.solution = solution;
+   }
+
+   @Validate
+   private int handled;
+ 
+   public int getHandled() {
      return handled;
    }
-   public void setHandled(Boolean handled) {
+   public void setHandled(int handled) {
      this.handled = handled;
    }
 
@@ -171,7 +181,7 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
    */
   public Resolution edit() throws NamingException, SQLException { 
     if (id > 0) {
-      Map<String,Object> data = DB.qr().query("SELECT id, subject, description, username, name, email, phone, handled, to_char(dtgmelding, 'YYYY-MM-DD HH24:MI') as dtgmelding FROM safetymaps.support WHERE id=?", new MapHandler(), id);
+      Map<String,Object> data = DB.qr().query("SELECT id, solution, subject, description, username, name, email, phone, handled, to_char(dtgmelding, 'YYYY-MM-DD HH24:MI') as dtgmelding FROM safetymaps.support WHERE id=?", new MapHandler(), id);
 
       if(data.get("id") != null) {
         dtgmelding = data.get("dtgmelding").toString();
@@ -181,7 +191,8 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
         name = data.get("name").toString();
         phone = data.get("phone").toString();
         username = data.get("username").toString();
-        handled = (Boolean)data.get("handled");
+        solution = data.get("solution").toString();
+        handled = Integer.parseInt(data.get("handled").toString());
       }
     }
 
@@ -199,8 +210,8 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
   
     if (id > 0) {
       Date melding = sdf.parse(dtgmelding);
-      DB.qr().update("UPDATE safetymaps.support SET dtgmelding=?, subject=?, description=?, username=?, name=?, email=?, phone=? WHERE id=?", 
-        new java.sql.Timestamp(melding.getTime()), subject, description, username, name, email, phone, id);
+      DB.qr().update("UPDATE safetymaps.support SET dtgmelding=?, subject=?, description=?, username=?, name=?, email=?, phone=?, solution=? WHERE id=?", 
+        new java.sql.Timestamp(melding.getTime()), subject, description, username, name, email, phone, solution, id);
     }
 
     return cancel();

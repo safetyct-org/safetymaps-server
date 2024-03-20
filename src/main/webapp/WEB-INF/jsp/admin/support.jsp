@@ -46,10 +46,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 <stripes:param name="id" value="${ticket.id}"/>
                 <span class="glyphicon glyphicon-check"></span>
               </stripes:link>
-              <stripes:link class="remove-item" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean" event="delete" title="Verwijderen">
-                <stripes:param name="id" value="${ticket.id}"/>
-                <span class="glyphicon glyphicon-remove"></span>
-              </stripes:link>
             </td>
           </tr>
         </c:forEach>
@@ -73,27 +69,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         </c:if>
 
         <div class="form-group">
-          <label class="col-sm-2 control-label">Onderwerp: <c:out value="${actionBean.subject}"/></label>
+          <label class="col-sm-2 control-label">Onderwerp:</label>
           <div class="col-sm-10">
-            <stripes:text class="form-control" name="subject" />
+            <c:out value="${actionBean.subject}"/>
           </div>
         </div>
         <div class="form-group">
-          <label class="col-sm-2 control-label">Datum melding: <c:out value="${actionBean.dtgmelding}"/></label>
+          <label class="col-sm-2 control-label">Datum melding:</label>
           <div class="col-sm-10">
-            <stripes:text class="form-control" name="subject" />
+            <c:out value="${actionBean.dtgmelding}"/>
           </div>
         </div>
         <div class="form-group">
-          <label class="col-sm-2 control-label">Gemeld door: <c:out value="${actionBean.name}"/> (<c:out value="${actionBean.username}"/>) <c:out value="${actionBean.phone}"/> <c:out value="${actionBean.email}"/></label>
+          <label class="col-sm-2 control-label">Gemeld door:</label>
           <div class="col-sm-10">
-            <stripes:text class="form-control" name="subject" />
+            <c:out value="${actionBean.name}"/> (<c:out value="${actionBean.username}"/>) <c:out value="${actionBean.phone}"/> <c:out value="${actionBean.email}"/>
           </div>
         </div>
         <div class="form-group">
-          <label class="col-sm-2 control-label">Melding: <c:out value="${actionBean.dtgmelding}"/></label>
+          <label class="col-sm-2 control-label">Melding:</label>
           <div class="col-sm-10">
-            <stripes:text class="form-control" name="description" />
+            <c:out value="${actionBean.dtgmelding}"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Afhandeling:</label>
+          <div class="col-sm-10">
+            <stripes:text class="form-control" name="solution" />
           </div>
         </div>
       </c:if>
