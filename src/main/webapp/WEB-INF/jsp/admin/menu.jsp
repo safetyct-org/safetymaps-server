@@ -27,7 +27,7 @@
       <ul class="dropdown-menu">
         <li${menuitem == 'messages' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.MessagesActionBean">Berichten</stripes:link></li>
         <c:if test="${s.settings['useSupportTickets'] == 'true'}">
-          <li${menuitem == 'support' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean">Tickets</stripes:link></li>
+          <li${menuitem == 'support' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean">Support tickets</stripes:link></li>
         </c:if>
       </ul>
     </li>

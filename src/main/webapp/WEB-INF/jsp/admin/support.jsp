@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <stripes:layout-render name="/WEB-INF/jsp/templates/admin.jsp" pageTitle="Berichten tickets" menuitem="support">
   <stripes:layout-component name="content">
 
-    <h1>Tickets</h1>
+    <h1>Support tickets</h1>
     <table class="table table-bordered table-striped table-fixed-header table-condensed table-hover" id="support-table">
       <thead>
         <tr>

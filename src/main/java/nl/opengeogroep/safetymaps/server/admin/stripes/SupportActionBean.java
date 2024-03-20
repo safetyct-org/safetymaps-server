@@ -179,7 +179,7 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
    */
   @Before
   private void loadInfo() throws NamingException, SQLException {
-    tickets = DB.qr().query("SELECT * FROM safetymaps.support ORDER BY hanndled ASC, dtgmelding DESC", new MapListHandler());
+    tickets = DB.qr().query("SELECT * FROM safetymaps.support ORDER BY handled ASC, dtgmelding DESC", new MapListHandler());
   }
 
    /**
