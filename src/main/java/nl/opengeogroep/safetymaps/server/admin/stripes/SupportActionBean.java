@@ -154,10 +154,10 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
    private String permalink;
  
    public String getPermalink() {
-     return solution;
+     return permalink;
    }
-   public void setPermalink(String solution) {
-     this.solution = solution;
+   public void setPermalink(String permalink) {
+     this.permalink = permalink;
    }
 
    @Validate
@@ -179,7 +179,7 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
    */
   @Before
   private void loadInfo() throws NamingException, SQLException {
-    tickets = DB.qr().query("SELECT * FROM safetymaps.support ORDER BY dtgmelding DESC", new MapListHandler());
+    tickets = DB.qr().query("SELECT * FROM safetymaps.support ORDER BY hanndled ASC, dtgmelding DESC", new MapListHandler());
   }
 
    /**

@@ -33,19 +33,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <stripes:url var="editLink" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean" event="edit">
             <stripes:param name="id" value="${ticket.id}"/>
           </stripes:url>
-          <tr style="cursor: pointer" class="${actionBean.id == ticket.id ? 'info' : ''}" onclick="${'window.location.href=\''.concat(editLink).concat('\'')}">
+          <tr style="cursor: pointer" class="${actionBean.id == ticket.id ? 'info' : ''} ${ticket.handled == 1 ? 'disabled' : ''}" onclick="${'window.location.href=\''.concat(editLink).concat('\'')}">
             <td><c:out value="${ticket.subject}"/></td>
             <td><c:out value="${ticket.dtgmelding}"/></td>
             <td><c:out value="${ticket.name}"/> (<c:out value="${ticket.username}"/>)</td>
             <td class="table-actions">
-              <stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean" event="edit" title="Bewerken">
-                <stripes:param name="id" value="${ticket.id}"/>
-                <span class="glyphicon glyphicon-pencil"></span>
-              </stripes:link>
-              <stripes:link class="handle-item" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean" event="handle" title="Afhandelen">
-                <stripes:param name="id" value="${ticket.id}"/>
-                <span class="glyphicon glyphicon-check"></span>
-              </stripes:link>
+              <c:if test="${ticket.handled == 0}">
+                <stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean" event="edit" title="Bewerken">
+                  <stripes:param name="id" value="${ticket.id}"/>
+                  <span class="glyphicon glyphicon-pencil"></span>
+                </stripes:link>
+                <stripes:link class="handle-item" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean" event="handle" title="Afhandelen">
+                  <stripes:param name="id" value="${ticket.id}"/>
+                  <span class="glyphicon glyphicon-check"></span>
+                </stripes:link>
+              </c:if>
             </td>
           </tr>
         </c:forEach>
@@ -54,10 +56,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
     <stripes:form beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean" class="form-horizontal">
       <c:set var="event" value="${actionBean.context.eventName}"/>
-      <c:if test="${event == 'edit' || event == 'save'}">
+      <c:if test="${(event == 'edit' || event == 'save')  && actionBean.handled == 0}">
         <stripes:submit name="save" class="btn btn-primary">Opslaan</stripes:submit>
-        <c:if test="${!empty actionBean.id}">
-          <stripes:submit name="handle" class="btn btn-danger remove-item">Afhandelen</stripes:submit>
+        <c:if test="${!empty actionBean.id && actionBean.handled == 0}">
+          <stripes:submit name="handle" class="btn btn-success handle-item">Afhandelen</stripes:submit>
         </c:if>
         <c:if test="${!empty actionBean.id}">
           <stripes:submit name="delete" class="btn btn-danger remove-item">Verwijderen</stripes:submit>
