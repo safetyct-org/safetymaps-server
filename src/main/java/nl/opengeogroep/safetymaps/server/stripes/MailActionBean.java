@@ -63,12 +63,14 @@ public class MailActionBean implements ActionBean {
           String phone = context.getRequest().getParameter("phone");
 
           DB.qr().update("INSERT INTO safetymaps.support(dtgmelding, username, name, email, subject, description, phone, handled) VALUES(?, ?, ?, ?, ?, ?, ?, 0)", 
-          new java.sql.Timestamp(message.getTime()), username, name, email, subject, description, phone);
+            new java.sql.Timestamp(message.getTime()), username, name, email, subject, description, phone);
+
           response.put("result", true);
         } else {
           response = sendMail();
         }
       } catch (Exception e) {
+        response.put("error", e.getMessage());
         response.put("result", false);
       }
       
