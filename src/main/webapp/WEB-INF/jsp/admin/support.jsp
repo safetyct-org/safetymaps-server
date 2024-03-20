@@ -87,6 +87,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           </div>
         </div>
         <div class="form-group">
+          <label class="col-sm-2 control-label">Link:</label>
+          <div class="col-sm-10">
+            <c:out value="${actionBean.permalink}"/>
+          </div>
+        </div>
+        <div class="form-group">
           <label class="col-sm-2 control-label">Melding:</label>
           <div class="col-sm-10">
             <c:out value="${actionBean.dtgmelding}"/>

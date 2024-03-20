@@ -114,7 +114,7 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
    private String phone;
  
    public String getPhone() {
-     return name;
+     return phone;
    }
    public void setPhone(String phone) {
      this.phone = phone;
@@ -151,6 +151,16 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
    }
 
    @Validate
+   private String permalink;
+ 
+   public String getPermalink() {
+     return solution;
+   }
+   public void setPermalink(String solution) {
+     this.solution = solution;
+   }
+
+   @Validate
    private int handled;
  
    public int getHandled() {
@@ -181,7 +191,7 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
    */
   public Resolution edit() throws NamingException, SQLException { 
     if (id > 0) {
-      Map<String,Object> data = DB.qr().query("SELECT id, solution, subject, description, username, name, email, phone, handled, to_char(dtgmelding, 'YYYY-MM-DD HH24:MI') as dtgmelding FROM safetymaps.support WHERE id=?", new MapHandler(), id);
+      Map<String,Object> data = DB.qr().query("SELECT id, permalink, solution, subject, description, username, name, email, phone, handled, to_char(dtgmelding, 'YYYY-MM-DD HH24:MI') as dtgmelding FROM safetymaps.support WHERE id=?", new MapHandler(), id);
 
       if(data.get("id") != null) {
         dtgmelding = data.get("dtgmelding").toString();
@@ -192,6 +202,7 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
         phone = data.get("phone").toString();
         username = data.get("username").toString();
         solution = data.get("solution").toString();
+        permalink = data.get("permalink").toString();
         handled = Integer.parseInt(data.get("handled").toString());
       }
     }
@@ -206,12 +217,8 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
    * @throws Exception
    */
   public Resolution save() throws Exception {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-  
     if (id > 0) {
-      Date melding = sdf.parse(dtgmelding);
-      DB.qr().update("UPDATE safetymaps.support SET dtgmelding=?, subject=?, description=?, username=?, name=?, email=?, phone=?, solution=? WHERE id=?", 
-        new java.sql.Timestamp(melding.getTime()), subject, description, username, name, email, phone, solution, id);
+      DB.qr().update("UPDATE safetymaps.support SET solution=? WHERE id=?", solution, id);
     }
 
     return cancel();

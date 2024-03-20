@@ -121,6 +121,16 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
     private static final Map<String,CachedResponseString> cache_proxy = new HashMap<>();
 
+    private List<String> JSONArryToStringList(JSONArray ja) {
+      JSONArray arr = new JSONArray(ja);
+      List<String> list = new ArrayList<String>();
+      for(int i = 0; i < arr.length(); i++){
+          list.add(arr.getJSONObject(i).toString());
+      }
+
+      return list;
+    }
+
     public Resolution proxy() throws Exception {
           if(requestIs(INCIDENT_REQUEST) && !context.getRequest().isUserInRole(ROLE) && !context.getRequest().isUserInRole(ROLE_ADMIN)) {
               return unAuthorizedResolution();
@@ -223,7 +233,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   for(int v=0; v<notepad.length(); v++) {
                       JSONObject notepadrule = (JSONObject)notepad.get(v);
                       String inhoud = notepadrule.has("inhoud") ? notepadrule.getString("inhoud") : notepadrule.has("Inhoud") ? notepadrule.getString("Inhoud") : "";
-                      List<String> discs = notepadrule.has("disciplines") ? Arrays.asList((String[])notepadrule.get("disciplines")) : null;
+                      List<String> discs = notepadrule.has("disciplines") ? JSONArryToStringList((JSONArray)notepadrule.get("disciplines")) : null;
                       
                       if (isauthfor_alldiscnotepad || (discs != null && discs.contains("B"))) {
                         discnotepad.put(notepadrule);
