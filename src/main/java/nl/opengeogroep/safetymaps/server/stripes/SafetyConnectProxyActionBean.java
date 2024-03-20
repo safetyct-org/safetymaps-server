@@ -125,7 +125,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
       //JSONArray arr = new JSONArray(ja);
       List<String> list = new ArrayList<String>();
       for(int i = 0; i < arr.length(); i++){
-          list.add(arr.getJSONObject(i).toString());
+          list.add(arr.get(i).toString());
       }
 
       return list;

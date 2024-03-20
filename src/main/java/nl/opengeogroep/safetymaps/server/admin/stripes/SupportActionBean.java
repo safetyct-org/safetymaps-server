@@ -198,10 +198,10 @@ public class SupportActionBean implements ActionBean, ValidationErrorHandler {
         subject = data.get("subject").toString();
         description = data.get("description").toString();
         email = data.get("email").toString();
-        name = data.get("name").toString();
-        phone = data.get("phone").toString();
+        name = data.get("name") != null ? data.get("name").toString() : "";
+        phone = data.get("phone") != null ? data.get("phone").toString() : "";
         username = data.get("username").toString();
-        solution = data.get("solution").toString();
+        solution = data.get("solution") != null ? data.get("solution").toString() : "";
         permalink = data.get("permalink").toString();
         handled = Integer.parseInt(data.get("handled").toString());
       }
