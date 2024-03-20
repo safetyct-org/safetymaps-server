@@ -31,3 +31,7 @@
 .fixed-table-wrapper--full {
     max-height: 85% !important;
 }
+
+.disabled {
+  text-decoration: line-through !important;
+}
