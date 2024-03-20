@@ -61,9 +61,10 @@ public class MailActionBean implements ActionBean {
           String subject = context.getRequest().getParameter("subject");
           String description = context.getRequest().getParameter("remarks");
           String phone = context.getRequest().getParameter("phone");
+          String permalink = context.getRequest().getParameter("permalink");
 
-          DB.qr().update("INSERT INTO safetymaps.support(dtgmelding, username, name, email, subject, description, phone, handled) VALUES(?, ?, ?, ?, ?, ?, ?, 0)", 
-            new java.sql.Timestamp(message.getTime()), username, name, email, subject, description, phone);
+          DB.qr().update("INSERT INTO safetymaps.support(dtgmelding, username, name, email, subject, description, phone, permalink, handled) VALUES(?, ?, ?, ?, ?, ?, ?, 0)", 
+            new java.sql.Timestamp(message.getTime()), username, name, email, subject, description, permalink, phone);
 
           response.put("result", true);
         } else {

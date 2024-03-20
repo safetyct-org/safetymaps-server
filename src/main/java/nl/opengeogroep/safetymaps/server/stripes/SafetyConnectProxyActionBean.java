@@ -121,8 +121,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
     private static final Map<String,CachedResponseString> cache_proxy = new HashMap<>();
 
-    private List<String> JSONArryToStringList(JSONArray ja) {
-      JSONArray arr = new JSONArray(ja);
+    private List<String> JSONArryToStringList(JSONArray arr) {
+      //JSONArray arr = new JSONArray(ja);
       List<String> list = new ArrayList<String>();
       for(int i = 0; i < arr.length(); i++){
           list.add(arr.getJSONObject(i).toString());
