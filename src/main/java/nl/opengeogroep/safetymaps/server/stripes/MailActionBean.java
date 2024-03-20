@@ -2,6 +2,8 @@ package nl.opengeogroep.safetymaps.server.stripes;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +17,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import net.sourceforge.stripes.action.*;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
+import nl.opengeogroep.safetymaps.server.db.DB;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
@@ -44,7 +48,35 @@ public class MailActionBean implements ActionBean {
     }
 
     public Resolution mail() throws IOException {
-        Session session;
+      JSONObject response = new JSONObject();
+
+      try {
+        String useSupportTickets = Cfg.getSetting("useSupportTickets");
+
+        if ("true".equals(useSupportTickets)) {
+          Date message = new Date();
+          String username = context.getRequest().getRemoteUser();
+          String name = context.getRequest().getParameter("name");
+          String email = context.getRequest().getParameter("email");
+          String subject = context.getRequest().getParameter("subject");
+          String description = context.getRequest().getParameter("remarks");
+          String phone = context.getRequest().getParameter("phone");
+
+          DB.qr().update("INSERT INTO safetymaps.support(dtgmelding, username, name, email, subject, description, phone, handled) VALUES(?, ?, ?, ?, ?, ?, ?, 0)", 
+          new java.sql.Timestamp(message.getTime()), username, name, email, subject, description, phone);
+          response.put("result", true);
+        } else {
+          response = sendMail();
+        }
+      } catch (Exception e) {
+        response.put("result", false);
+      }
+      
+      return new StreamingResolution("application/json", response.toString());
+    }
+
+    private JSONObject sendMail() {
+      Session session;
         JSONObject response = new JSONObject();
         response.put("result", false);
         try {
@@ -53,7 +85,7 @@ public class MailActionBean implements ActionBean {
         } catch(Exception e) {
             log.error("Mail session not configured correctly, exception looking up JNDI resource", e);
             response.put("error", "Server not configured correctly to send mail");
-            return new StreamingResolution("application/json", response.toString());
+            return response;
         }
 
         String mail, to, from, subject;
@@ -96,7 +128,7 @@ public class MailActionBean implements ActionBean {
             if(to == null || from == null || subject == null) {
                 log.error("Missing safetymaps.settings keys for either support_mail_to, support_mail_from or support_mail_subject");
                 response.put("error", "Server configuration error formatting mail");
-                return new StreamingResolution("application/json", response.toString());
+                return response;
             }
 
             subject = request.replace(subject);
@@ -107,7 +139,7 @@ public class MailActionBean implements ActionBean {
         } catch(Exception e) {
             log.error("Error formatting mail", e);
             response.put("error", "Server error formatting mail");
-            return new StreamingResolution("application/json", response.toString());
+            return response;
         }
 
         try {
@@ -126,10 +158,10 @@ public class MailActionBean implements ActionBean {
         } catch(Exception e) {
             log.error("Error formatting mail", e);
             response.put("error", "Server error formatting mail");
-            return new StreamingResolution("application/json", response.toString());
+            return response;
         }
              
         response.put("result", true);
-        return new StreamingResolution("application/json", response.toString());
+        return response;
     }
 }

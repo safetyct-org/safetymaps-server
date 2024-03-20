@@ -13,7 +13,7 @@
 
     <stripes:useActionBean var="s" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SettingsActionBean" event="list"/>
 
-    <c:if test="${s.settings['hide_onboard'] != 'true'}">
+    <!--<c:if test="${s.settings['hide_onboard'] != 'true'}">
         <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Voertuig <span class="caret"></span></a>
             <ul class="dropdown-menu">
@@ -21,12 +21,20 @@
                 <li${menuitem == 'sync' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SyncStatusActionBean">Synchronisatie</stripes:link></li>
             </ul>
         </li>
-    </c:if>
+    </c:if>-->
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Voertuigen <span class="caret"></span></a>
+      <ul class="dropdown-menu">
+        <li${menuitem == 'messages' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.MessagesActionBean">Berichten</stripes:link></li>
+        <c:if test="${s.settings['useSupportTickets'] == 'true'}">
+          <li${menuitem == 'support' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean">Tickets</stripes:link></li>
+        </c:if>
+      </ul>
+    </li>
     <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Configuratie <span class="caret"></span></a>
         <ul class="dropdown-menu">
-            <li${menuitem == 'app' ? ' class="active"' : ''}><a href="${contextPath}/admin/app.jsp">Instellingen</a></li>
-            <li${menuitem == 'messages' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.MessagesActionBean">Berichten</stripes:link></li>
+            <li${menuitem == 'app' ? ' class="active"' : ''}><a href="${contextPath}/admin/app.jsp">Instellingen</a></li>            
             <li${menuitem == 'modules' ? ' class="active"' : ''}><a href="${contextPath}/admin/modules.jsp">Modules</a></li>
             <c:if test="${s.settings['linkify_enabled'] == 'true'}"><li${menuitem == 'linkify' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LinkifyActionBean">Steekwoorden</stripes:link></li></c:if>
             <li${menuitem == 'layers' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LayerActionBean">Lagen</stripes:link></li>
