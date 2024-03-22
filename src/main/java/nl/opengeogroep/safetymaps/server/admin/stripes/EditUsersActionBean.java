@@ -287,7 +287,7 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
 
         qr().update("update " + USER_TABLE + " set password = ? where username = ?", userHashedPassword, username);
 
-        String link = Cfg.getSetting("uri", "/smvng/viewer");
+        String link = Cfg.getSetting("uri", "/viewer");
         return new RedirectResolution(link);
     }
 
