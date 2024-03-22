@@ -32,6 +32,7 @@ import net.sourceforge.stripes.validation.SimpleError;
 import net.sourceforge.stripes.validation.Validate;
 import net.sourceforge.stripes.validation.ValidationErrorHandler;
 import net.sourceforge.stripes.validation.ValidationErrors;
+import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.security.PersistentSessionManager;
 import nl.opengeogroep.safetymaps.server.security.UpdatableLoginSessionFilter;
 import org.apache.catalina.realm.SecretKeyCredentialHandler;
@@ -286,7 +287,8 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
 
         qr().update("update " + USER_TABLE + " set password = ? where username = ?", userHashedPassword, username);
 
-        return new RedirectResolution("/smvng/test");
+        String link = Cfg.getSetting("uri", "/smvng/viewer");
+        return new RedirectResolution(link);
     }
 
     public Resolution save() throws Exception {
