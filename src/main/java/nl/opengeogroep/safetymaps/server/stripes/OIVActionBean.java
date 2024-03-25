@@ -330,7 +330,7 @@ public class OIVActionBean implements ActionBean {
       }
     }
 
-    if (bagid == "0405100000551806") {
+    if (bagid.equals("0405100000551806")) {
       JSONArray media = new JSONArray();
       JSONObject mediaItem = new JSONObject();
       mediaItem.put("filename", "Fictief_RBP_OIV.pdf");
