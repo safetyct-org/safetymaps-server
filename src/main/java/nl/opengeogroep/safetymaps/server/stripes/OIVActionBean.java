@@ -329,7 +329,7 @@ public class OIVActionBean implements ActionBean {
       , new MapHandler(), bagid);*/
       Optional<Map<String,Object>> dbkAdres = CACHE.bag.stream().filter(itm -> itm.get("pandid").toString().equals(bagid)).findFirst();
 
-      if (dbkAdres != null) {
+      if (!dbkAdres.isEmpty()) {
         dbkJSON.put("adres", rowToJson(dbkAdres.get(), false, false));
       }
     }
@@ -377,7 +377,7 @@ public class OIVActionBean implements ActionBean {
 
         if ("BAG".equals(source)) {
           List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
-              "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam " +
+              "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam, pandid " +
               "from bag_actueel.adres_full " +
               "where pandid = ?"
             , new MapListHandler(), bid);
