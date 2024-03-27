@@ -29,7 +29,7 @@ public class CACHE {
   public static final Boolean IsBAGCacheInitialized() { return bagCacheInitialized != null; }
   public static final void InitializeBAGCache() throws SQLException, NamingException {
     CACHE.bag = DB.bagQr().query(
-        "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam " +
+        "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam, pandid " +
         "from bag_actueel.adres_full "
       , new MapListHandler());
 
