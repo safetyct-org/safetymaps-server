@@ -30,15 +30,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       </thead>
       <tbody>
         <c:forEach var="ticket" items="${actionBean.tickets}">
-          <stripes:url var="editLink" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean" event="edit">
-            <stripes:param name="id" value="${ticket.id}"/>
-          </stripes:url>
-          <tr style="cursor: pointer" class="${actionBean.id == ticket.id ? 'info' : ''} ${ticket.handled == 1 ? 'disabled' : ''}" onclick="${'window.location.href=\''.concat(editLink).concat('\'')}">
-            <td><c:out value="${ticket.subject}"/></td>
-            <td><c:out value="${ticket.dtgmelding}"/></td>
-            <td><c:out value="${ticket.name}"/> (<c:out value="${ticket.username}"/>)</td>
-            <td class="table-actions">
-              <c:if test="${ticket.handled == 0}">
+          <c:if test="${ticket.handled == 0}">
+            <stripes:url var="editLink" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean" event="edit">
+              <stripes:param name="id" value="${ticket.id}"/>
+            </stripes:url>
+            <tr style="cursor: pointer" class="${actionBean.id == ticket.id ? 'info' : ''} ${ticket.handled == 1 ? 'disabled' : ''}" onclick="${'window.location.href=\''.concat(editLink).concat('\'')}">
+              <td><c:out value="${ticket.subject}"/></td>
+              <td><c:out value="${ticket.dtgmelding}"/></td>
+              <td><c:out value="${ticket.name}"/> (<c:out value="${ticket.username}"/>)</td>
+              <td class="table-actions">
                 <stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SupportActionBean" event="edit" title="Bewerken">
                   <stripes:param name="id" value="${ticket.id}"/>
                   <span class="glyphicon glyphicon-pencil"></span>
@@ -47,9 +47,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                   <stripes:param name="id" value="${ticket.id}"/>
                   <span class="glyphicon glyphicon-check"></span>
                 </stripes:link>
-              </c:if>
-            </td>
-          </tr>
+              </td>
+            </tr>
+          </c:if>
         </c:forEach>
       </tbody>
     </table>
