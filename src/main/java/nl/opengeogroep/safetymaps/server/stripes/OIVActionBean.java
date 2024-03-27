@@ -318,7 +318,7 @@ public class OIVActionBean implements ActionBean {
 
     JSONObject dbkJSON = rowToJson(dbk, false, false);
 
-    if (!"0".equals(bagid)) {
+    /*if (!"0".equals(bagid)) {
       Map<String,Object> dbkAdres = DB.bagQr().query(
         "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam " +
         "from bagactueel.adres_full " +
@@ -328,7 +328,7 @@ public class OIVActionBean implements ActionBean {
       if (dbkAdres != null) {
         dbkJSON.put("adres", rowToJson(dbkAdres, false, false));
       }
-    }
+    }*/
 
     if (bagid.equals("0405100000551806")) {
       JSONArray media = new JSONArray();
