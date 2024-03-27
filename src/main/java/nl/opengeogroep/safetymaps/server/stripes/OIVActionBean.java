@@ -8,8 +8,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.naming.NamingException;
 import javax.servlet.http.HttpServletResponse;
@@ -34,6 +36,7 @@ import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
 import nl.b3p.web.stripes.ErrorMessageResolution;
+import nl.opengeogroep.safetymaps.server.cache.CACHE;
 import nl.opengeogroep.safetymaps.server.db.DB;
 
 @UrlBinding("/viewer/api/oiv/{path}")
@@ -318,17 +321,18 @@ public class OIVActionBean implements ActionBean {
 
     JSONObject dbkJSON = rowToJson(dbk, false, false);
 
-    /*if (!"0".equals(bagid)) {
-      Map<String,Object> dbkAdres = DB.bagQr().query(
+    if (!"0".equals(bagid)) {
+      /*Map<String,Object> dbkAdres = DB.bagQr().query(
         "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam " +
         "from bagactueel.adres_full " +
         "where pandid = ?"
-      , new MapHandler(), bagid);
+      , new MapHandler(), bagid);*/
+      Optional<Map<String,Object>> dbkAdres = CACHE.bag.stream().filter(itm -> itm.get("pandid").toString().equals(bagid)).findFirst();
 
       if (dbkAdres != null) {
-        dbkJSON.put("adres", rowToJson(dbkAdres, false, false));
+        dbkJSON.put("adres", rowToJson(dbkAdres.get(), false, false));
       }
-    }*/
+    }
 
     if (bagid.equals("0405100000551806")) {
       JSONArray media = new JSONArray();
@@ -372,11 +376,13 @@ public class OIVActionBean implements ActionBean {
         JSONObject result = rowToJson(dbk, false, false);
 
         if ("BAG".equals(source)) {
-          List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
+          /*List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
               "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam " +
               "from bag_actueel.adres_full " +
               "where pandid = ?"
-            , new MapListHandler(), bid);
+            , new MapListHandler(), bid);*/
+          
+          List<Map<String,Object>> dbkAdresses = CACHE.bag.stream().filter(itm -> itm.get("pandid").toString().equals(bid)).collect(Collectors.toList());
           
           JSONArray addresses = new JSONArray();
           for(Map<String, Object> da: dbkAdresses) {
