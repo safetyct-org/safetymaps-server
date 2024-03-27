@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.json.JSONArray;
+import org.owasp.encoder.Encode;
 
 import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
 import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_SMVNG_KLADBLOKCHAT_GMS;
@@ -159,8 +160,14 @@ public class KladblokActionBean implements ActionBean {
             return new ErrorResolution(HttpServletResponse.SC_FORBIDDEN);
         }
 
+        row = Encode.forHtml(row);
+        row = Encode.forJavaScript(row);
+
         if(row.length() > 0 && row.length() <= 500) {
             String username = getContext().getRequest().getRemoteUser();
+            username = Encode.forHtml(username);
+            username = Encode.forJavaScript(username);
+            
             String user = username.split("@")[0];
             int length = user.length() > 10 ? 10 : user.length();
 
