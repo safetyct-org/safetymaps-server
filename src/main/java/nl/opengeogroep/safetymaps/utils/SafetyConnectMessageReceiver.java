@@ -83,9 +83,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     try {
       CACHE.InitializeIncidentCache();
       CACHE.InitializeUnitCache();
-      CACHE.InitializeBAGCache();
       
-      LOG.info("Incident- and Unit- and BAGCache initialized. IncidentCount: " + CACHE.GetAllIncidents().size() + ", UnitCount: " + CACHE.GetAllUnits().size());
+      LOG.info("Incident- and UnitCache initialized. IncidentCount: " + CACHE.GetAllIncidents().size() + ", UnitCount: " + CACHE.GetAllUnits().size());
     } catch (Exception e) {
       LOG.error("Exception while initializing Incident- and UnitCache: ", e);
     }

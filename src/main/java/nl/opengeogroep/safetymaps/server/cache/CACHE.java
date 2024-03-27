@@ -18,23 +18,13 @@ import nl.opengeogroep.safetymaps.server.db.DB;
 
 public class CACHE {
 
-  private static Date bagCacheInitialized = null;
   private static Date incidentCacheInitialized = null;
   private static Date unitCacheInitialized = null;
   private static final ArrayList<UnitCacheItem> units = new ArrayList<UnitCacheItem>();
   private static final ArrayList<IncidentCacheItem> incidents = new ArrayList<IncidentCacheItem>();
   private static final Map<Integer, String> unitStatusList = new HashMap<Integer, String>();
 
-  public static List<Map<String,Object>> bag = null;
-  public static final Boolean IsBAGCacheInitialized() { return bagCacheInitialized != null; }
-  public static final void InitializeBAGCache() throws SQLException, NamingException {
-    CACHE.bag = DB.bagQr().query(
-        "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam, pandid " +
-        "from bag_actueel.adres_full "
-      , new MapListHandler());
-
-    CACHE.bagCacheInitialized = new Date();
-  }
+  public static List<Map<String,Object>> bag = new ArrayList<Map<String,Object>>();
 
   public static final Boolean IsIncidentCacheInitialized() { return incidentCacheInitialized != null; }
   public static final void InitializeIncidentCache() throws SQLException, NamingException {
