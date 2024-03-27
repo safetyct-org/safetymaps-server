@@ -438,7 +438,7 @@ public class ViewerApiActionBean implements ActionBean {
       }
 
       public boolean isOutDated() {
-        int outdatedAfterSecondes = 60 * 5;
+        int outdatedAfterSecondes = 60 * 1;
         Date now = new Date();
         Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
         return this.created.before(outDated);

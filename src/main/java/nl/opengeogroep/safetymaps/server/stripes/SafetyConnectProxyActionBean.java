@@ -174,7 +174,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             HttpServletRequest request = context.getRequest();
             String numString = path.substring(path.lastIndexOf('/') + 1);
             Integer number = 0;
-            String daysInPast = getQueryStringMap(qs).get("daysInPast") != null ? getQueryStringMap(qs).get("daysInPast") : "2";
+            String daysInPast = getQueryStringMap(qs).get("daysInPast") != null ? getQueryStringMap(qs).get("daysInPast") : "5";
 
             if (numString.equals("incident") == false) {
               number = Integer.parseInt(numString);

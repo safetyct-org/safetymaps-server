@@ -91,13 +91,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <div class="form-group">
           <label class="col-sm-2 control-label">Link:</label>
           <div class="col-sm-10">
-            <c:out value="${actionBean.permalink}"/>
+            <stripes:link href="${actionBean.permalink}" target="_blank"><c:out value="${actionBean.permalink}"/></stripes:link>            
           </div>
         </div>
         <div class="form-group">
           <label class="col-sm-2 control-label">Melding:</label>
           <div class="col-sm-10">
-            <c:out value="${actionBean.dtgmelding}"/>
+            <c:out value="${actionBean.description}"/>
           </div>
         </div>
         <div class="form-group">
