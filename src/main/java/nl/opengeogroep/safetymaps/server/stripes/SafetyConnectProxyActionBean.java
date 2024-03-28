@@ -311,8 +311,9 @@ public class SafetyConnectProxyActionBean implements ActionBean {
               */
               boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
 
-              if (isauthfor_ownvehiclenumber && unitId.equals(unit.getString("roepnaam"))) { units.put(unit); }
-              else if (getUserVehicleList().contains(unitId)) { units.put(unit); }
+              /*if (isauthfor_ownvehiclenumber && unitId.equals(unit.getString("roepnaam"))) { units.put(unit); }
+              else if (getUserVehicleList().contains(unitId)) { units.put(unit); }*/
+              if (unitId.equals(unit.getString("roepnaam"))) { units.put(unit); }
             }
             
             return new Resolution() {
@@ -371,7 +372,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             boolean isauthfor_incidentlocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations");
             boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
 
-            if (isauthfor_unasigned && unit.has("incidentId") == false) {
+            if (isauthfor_unasigned && !unit.has("incidentId")) {
               units.put(unit);
             } else if (isauthfor_maplocations && unit.has("incidentId")) {
               units.put(unit);
