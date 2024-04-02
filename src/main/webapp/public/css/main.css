@@ -4,6 +4,10 @@
     }
 }
 
+body {
+  
+}
+
 .main-container > h1:first-child {
     margin-top: 0;
 }

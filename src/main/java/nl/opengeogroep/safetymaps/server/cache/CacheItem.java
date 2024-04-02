@@ -12,6 +12,7 @@ public class CacheItem {
   }
 
   public Boolean IsDirty() { return this.dirty; }
+  
   public void Save() {
     this.dirty = false;
   }
