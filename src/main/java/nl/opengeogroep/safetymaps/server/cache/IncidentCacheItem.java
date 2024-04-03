@@ -6,6 +6,9 @@ import java.util.Map;
 
 import javax.naming.NamingException;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import nl.opengeogroep.safetymaps.server.db.DB;
 
 public class IncidentCacheItem extends CacheItem {
@@ -73,6 +76,40 @@ public class IncidentCacheItem extends CacheItem {
     if (characts != null) this.characts = characts;
     if (talkinggroups != null) this.talkinggroups = talkinggroups;
 
+    this.Renew();
+  }
+
+  public boolean IsFromGMS() {
+    return !sourceId.startsWith("FLK") && !sourceId.startsWith("DCU");
+  }
+
+  public boolean IsForUnit(String unitSourceId) {
+    JSONArray units = this.units != null ? new JSONArray(this.units) : new JSONArray();
+    boolean isForUnit = false;
+    for(int i=0; i<units.length(); i++) {
+      JSONObject unit = (JSONObject)units.get(i);
+      if (unit.has("roepnaam") && unitSourceId.equals(unit.getString("roepnaam")) && !unit.has("eindeActieDtg")) {
+        isForUnit = true;
+      }
+    }
+    return isForUnit;
+  }
+
+  public void RemoveUnit(String unitSourceId) {
+    JSONArray units = this.units != null ? new JSONArray(this.units) : new JSONArray();
+    JSONArray updatedUnits = new JSONArray();
+
+    for(int i=0; i<units.length(); i++) {
+      JSONObject unit = (JSONObject)units.get(i);
+      if (unit.has("roepnaam") && unitSourceId.equals(unit.getString("roepnaam")) && !unit.has("eindeActieDtg")) {
+        // Do nothing
+      } else {
+        updatedUnits.put(unit);
+      }
+    }
+
+    this.units = updatedUnits.toString();
+    
     this.Renew();
   }
 

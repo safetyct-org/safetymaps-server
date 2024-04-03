@@ -439,11 +439,21 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
           addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString(), null);
 
-          List<Map<String, Object>> dbUnits = DB.qr().query("SELECT * FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), unitEnvId);
-          JSONObject dbUnit = dbUnits.size() > 0 ? SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnits.get(0)) : new JSONObject();
+          Optional<IncidentCacheItem> oici = CACHE.FindActiveNonGMSIncident(vhost, unitId);
+          if (oici.isPresent()) {
+            oici.get().RemoveUnit(unitId);
+          }
 
+          //List<Map<String, Object>> dbUnits = DB.qr().query("SELECT * FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), unitEnvId);
+          Optional<UnitCacheItem> ouci = CACHE.FindUnit(unitEnvId);
+          JSONObject dbUnit = ouci.isPresent() ? SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(ouci.get().ConvertToMap()) : new JSONObject();
+          
           unit.put("standPlaatsKazerneCode", dbUnit.has("post") ? dbUnit.getString("post") : "");
-          modifiedUnits.put(unit);
+
+          oici = CACHE.FindActiveGMSIncident(vhost, unitId);
+          if (!oici.isPresent()) {
+            modifiedUnits.put(unit);
+          }
         }
 
         /*
