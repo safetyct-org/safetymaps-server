@@ -211,7 +211,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                 boolean isauthfor_concatted = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_samengevoegd");
                 boolean isauthfor_trainingincident = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_trainingincident");              
                 boolean isauthfor_im = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
-                boolean isauthfor_incident = incidentIsForUserVehicle(incident) != "" || (isauthfor_im && (isauthfor_alldiscunits || incidentHasBrwUnit(incident))) || isauthfor_ownvehiclenumber;
+                boolean isauthfor_withoutunits = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_incidentwithoutunit");
+                boolean isauthfor_incident = incidentIsForUserVehicle(incident) != "" || (isauthfor_im && (isauthfor_alldiscunits || incidentHasBrwUnit(incident) || isauthfor_withoutunits)) || isauthfor_ownvehiclenumber;
   
                 if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { 
                   JSONObject discipline = incident.has("brwDisciplineGegevens") ? (JSONObject)incident.get("brwDisciplineGegevens") : null;
