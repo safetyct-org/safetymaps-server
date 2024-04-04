@@ -450,7 +450,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           
           unit.put("standPlaatsKazerneCode", dbUnit.has("post") ? dbUnit.getString("post") : "");
 
-          oici = CACHE.FindActiveGMSIncident(vhost, unitId);
+          oici = CACHE.FindActiveGMSIncident(envId, vhost, unitId);
           if (!oici.isPresent()) {
             modifiedUnits.put(unit);
           }
