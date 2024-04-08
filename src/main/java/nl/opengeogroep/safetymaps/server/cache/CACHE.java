@@ -134,11 +134,11 @@ public class CACHE {
   }
 
   public static final Optional<IncidentCacheItem> FindActiveNonGMSIncident(String sourceEnvId, String env, String unitSourceId) {
-    return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnvId) == false && i.GetSourceEnv().equals(env) && !i.IsFromGMS() && i.IsForUnit(unitSourceId)).findFirst();
+    return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnvId) == false && i.IsActive() && i.GetSourceEnv().equals(env) && !i.IsFromGMS() && i.IsForUnit(unitSourceId)).findFirst();
   }
 
   public static final Optional<IncidentCacheItem> FindActiveGMSIncident(String sourceEnvId, String env, String unitSourceId) {
-    return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnvId) == false && i.GetSourceEnv().equals(env) && i.IsFromGMS() && i.IsForUnit(unitSourceId)).findFirst();
+    return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnvId) == false && i.IsActive() && i.GetSourceEnv().equals(env) && i.IsFromGMS() && i.IsForUnit(unitSourceId)).findFirst();
   }
 
   public static final List<Map<String, Object>> GetIncidents(String sourceEnv) {

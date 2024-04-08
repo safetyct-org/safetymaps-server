@@ -147,6 +147,7 @@ public class IncidentCacheItem extends CacheItem {
 
   public String GetSourceEnvId() { return this.sourceEnvId; }
   public String GetSourceEnv() { return this.sourceEnv; }
+  public Boolean IsActive() { return this.status.equals("operationeel"); }
 
   public Boolean IsReadyForCleanup() {
     return !IsDirty() && IsExpiredAfter(1 * 60 * 24 * 5) && !status.equals("operationeel");
