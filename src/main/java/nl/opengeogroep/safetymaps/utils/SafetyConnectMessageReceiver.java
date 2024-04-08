@@ -439,7 +439,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
           addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString(), null);
 
-          Optional<IncidentCacheItem> oici = CACHE.FindActiveNonGMSIncident(vhost, unitId);
+          Optional<IncidentCacheItem> oici = CACHE.FindActiveNonGMSIncident(envId, vhost, unitId);
           if (oici.isPresent()) {
             oici.get().RemoveUnit(unitId);
           }
