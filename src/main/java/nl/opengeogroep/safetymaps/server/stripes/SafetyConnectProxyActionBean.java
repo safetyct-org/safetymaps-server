@@ -157,6 +157,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           Boolean useTest = context.getRequest().isUserInRole(ROLE_TEST);
 
           String useRabbitMq = Cfg.getSetting("safetyconnect_rq", "false");
+          String useRabbitMqProxy = Cfg.getSetting("safetyconnect_rq_proxy", useRabbitMq);
           String rabbitMqSourceDefault = "prod".equals(defaultApi) ? "productie" : "opl".equals(defaultApi) ? "opleiding" : "test".equals(defaultApi) ? "test" : null;
           String rabbitMqSource = useAdmin ? rabbitMqSourceDefault : useProd ?  "productie" : useOpl ? "opleiding" : useTest ? "test" : rabbitMqSourceDefault;
 
@@ -166,11 +167,11 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           String authorization = useAdmin ? defaultAuth : useProd ? authorizationProd : useOpl ? authorizationOpl : useTest ? authorizationTest : defaultAuth;
           String url = useAdmin ? defaultUrl : useProd ? urlProd : useOpl ? urlOpl : useTest ? urlTest : defaultUrl;
 
-          if("false".equals(useRabbitMq) && (authorization == null || url == null)) {
+          if("false".equals(useRabbitMqProxy) && (authorization == null || url == null)) {
               return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Geen toegangsgegevens voor webservice geconfigureerd door beheerder");
           }
 
-          if ("true".equals(useRabbitMq) && requestIs(INCIDENT_REQUEST)) {
+          if ("true".equals(useRabbitMqProxy) && requestIs(INCIDENT_REQUEST)) {
             HttpServletRequest request = context.getRequest();
             String numString = path.substring(path.lastIndexOf('/') + 1);
             Integer number = 0;
@@ -293,7 +294,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
               };
           }
 
-          if ("true".equals(useRabbitMq) && requestIs(EENHEIDSTATUS_REQUEST)) {
+          if ("true".equals(useRabbitMqProxy) && requestIs(EENHEIDSTATUS_REQUEST)) {
             HttpServletRequest request = context.getRequest();
             String unitId = context.getRequest().getQueryString().replaceAll("id=", "");
             JSONArray units = new JSONArray();
@@ -344,7 +345,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             };
         }
         
-        if ("true".equals(useRabbitMq) && requestIs(EENHEIDLOCATIE_REQUEST)) {
+        if ("true".equals(useRabbitMqProxy) && requestIs(EENHEIDLOCATIE_REQUEST)) {
           HttpServletRequest request = context.getRequest();
           JSONArray units = new JSONArray();
           //List<Map<String, Object>> dbUnits = DB.qr().query("select * from safetymaps.units where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
