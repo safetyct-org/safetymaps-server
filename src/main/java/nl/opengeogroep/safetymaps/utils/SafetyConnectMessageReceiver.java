@@ -102,7 +102,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
         .build(); 
 
       CronExpression ceCacheClean = new CronExpression("0 0 6 * * ?");
-      CronExpression ceCacheSave = new CronExpression("0 */5 * * * ?");
+      CronExpression ceCacheSave = new CronExpression("*/5 * * * * ?");
 
       CronScheduleBuilder csCacheClean = CronScheduleBuilder.cronSchedule(ceCacheClean);
       CronScheduleBuilder csCacheSave = CronScheduleBuilder.cronSchedule(ceCacheSave);
