@@ -56,6 +56,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private static String RQ_PASS;
   private static String RQ_PARAMS;
   private static String RQ_OPTIONAL_ONLY_UNITS;
+  private static String RQ_OPTIONAL_ROAD_ATTENTIONS;
   private static String RQ_OPTIONAL_NAME_PREFIX;
   
   private static HashMap<String, Connection> RQ_CONNECTIONS = new HashMap<String, Connection>();
@@ -64,6 +65,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private static final String RQ_MB_INCIDENT_CHANGED = "SafetyConnect.Messages.IncidentChanged:IIncidentChangedEvent";
   private static final String RQ_MB_UNIT_CHANGED = "SafetyConnect.Messages.EenheidChanged:IEenheidChangedEvent";
   private static final String RQ_MB_UNIT_MOVED = "SafetyConnect.Messages.PositionReceived:IPositionReceivedEvent";
+  private static final String RQ_MB_RA_CHANGED = "SafetyConnect.Messages.RoadAttentionChanged.IRoadAttentionChangedEvent";
+  private static final String RQ_MB_RA_SYNC = "SafetyConnect.Messages.RoadAttentionsSynchronize.IRoadAttentionsSynchronizeEvent";
 
   @Override
   public void contextInitialized(ServletContextEvent sce) {
@@ -172,6 +175,20 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
       } catch (Exception e) {
         LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_MOVED + ")'", e);
       }
+
+      try {
+        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_RA_CHANGED, "roadattention_changed");
+        LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_RA_CHANGED + "') initialized.");
+      } catch (Exception e) {
+        LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_RA_CHANGED + ")'", e);
+      }
+
+      try {
+        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_RA_SYNC, "roadattention_synchronized");
+        LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_RA_SYNC + "') initialized.");
+      } catch (Exception e) {
+        LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_RA_SYNC + ")'", e);
+      }
     });
 
     LOG.info("SafetyConnectMessageReceiver initialized for all vhosts.");
@@ -275,6 +292,17 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     }; 
   }
 
+  private static void handleRoadAttentionChangeMessage(String vhost, String msgBody) {
+    JSONObject ra = extractObjectFromMessage(msgBody);
+
+    Integer raId = ra.has("roadAttentionId") && ra.get("roadAttentionId").toString() != "null" ? ra.getInt("roadAttentionId") : 0;
+    String envId = vhost + '-' + raId.toString();
+
+    if (isForMe(ra, "tenantId", Arrays.asList(RQ_TENANTS.split(","))) == true) {
+
+    }
+  }
+
   private static void handleUnitMovedMessage(String vhost, String msgBody) {
     JSONObject move = extractObjectFromMessage(msgBody);
     
@@ -371,9 +399,9 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     
     if (
       // SMVNG-711 : only filter on tenant // incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true ||
-      incidentIsForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true ||
+      isForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true ||
       (
-        incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true &&
+        isForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true &&
         incidentHasUnitForMe(incident, regions) == true
       )
     ) {
@@ -525,7 +553,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
     return RQ_VHOSTS.substring(0, 1) + "-" + vhost + "-" + rqMb;
   }
 
-  private static boolean incidentIsForMe(JSONObject object, String key, List<String> valuesToCheck) {
+  private static boolean isForMe(JSONObject object, String key, List<String> valuesToCheck) {
     boolean matched = false;
     String keyValue = object.getString(key);
 

@@ -12,10 +12,6 @@ import org.json.JSONObject;
 import nl.opengeogroep.safetymaps.server.db.DB;
 
 public class IncidentCacheItem extends CacheItem {
-  private String source;
-  private String sourceEnv;
-  private String sourceId;
-  private String sourceEnvId;
   private String notes;
   private String units;
   private String location;
@@ -145,8 +141,6 @@ public class IncidentCacheItem extends CacheItem {
     DB.qr().update("DELETE FROM safetymaps.incidents WHERE source = ? and sourceEnvId = ?", source, sourceEnvId);
   }
 
-  public String GetSourceEnvId() { return this.sourceEnvId; }
-  public String GetSourceEnv() { return this.sourceEnv; }
   public Boolean IsActive() { return this.status.equals("operationeel"); }
 
   public Boolean IsReadyForCleanup() {
