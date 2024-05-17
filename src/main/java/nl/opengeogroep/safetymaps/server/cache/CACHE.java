@@ -142,7 +142,7 @@ public class CACHE {
   }
 
   public static final Optional<IncidentCacheItem> FindActiveIncident(String sourceEnv, String unitSourceId) {
-    return CACHE.incidents.stream().filter(i -> i.GetSourceEnv().equals(sourceEnv) == false && i.IsActive() && i.IsForUnit(unitSourceId)).findFirst();
+    return CACHE.incidents.stream().filter(i -> i.GetSourceEnv().equals(sourceEnv) && i.IsActive() && i.IsForUnit(unitSourceId)).findFirst();
   }
 
   public static final List<Map<String, Object>> GetIncidents(String sourceEnv) {
