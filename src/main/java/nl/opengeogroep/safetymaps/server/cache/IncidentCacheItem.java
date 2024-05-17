@@ -79,6 +79,22 @@ public class IncidentCacheItem extends CacheItem {
     return !sourceId.startsWith("FLK") && !sourceId.startsWith("DCU");
   }
 
+  public Integer GetId() {
+    return number;
+  }
+
+  public String GetUnitRol(String unitSourceId) {
+    JSONArray units = this.units != null ? new JSONArray(this.units) : new JSONArray();
+    String unitRol = "";
+    for(int i=0; i<units.length(); i++) {
+      JSONObject unit = (JSONObject)units.get(i);
+      if (unit.has("inzetrol") && unitSourceId.equals(unit.getString("roepnaam"))) {
+        unitRol = unit.getString("inzetrol");
+      }
+    }
+    return unitRol;
+  }
+
   public boolean IsForUnit(String unitSourceId) {
     JSONArray units = this.units != null ? new JSONArray(this.units) : new JSONArray();
     boolean isForUnit = false;

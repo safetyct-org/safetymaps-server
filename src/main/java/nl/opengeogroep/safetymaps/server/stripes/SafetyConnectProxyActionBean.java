@@ -41,6 +41,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.zip.GZIPOutputStream;
 
 import org.json.JSONArray;
@@ -48,6 +49,7 @@ import org.json.JSONObject;
 
 import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
 import static nl.opengeogroep.safetymaps.server.db.DB.getUserDetails;
+import nl.opengeogroep.safetymaps.server.cache.IncidentCacheItem;
 
 /**
  *
@@ -352,17 +354,18 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           //List<Map<String, Object>> dbIncidents = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=? and status='operationeel'", new MapListHandler(), rabbitMqSource);
           
           List<Map<String, Object>> dbUnits = CACHE.GetUnits(rabbitMqSource);
-          List<Map<String, Object>> dbIncidents = CACHE.GetIncidents(rabbitMqSource);
 
           for (Map<String, Object> dbUnit : dbUnits) {
             JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnit);
-            JSONObject unitOnIncident = SafetyConnectMessageUtil.IncidentDbRowHasActiveUnit(dbIncidents, unit.getString("roepnaam"));
 
-            if (unitOnIncident != null) {
-              unit.put("incidentId", unitOnIncident.get("incidentId"));
-              unit.put("incidentRol", unitOnIncident.get("incidentRol"));
+            Boolean unitHasActiveIncident = false;
+            Optional<IncidentCacheItem> oici = CACHE.FindActiveIncident(rabbitMqSource, unit.getString("roepnaam"));
+            if (oici.isPresent()) {
+              unitHasActiveIncident = true;
+              unit.put("incidentId", oici.get().GetId());
+              unit.put("incidentRol",oici.get().GetUnitRol(unit.getString("roepnaam")));
             }
-
+           
             /**
              * smvng_vehicleinfo_unasigned	Toon locaties van alle voertuigen die niet aan een incident gekoppeld zijn.
              * smvng_vehicleinfo_maplocations	Toon locaties van alle voertuigen die aan een incident gekoppeld zijn.
@@ -374,20 +377,13 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             boolean isauthfor_incidentlocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations");
             boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
 
-            if (isauthfor_unasigned && !unit.has("incidentId")) {
+            if (isauthfor_unasigned && !unitHasActiveIncident) {
               units.put(unit);
-            } else if (isauthfor_maplocations && unit.has("incidentId")) {
+            } else if (isauthfor_maplocations && unitHasActiveIncident) {
               units.put(unit);
-            } else if (isauthfor_ownvehiclenumber && unit.has("incidentId")) {
+            } else if (isauthfor_ownvehiclenumber && unitHasActiveIncident) {
               units.put(unit);
-            } else if (isauthfor_incidentlocations && unit.has("incidentId") && unitOnIncident != null) {
-              /*for (Map<String, Object> dbIncident : dbIncidents) {
-                JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncident);
-                Integer incidentId = (Integer)incident.get("incidentNummer"); //incidentIsForUserVehicle(incident);
-                if (incidentId == unit.get("incidentId")) {
-                  units.put(unit);
-                }
-              }*/
+            } else if (isauthfor_incidentlocations && unitHasActiveIncident) {
               units.put(unit);
             }
           }
