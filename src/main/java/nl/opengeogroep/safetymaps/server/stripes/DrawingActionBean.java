@@ -115,7 +115,7 @@ public class DrawingActionBean  implements ActionBean {
               } else {
                   out = response.getOutputStream();
               }
-              IOUtils.copy(new StringReader(theFeatures == null ? "{ \"type\": \"FeatureCollection\", \"features\": [] }" : theFeatures), out, encoding);
+              IOUtils.copy(new StringReader(theFeatures == null ? "{\"type\":\"FeatureCollection\",\"features\":[]}" : theFeatures), out, encoding);
               out.flush();
               out.close();
           }
