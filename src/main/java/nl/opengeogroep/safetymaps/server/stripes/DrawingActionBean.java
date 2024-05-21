@@ -100,10 +100,6 @@ public class DrawingActionBean  implements ActionBean {
       try {
         String theFeatures = DB.qr().query("select features from safetymaps.drawing where incident = ?", new ScalarHandler<String>(), incident);
 
-        if (theFeatures == null) {
-          return new ErrorMessageResolution(HttpServletResponse.SC_OK, "No drawings found");
-        }
-
         return new Resolution() {
           @Override
           public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -119,7 +115,7 @@ public class DrawingActionBean  implements ActionBean {
               } else {
                   out = response.getOutputStream();
               }
-              IOUtils.copy(new StringReader(theFeatures), out, encoding);
+              IOUtils.copy(new StringReader(theFeatures == null ? "{ type: 'FeatureCollection', features: [] }" : theFeatures), out, encoding);
               out.flush();
               out.close();
           }
