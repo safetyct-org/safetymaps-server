@@ -65,8 +65,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
   private static final String RQ_MB_INCIDENT_CHANGED = "SafetyConnect.Messages.IncidentChanged:IIncidentChangedEvent";
   private static final String RQ_MB_UNIT_CHANGED = "SafetyConnect.Messages.EenheidChanged:IEenheidChangedEvent";
   private static final String RQ_MB_UNIT_MOVED = "SafetyConnect.Messages.PositionReceived:IPositionReceivedEvent";
-  private static final String RQ_MB_RA_CHANGED = "SafetyConnect.Messages.RoadAttentionChanged.IRoadAttentionChangedEvent";
-  private static final String RQ_MB_RA_SYNC = "SafetyConnect.Messages.RoadAttentionsSynchronize.IRoadAttentionsSynchronizeEvent";
+  private static final String RQ_MB_RA_CHANGED = "SafetyConnect.Messages.RoadAttentionChanged:IRoadAttentionChangedEvent";
+  private static final String RQ_MB_RA_SYNC = "SafetyConnect.Messages.RoadAttentionsSynchronize:IRoadAttentionsSynchronizeEvent";
 
   @Override
   public void contextInitialized(ServletContextEvent sce) {
