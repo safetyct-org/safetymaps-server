@@ -281,6 +281,8 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
           case RQ_MB_UNIT_MOVED:
             handleUnitMovedMessage(vhost, msgBody);
             break;
+          case RQ_MB_RA_CHANGED:
+            handleRoadAttentionChangeMessage(vhost, msgBody);
           default:
             break;
         }
@@ -297,7 +299,7 @@ public class SafetyConnectMessageReceiver implements ServletContextListener {
 
     Integer raId = ra.has("roadAttentionId") && ra.get("roadAttentionId").toString() != "null" ? ra.getInt("roadAttentionId") : 0;
     String envId = vhost + '-' + raId.toString();
-
+    LOG.info(msgBody);
     if (isForMe(ra, "tenantId", Arrays.asList(RQ_TENANTS.split(","))) == true) {
 
     }
