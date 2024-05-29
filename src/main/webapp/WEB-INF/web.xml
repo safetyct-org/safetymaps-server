@@ -13,7 +13,7 @@
     <!-- Context listener for safetyconnect -->
     <listener>
         <description>The class which initializes SafetyConnectMessageReceiver</description>
-        <listener-class>nl.opengeogroep.safetymaps.utils.SafetyConnectMessageReceiver</listener-class>
+        <listener-class>nl.opengeogroep.safetymaps.utils.SafetyctMessageReceiver</listener-class>
     </listener>
 
     <!-- Localization context voor o.a. de <fmt:message> JSTL tag -->

@@ -9,7 +9,7 @@ import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.cache.CACHE;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
-import nl.opengeogroep.safetymaps.utils.SafetyConnectMessageUtil;
+import nl.opengeogroep.safetymaps.utils.SafetyctMessageUtil;
 
 import org.apache.commons.dbutils.handlers.ColumnListHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
@@ -195,7 +195,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             for (Map<String, Object> res : results) {              
               boolean isauthfor_interregio = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_interregio");
               if (isauthfor_interregio || res.get("tenantid").equals(tenant)) {
-                JSONObject incident = SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res);
+                JSONObject incident = SafetyctMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res);
 
                 /**
                 * smvng_incident_hidenotepad	Kladblok verbergen
@@ -308,7 +308,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
               Integer gmsStatusCode = (Integer)res.get("gmsstatuscode");
               String gmsStatusText = unitStatusList.get(gmsStatusCode);
               res.put("gmsstatustext", gmsStatusText);
-              JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(res);
+              JSONObject unit = SafetyctMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(res);
 
               /*
               * smvng_incident_ownvehiclenumber	Gebruiker mag eigen voertuignummer wijzigen.
@@ -356,7 +356,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
           List<Map<String, Object>> dbUnits = CACHE.GetUnits(rabbitMqSource);
 
           for (Map<String, Object> dbUnit : dbUnits) {
-            JSONObject unit = SafetyConnectMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnit);
+            JSONObject unit = SafetyctMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnit);
 
             Boolean unitHasActiveIncident = false;
             Optional<IncidentCacheItem> oici = CACHE.FindActiveIncident(rabbitMqSource, unit.getString("roepnaam"));
