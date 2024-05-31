@@ -320,11 +320,6 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         Integer heading = move.has("heading") && move.get("heading").toString() != "null" ? move.getInt("heading") : 0;
         Integer eta = move.has("eta") && move.get("eta").toString() != "null" ? move.getInt("eta") : 0;
 
-        /*DB.qr().update(
-          "INSERT INTO safetymaps.units (source, sourceEnv, sourceId, sourceEnvId, lon, lat, speed, heading, eta, geom) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)) ON CONFLICT (sourceEnvId) DO UPDATE SET lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)",
-          vhost, moveId, envId, lon, lat, speed, heading, eta, lon, lat, lon, lat, speed, heading, eta, lon, lat
-        );*/
-
         Optional<UnitCacheItem> oci = CACHE.FindUnit(envId);
         if (oci.isPresent()) {
           UnitCacheItem ci = oci.get();
@@ -375,18 +370,6 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         UnitCacheItem ci = new UnitCacheItem("sc", vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, post);
         CACHE.AddUnit(ci);
       }
-
-      /*if (post.equals("")) {
-        DB.qr().update("INSERT INTO safetymaps.units " +
-          "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs) VALUES('sc', ?, ?, ?, ?, ?, ?, ?) " +
-          " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?",
-          vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, gmsStatusCode, primairevoertuigsoort, abbs);
-      } else {
-        DB.qr().update("INSERT INTO safetymaps.units " +
-          "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs, post) VALUES('sc', ?, ?, ?, ?, ?, ?, ?, ?) " +
-          " ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?, post = ?",
-          vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, post, gmsStatusCode, primairevoertuigsoort, abbs, post);
-      }*/
     } catch (Exception e) {
       LOG.error("Exception while upserting unit(" + envId + ") in database: ", e);
     }
@@ -412,8 +395,6 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       String envId = vhost + '-' + incidentId;
       
       try {
-        /*List<Map<String, Object>> dbIncidents = DB.qr().query("SELECT * FROM safetymaps.incidents WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), envId);
-        JSONObject dbIncident = dbIncidents.size() > 0 ? SafetyConnectMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(dbIncidents.get(0)) : new JSONObject();*/
         Optional<IncidentCacheItem> oci = CACHE.FindIncident(envId);
         JSONObject dbIncident = oci.isPresent() ? SafetyctMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(oci.get().ConvertToMap()) : new JSONObject();
 
@@ -467,14 +448,14 @@ public class SafetyctMessageReceiver implements ServletContextListener {
           String primairevoertuigsoort = unit.has("primaireVoertuigSoort") ? unit.getString("primaireVoertuigSoort") : null;
           JSONArray abbs = unit.has("meldkamerStatusAbonnementen") ? unit.getJSONArray("meldkamerStatusAbonnementen") : new JSONArray();
 
-          addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString(), null);
+          // Disable addupdateunit on incident so correct status is always that from unitchanged
+          //addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString(), null);
 
           Optional<IncidentCacheItem> oici = CACHE.FindActiveNonGMSIncident(envId, vhost, unitId);
           if (oici.isPresent()) {
             oici.get().RemoveUnit(unitId);
           }
 
-          //List<Map<String, Object>> dbUnits = DB.qr().query("SELECT * FROM safetymaps.units WHERE source = 'sc' AND sourceenvid = ?", new MapListHandler(), unitEnvId);
           Optional<UnitCacheItem> ouci = CACHE.FindUnit(unitEnvId);
           JSONObject dbUnit = ouci.isPresent() ? SafetyctMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(ouci.get().ConvertToMap()) : new JSONObject();
           
@@ -485,13 +466,6 @@ public class SafetyctMessageReceiver implements ServletContextListener {
             modifiedUnits.put(unit);
           }
         }
-
-        /*
-        DB.qr().update("INSERT INTO safetymaps.incidents " + 
-          "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid, talkinggroups) VALUES ('sc', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-          " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?, tenantId = ?, talkinggroups = ?", 
-          vhost, incidentId, envId, status, sender, number, notes.toString(), modifiedUnits.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId, talkinggroups.toString(), status, notes.toString(), modifiedUnits.toString(), characts.toString(), location.toString(), discipline.toString(), tenantId, talkinggroups.toString());
-        */
 
         if (oci.isPresent()) {
           IncidentCacheItem ci = oci.get();
