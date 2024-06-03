@@ -117,12 +117,20 @@ public class PersistentSessionManager {
         try {
             removeInvalidSessions();
 
+            String username = request.getRemoteUser();
+            String remoteIpLogin = request.getRemoteAddr();
+
             // TODO cache
             Map result = qr().query("select * from " + SESSION_TABLE + " where id = ?", new MapHandler(), id);
             log.debug("Result: " + result);
-            if(result != null && !request.getRemoteAddr().equals(result.get("remote_ip_last"))) {
-                log.info(String.format("Changed remote address for session %s from %s to %s", result.get("id"), result.get("remote_ip_last"), request.getRemoteAddr()));
-                qr().update("update " + SESSION_TABLE + " set remote_ip_last = ? where id = ?", request.getRemoteAddr(), result.get("id"));
+            if(result != null && !remoteIpLogin.equals(result.get("remote_ip_last"))) {
+                log.info(String.format("Changed remote address for session %s from %s to %s", result.get("id"), result.get("remote_ip_last"), remoteIpLogin));
+                qr().update("update " + SESSION_TABLE + " set remote_ip_last = ? where id = ?", remoteIpLogin, result.get("id"));
+            } 
+            
+            result = qr().query("select * from " + SESSION_TABLE + " where username = ? and remote_ip_last = ?", new MapHandler(), username, remoteIpLogin);
+            if(result != null) {
+              deleteUserIpSessions(username, remoteIpLogin);
             }
             return result;
         } catch(SQLException | NamingException e) {
@@ -147,4 +155,13 @@ public class PersistentSessionManager {
             throw new IOException("Database error", e);
         }
     }
+
+    static void deleteUserIpSessions(String name, String ip) throws IOException {
+      try {
+          int count = qr().update("delete from " + SESSION_TABLE + " where username = ? and remote_ip_last = ?", name, ip);
+          log.debug("Deleted " + count + " persistent sessions for user " + name);
+      } catch(SQLException | NamingException e) {
+          throw new IOException("Database error", e);
+      }
+  }
 }
