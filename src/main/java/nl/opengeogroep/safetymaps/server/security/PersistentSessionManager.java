@@ -128,10 +128,10 @@ public class PersistentSessionManager {
                 qr().update("update " + SESSION_TABLE + " set remote_ip_last = ? where id = ?", remoteIpLogin, result.get("id"));
             } 
             
-            List<Map<String, Object>> listresult = qr().query("select * from " + SESSION_TABLE + " where username = ? and remote_ip_last = ?", new MapListHandler(), username, remoteIpLogin);
+            /*List<Map<String, Object>> listresult = qr().query("select * from " + SESSION_TABLE + " where username = ? and remote_ip_last = ?", new MapListHandler(), username, remoteIpLogin);
             if(listresult != null) {
               deleteUserIpSessions(username, remoteIpLogin);
-            }
+            }*/
             return result;
         } catch(SQLException | NamingException e) {
             throw new IOException("Database error", e);
