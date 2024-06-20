@@ -325,6 +325,8 @@ public class PersistentAuthenticationFilter implements Filter {
                     for (String roleFromLoginSource: rolesInLoginSource.split(",")) {
                         roles.add(roleFromLoginSource);
                     }
+                    String[] username = request.getRemoteUser().split("@");
+                    roles.add(username[0].toUpperCase());
                 }
 
                 persistentPrincipal = new AuthenticatedPrincipal((String)persistentSession.get("username"), roles);
