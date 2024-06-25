@@ -299,7 +299,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
     Integer raId = ra.has("roadAttentionId") && ra.get("roadAttentionId").toString() != "null" ? ra.getInt("roadAttentionId") : 0;
     String envId = vhost + '-' + raId.toString();
-    LOG.info(msgBody);
+    //LOG.info(msgBody);
     if (isForMe(ra, "tenantId", Arrays.asList(RQ_TENANTS.split(","))) == true) {
 
     }
