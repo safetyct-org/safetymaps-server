@@ -300,8 +300,8 @@ public class MellonHeaderAuthenticationFilter implements Filter {
                     roles.add(commonRole);
                 }
                 
-                String[] username = request.getRemoteUser().split("@");
-                roles.add(username[0].toUpperCase());
+                //String[] username = request.getRemoteUser().split("@");
+                //roles.add(username[0].toUpperCase());
 
                 String r = request.getHeader(headerPrefix + rolesHeader);
                 if(r != null) {
