@@ -20,6 +20,7 @@ public class CACHE {
 
   private static Date incidentCacheInitialized = null;
   private static Date unitCacheInitialized = null;
+  private static final ArrayList<RoadAttentionCacheItem> roadAttentions = new ArrayList<RoadAttentionCacheItem>();
   private static final ArrayList<UnitCacheItem> units = new ArrayList<UnitCacheItem>();
   private static final ArrayList<IncidentCacheItem> incidents = new ArrayList<IncidentCacheItem>();
   private static final Map<Integer, String> unitStatusList = new HashMap<Integer, String>();
@@ -96,6 +97,31 @@ public class CACHE {
     }
 
     return CACHE.unitStatusList; 
+  }
+
+  public static final Optional<RoadAttentionCacheItem> FindRoadAttention(String sourceEnvId) { 
+    return CACHE.roadAttentions.stream().filter(ra -> ra.GetSourceEnvId().equals(sourceEnvId)).findFirst();
+  }
+
+  public static final void AddRoadAttention(RoadAttentionCacheItem raci) {
+    CACHE.roadAttentions.add(raci);
+  }
+
+  public static final void UpdateRoadAttention(String sourceEnvId, RoadAttentionCacheItem raci) {
+    Optional<RoadAttentionCacheItem> oldRaci = CACHE.FindRoadAttention(sourceEnvId);
+
+    if (oldRaci.isPresent()) {
+      Integer index = CACHE.roadAttentions.indexOf(oldRaci.get());
+      CACHE.roadAttentions.set(index, raci);
+    }
+  }
+
+  public static final List<RoadAttentionCacheItem> GetReadyToCleanupRoadAttentions() {
+    return CACHE.roadAttentions.stream().filter(ci -> ci.IsReadyForCleanup()).collect(Collectors.toList());
+  }
+
+  public static final List<RoadAttentionCacheItem> GetDirtyRoadAttentions() {
+    return CACHE.roadAttentions.stream().filter(ci -> ci.IsDirty()).collect(Collectors.toList());
   }
 
   public static final ArrayList<UnitCacheItem> GetAllUnits() { return CACHE.units; }
@@ -179,6 +205,21 @@ public class CACHE {
       ci.SaveToDb();
       ci.Save();
       CACHE.UpdateIncident(ci.GetSourceEnvId(), ci);
+    }
+  }
+
+  public static final void SaveRoadAttentions() throws SQLException, NamingException {
+    for (RoadAttentionCacheItem ci : CACHE.GetDirtyRoadAttentions()) {
+      ci.SaveToDb();
+      ci.Save();
+      CACHE.UpdateRoadAttention(ci.GetSourceEnvId(), ci);
+    }
+  }
+
+  public static final void CleanupRoadAttentions() throws SQLException, NamingException {
+    for (RoadAttentionCacheItem ci : CACHE.GetReadyToCleanupRoadAttentions()) {
+      ci.RemoveFromDb();
+      CACHE.roadAttentions.remove(ci);
     }
   }
 

@@ -12,6 +12,7 @@ public class CacheSaveJob implements Job {
   @Override
   public void execute(JobExecutionContext jec) throws JobExecutionException {
     try {
+      CACHE.SaveRoadAttentions();
       CACHE.SaveIncidents();
       CACHE.SaveUnits();
     } catch (Exception e) {

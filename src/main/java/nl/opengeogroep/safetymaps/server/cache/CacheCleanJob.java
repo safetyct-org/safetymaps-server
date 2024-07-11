@@ -12,6 +12,7 @@ public class CacheCleanJob implements Job {
   @Override
   public void execute(JobExecutionContext jec) throws JobExecutionException {
     try {
+      CACHE.CleanupRoadAttentions();
       CACHE.CleanupIncidents();
     } catch (Exception e) {
       LOG.error("Error while executing CacheCleanJob: ", e);

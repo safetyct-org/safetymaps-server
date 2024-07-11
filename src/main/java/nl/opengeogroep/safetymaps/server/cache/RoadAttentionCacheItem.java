@@ -14,6 +14,7 @@ import nl.opengeogroep.safetymaps.server.db.DB;
 public class RoadAttentionCacheItem extends CacheItem {
   private String tenantId;
   private String kindOfAttention;
+  private String kindOfChange;
   private String attention;
   private Date beginDate;
   private Date endDate;
@@ -25,6 +26,7 @@ public class RoadAttentionCacheItem extends CacheItem {
     String sourceEnvId,
     String tenantId,
     String kindOfAttention,
+    String kindOfChange,
     String attention,
     Date beginDate,
     Date endDate,
@@ -36,6 +38,7 @@ public class RoadAttentionCacheItem extends CacheItem {
     this.sourceEnvId = sourceEnvId;
     this.tenantId = tenantId;
     this.kindOfAttention = kindOfAttention;
+    this.kindOfChange = kindOfChange;
     this.attention = attention;
     this.beginDate = beginDate;
     this.endDate = endDate;
@@ -44,12 +47,15 @@ public class RoadAttentionCacheItem extends CacheItem {
     this.Renew();
   }
 
-  public void Update(String kindOfAttention,
+  public void Update(String kindOfChange,
+    String kindOfAttention,
     String attention,
     Date beginDate,
     Date endDate,
     String geoLocation
   ) {
+    this.kindOfChange = kindOfChange;
+    this.kindOfAttention = kindOfAttention;
     this.attention = attention;
     this.beginDate = beginDate;
     this.endDate = endDate;
@@ -88,5 +94,9 @@ public class RoadAttentionCacheItem extends CacheItem {
 
   public void RemoveFromDb() throws SQLException, NamingException {
     DB.qr().update("DELETE FROM safetymaps.roadattentions WHERE source = ? and sourceEnvId = ?", source, sourceEnvId);
+  }
+
+  public Boolean IsReadyForCleanup() {
+    return kindOfChange.toLowerCase().equals("deleted");
   }
 }

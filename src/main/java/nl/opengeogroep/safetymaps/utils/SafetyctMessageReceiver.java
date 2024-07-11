@@ -1,6 +1,7 @@
 package nl.opengeogroep.safetymaps.utils;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,6 +39,7 @@ import nl.opengeogroep.safetymaps.server.cache.CACHE;
 import nl.opengeogroep.safetymaps.server.cache.CacheCleanJob;
 import nl.opengeogroep.safetymaps.server.cache.CacheSaveJob;
 import nl.opengeogroep.safetymaps.server.cache.IncidentCacheItem;
+import nl.opengeogroep.safetymaps.server.cache.RoadAttentionCacheItem;
 import nl.opengeogroep.safetymaps.server.cache.UnitCacheItem;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
@@ -299,9 +301,30 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
     Integer raId = ra.has("roadAttentionId") && ra.get("roadAttentionId").toString() != "null" ? ra.getInt("roadAttentionId") : 0;
     String envId = vhost + '-' + raId.toString();
-    //LOG.info(msgBody);
-    if (isForMe(ra, "tenantId", Arrays.asList(RQ_TENANTS.split(","))) == true) {
+    
+    try {
+      if (isForMe(ra, "tenantId", Arrays.asList(RQ_TENANTS.split(","))) == true) {
+        String tenantId = ra.getString("tenantId");
+        String kindOfChange = ra.getString("kindOfChange");
+        String kindOfAttention = ra.getString("kindOfAttention");
+        String attention = ra.getString("attention");
+        Date beginDate = (Date)ra.get("beginDate");
+        Date endDate = ra.has("endDate") && ra.get("endDate") != null ? (Date)ra.get("endDate") : null;
+        String geoLocation = (String)ra.getString("geoLocation");
 
+        Optional<RoadAttentionCacheItem> oraci = CACHE.FindRoadAttention(envId);
+        if (oraci.isPresent()) {
+          RoadAttentionCacheItem raci = oraci.get();
+          raci.Update(kindOfChange, kindOfAttention, attention, beginDate, endDate, geoLocation);
+          CACHE.UpdateRoadAttention(envId, raci);
+        } else {
+          RoadAttentionCacheItem raci = new RoadAttentionCacheItem("sc", vhost, raId.toString(), envId, tenantId, kindOfAttention, kindOfChange, attention, beginDate, endDate, geoLocation);
+          CACHE.AddRoadAttention(raci);
+        }
+      }
+    } catch(Exception e) {
+      LOG.error("Exception while upserting roadAttention(" + envId + ") in database: ", e);
+      throw new RuntimeException(e);
     }
   }
 
