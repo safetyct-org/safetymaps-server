@@ -126,7 +126,7 @@ public class KladblokActionBean implements ActionBean {
         HttpServletRequest request = getContext().getRequest();
         JSONArray response = new JSONArray();
 
-        if(!request.isUserInRole(ROLE_ADMIN) && !request.isUserInRole(ROLE_SMVNG_KLADBLOKCHAT_VIEWER)) {
+        if(!request.isUserInRole(ROLE_ADMIN) && !request.isUserInRole(ROLE_SMVNG_KLADBLOKCHAT_VIEWER) && !request.isUserInRole(ROLE_SMVNG_KLADBLOKCHAT_EDITOR)) {
             return new ErrorResolution(HttpServletResponse.SC_FORBIDDEN);
         }
 
