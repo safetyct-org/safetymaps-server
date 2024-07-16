@@ -1,5 +1,9 @@
 package nl.opengeogroep.safetymaps.server.security;
 
+import static nl.opengeogroep.safetymaps.server.db.DB.USER_ROLE_TABLE;
+import static nl.opengeogroep.safetymaps.server.db.DB.USER_TABLE;
+import static nl.opengeogroep.safetymaps.server.db.DB.qr;
+
 import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -292,6 +296,14 @@ public class MellonHeaderAuthenticationFilter implements Filter {
                     log.warn("No user header returned, Apache should have denied access!");
                     response.sendError(HttpServletResponse.SC_FORBIDDEN, "Not authorized by identity provider");
                     return;
+                } else {
+                  try {
+                    if (Cfg.getSetting("auto_create_external_user_onlogin", "false").equals("true")) {
+                      qr().update("insert into " + USER_TABLE + " (username, password, session_expiry_number, session_expiry_timeunit) values(?, ?, ?, ?)", user, "-", 10, "years");
+                      qr().update("insert into " + USER_ROLE_TABLE + " (username, role) values (?, ?)", user, "viewer");
+                    }
+                  } catch (Exception e) {
+                  }
                 }
 
 
