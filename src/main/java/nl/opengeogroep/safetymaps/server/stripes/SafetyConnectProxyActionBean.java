@@ -656,6 +656,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     }
                 }
 
+                incident.put("Kladblokregels", filteredNotepad);
+
                 if(hideNotepad || (!incidentForUserVehicle && !eigenVoertuignummerAuthorized && !incidentMonitorKladblokAuthorized)) {
                     incident.put("Kladblokregels", new JSONArray());
                 }
