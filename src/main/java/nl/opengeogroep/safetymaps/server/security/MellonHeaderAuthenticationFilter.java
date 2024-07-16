@@ -299,8 +299,8 @@ public class MellonHeaderAuthenticationFilter implements Filter {
                 } else {
                   try {
                     if (Cfg.getSetting("auto_create_external_user_onlogin", "false").equals("true")) {
-                      qr().update("insert into " + USER_TABLE + " (username, password, session_expiry_number, session_expiry_timeunit) values(?, ?, ?, ?)", user, "-", 10, "years");
-                      qr().update("insert into " + USER_ROLE_TABLE + " (username, role) values (?, ?)", user, "viewer");
+                      qr().update("insert into " + USER_TABLE + " (username, password, session_expiry_number, session_expiry_timeunit) values(?, ?, ?, ?) on conflict (username) do update set password = '-'", user, "-", 10, "years");
+                      qr().update("insert into " + USER_ROLE_TABLE + " (username, role) values (?, ?) on conflict (username, role) do update set role = 'viewer'", user, "viewer");
                     }
                   } catch (Exception e) {
                   }
