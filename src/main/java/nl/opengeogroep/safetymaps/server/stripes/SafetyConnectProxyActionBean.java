@@ -601,6 +601,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         boolean eigenVoertuignummerAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
         boolean zonderEenhedenAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_incidentwithoutunit");
         boolean incidentMonitorAuthorized = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
+        boolean isauthfor_alldiscnotepad = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_alldiscnotepad");
 
         /*if (incidentMonitorAuthorized && incidentMonitorKladblokAuthorized) {
             return content.toString();
@@ -633,6 +634,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
                 // Kladblok met verbergregel erin?
                 JSONArray notepad;
+                JSONArray filteredNotepad = new JSONArray();
                 if (incident.has("Kladblokregels") && !JSONObject.NULL.equals(incident.get("Kladblokregels"))) {
                   notepad = (JSONArray)incident.get("Kladblokregels");
                 } else {
@@ -642,6 +644,12 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                 boolean hideNotepad = false;
                 for(int v=0; v<notepad.length(); v++) {
                     JSONObject notepadrule = (JSONObject)notepad.get(v);
+                    // Check discipline
+                    String disc = notepadrule.getString("Discipline");
+                    if (isauthfor_alldiscnotepad || disc.contains("B")) {
+                      filteredNotepad.put(notepadrule);
+                    }
+                    // Check inhoud
                     String inhoud = notepadrule.getString("Inhoud");
                     if (inhoud.toLowerCase().startsWith(verbergKladblokTerm.toLowerCase())) {
                       hideNotepad = true;
