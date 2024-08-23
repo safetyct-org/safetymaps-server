@@ -43,6 +43,7 @@
             <li${menuitem == 'layertoggle' ? ' class="active"' : ''}><a href="${contextPath}/admin/layertoggle.jsp">Inzetbalk</a></li>
             <li${menuitem == 'edit' ? ' class="active"' : ''}><a href="#">Tekenmodule</a></li--%>
             <li${menuitem == 'livestreams' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LivestreamsActionBean">Livestream(s)</stripes:link></li>
+            <li${menuitem == 'databank' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.DatabankActionBean">Databank</stripes:link></li>
         </ul>
     </li>
     <li class="dropdown">
