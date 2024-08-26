@@ -133,13 +133,13 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
     } else if (id > 0 && (mcs == null || mcs.length() == 0)) {
       DB.qr().update("DELETE FROM safetymaps.incidentauthorization WHERE id=?", id);
     } else {
-      DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs)", group, mcs);
+      DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs) VALUES(?, ?)", group, mcs);
     }
 
     return cancel();
   }
 
-    /**
+  /**
    * Default handlers
    */
 
