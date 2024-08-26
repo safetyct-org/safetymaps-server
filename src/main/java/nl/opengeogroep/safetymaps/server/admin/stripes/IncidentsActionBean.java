@@ -49,7 +49,7 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
   }
 
   private List<Map<String,Object>> groups = new ArrayList();
-  public List<Map<String, Object>> geGroups() {
+  public List<Map<String, Object>> getGroups() {
       return groups;
   }
   public void setGroups(List<Map<String, Object>> groups) {
