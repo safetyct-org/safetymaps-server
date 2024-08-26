@@ -128,9 +128,9 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    * @throws Exception
    */
   public Resolution save() throws Exception {
-    if (id != null && id > 0 && mcs != null && mcs.length() > 0) {
+    if (id > 0 && mcs != null && mcs.length() > 0) {
       DB.qr().update("UPDATE safetymaps.incidentauthorization SET mcs=? WHERE id=?", mcs, id);
-    } else if (id != null &&  id > 0 && (mcs == null || mcs.length() == 0)) {
+    } else if (id > 0 && (mcs == null || mcs.length() == 0)) {
       DB.qr().update("DELETE FROM safetymaps.incidentauthorization WHERE id=?", id);
     } else {
       DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs)", group, mcs);
