@@ -222,6 +222,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                   Date checkDate = DateUtils.addDays(new Date(), (-1 * Integer.parseInt(daysInPast)));
                   Date startDtg = discipline.has("startDtg") ? sdf.parse(discipline.getString("startDtg").replaceAll("T", " ")) : checkDate;
+                  String mc1 = discipline.has("meldingsclassificatie1") ? discipline.getString("meldingsclassificatie1") : "";
                   String closureCode = discipline.has("afsluitCode") ? discipline.getString("afsluitCode") : "";
                   String concattedClosureCode = "Samengevoegd incident";
                   boolean incIsNotConcattedOrIsUserisAuthForConcatted = closureCode != concattedClosureCode || (closureCode == concattedClosureCode && isauthfor_concatted);
@@ -255,14 +256,35 @@ public class SafetyConnectProxyActionBean implements ActionBean {
   
                   if (checkDate.before(startDtg) || incident.getString("status").equals("operationeel"))
                   {
+                    Boolean isPutWithDefaultAuth = false;
                     if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
-                      incidents.put(incident); 
+                      //incidents.put(incident);
+                      isPutWithDefaultAuth = true; 
                     } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
-                      incidents.put(incident); 
+                      //incidents.put(incident); 
+                      isPutWithDefaultAuth = true;
                     } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
-                      incidents.put(incident); 
+                      //incidents.put(incident); 
+                      isPutWithDefaultAuth = true;
                     } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
-                      incidents.put(incident); 
+                      //incidents.put(incident); 
+                      isPutWithDefaultAuth = true;
+                    }
+
+                    if (isPutWithDefaultAuth) {
+                      Boolean userIsAuth = true;
+                      List<Map<String, Object>> groups = DB.qr().query("SELECT role FROM safetymaps.incidentauthorization WHERE LOWER(mcs) LIKE '%' || ? || ',%'", new MapListHandler(), mc1.toLowerCase());
+                      for(Map<String,Object> group: groups) {
+                        String[] restrictedGroups = group.get("role").toString().split(",");
+                        for(int i = 0; i< restrictedGroups.length; i++) {
+                          if (request.isUserInRole(restrictedGroups[i])) {
+                            userIsAuth = false;
+                          }
+                        }
+                      }
+                      if (userIsAuth) {
+                        incidents.put(incident); 
+                      }
                     }
                   }
                 }
