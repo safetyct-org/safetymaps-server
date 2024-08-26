@@ -112,7 +112,7 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
     if (group != null && group.length() > 0) {
       Map<String,Object> data = DB.qr().query("SELECT id, role, mcs FROM safetymaps.incidentauthorization WHERE role=?", new MapHandler(), group);
 
-      if(data.get("id") != null) {
+      if(data != null && data.get("id") != null) {
         id = (int)data.get("id");
         mcs = data.get("mcs").toString();
       }
@@ -128,9 +128,9 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    * @throws Exception
    */
   public Resolution save() throws Exception {
-    if (id > 0 && mcs != null && mcs.length() > 0) {
+    if (id != null && id > 0 && mcs != null && mcs.length() > 0) {
       DB.qr().update("UPDATE safetymaps.incidentauthorization SET mcs=? WHERE id=?", mcs, id);
-    } else if (id > 0 && (mcs == null || mcs.length() == 0)) {
+    } else if (id != null &&  id > 0 && (mcs == null || mcs.length() == 0)) {
       DB.qr().update("DELETE FROM safetymaps.incidentauthorization WHERE id=?", id);
     } else {
       DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs)", group, mcs);
