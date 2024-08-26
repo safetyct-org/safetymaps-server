@@ -46,7 +46,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       </tbody>
     </table>
 
-    <stripes:form beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.DatabankActionBean" class="form-horizontal">
+    <stripes:form beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.IncidentsActionBean" class="form-horizontal">
       <c:set var="event" value="${actionBean.context.eventName}"/>
       <c:if test="${event == 'edit' || event == 'save'}">
         <stripes:submit name="save" class="btn btn-primary">Opslaan</stripes:submit>
@@ -65,6 +65,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <stripes:text class="form-control" name="mcs" />
           </div>
         </div>
+      </c:if>
     </stripes:form>
 
   </stripes:layout-component>
