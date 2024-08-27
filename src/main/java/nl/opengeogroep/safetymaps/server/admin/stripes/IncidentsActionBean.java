@@ -151,13 +151,14 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    * @throws Exception
    */
   public Resolution save() throws Exception {
-    if (id > 0 && ((mcs != null && mcs.length() > 0) || (locs != null && !locs.isEmpty()))) {
+    if (id > 0) {
       if (mcs == null) mcs = "";
       if (locs == null) locs = new ArrayList<>();
       String locString = StringUtils.join(locs, ",");
-      DB.qr().update("UPDATE safetymaps.incidentauthorization SET mcs=?, locs=? WHERE id=?", mcs, locString, id);
-    } else if (id > 0 && ((mcs == null || mcs.length() == 0) && (locs == null || locs.size() == 0))) {
       DB.qr().update("DELETE FROM safetymaps.incidentauthorization WHERE id=?", id);
+      if (mcs.length() > 0 || locString.length() > 0) {
+        DB.qr().update("UPDATE safetymaps.incidentauthorization SET mcs=?, locs=? WHERE id=?", mcs, locString, id);
+      }
     } else {
       if (mcs == null) mcs = "";
       if (locs == null) locs = new ArrayList<>();
