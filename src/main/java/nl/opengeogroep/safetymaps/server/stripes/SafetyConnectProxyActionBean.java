@@ -12,6 +12,7 @@ import nl.opengeogroep.safetymaps.server.db.DB;
 import nl.opengeogroep.safetymaps.utils.SafetyctMessageUtil;
 
 import org.apache.commons.dbutils.handlers.ColumnListHandler;
+import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -43,9 +44,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.GZIPOutputStream;
+/*import java.awt.Polygon;
+import java.awt.Point;*/
+import org.geotools.geometry.jts.JTS;
+import org.geotools.geometry.jts.JTSFactoryFinder;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.io.WKTReader;
 
 import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
 import static nl.opengeogroep.safetymaps.server.db.DB.getUserDetails;
@@ -142,6 +153,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
               return unAuthorizedResolution();
           }
 
+          GeometryFactory geometryFactory = new GeometryFactory();
+
           String qs = context.getRequest().getQueryString();
           String regioCode = Cfg.getSetting("safetyconnect_regio_code");
           String defaultApi = Cfg.getSetting("safetyconnect_webservice_default"); // new
@@ -219,10 +232,14 @@ public class SafetyConnectProxyActionBean implements ActionBean {
   
                 if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { 
                   JSONObject discipline = incident.has("brwDisciplineGegevens") ? (JSONObject)incident.get("brwDisciplineGegevens") : null;
+                  JSONObject location = incident.has("incidentLocatie") ? (JSONObject)incident.get("incidentLocatie") : null;
+                  JSONObject locationCoords = location.has("incidentCoordinaten") ? (JSONObject)location.get("incidentCoordinaten") : null;
                   SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                   Date checkDate = DateUtils.addDays(new Date(), (-1 * Integer.parseInt(daysInPast)));
                   Date startDtg = discipline.has("startDtg") ? sdf.parse(discipline.getString("startDtg").replaceAll("T", " ")) : checkDate;
                   String mc1 = discipline.has("meldingsclassificatie1") ? discipline.getString("meldingsclassificatie1") : "";
+                  Coordinate incCoordinate = locationCoords != null ? new Coordinate(locationCoords.getDouble("lon"), locationCoords.getDouble("lat")) : null;
+                  Point incLoc = geometryFactory.createPoint(incCoordinate);
                   String closureCode = discipline.has("afsluitCode") ? discipline.getString("afsluitCode") : "";
                   String concattedClosureCode = "Samengevoegd incident";
                   boolean incIsNotConcattedOrIsUserisAuthForConcatted = closureCode != concattedClosureCode || (closureCode == concattedClosureCode && isauthfor_concatted);
@@ -272,15 +289,33 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     }
 
                     if (isPutWithDefaultAuth) {
-                      Boolean userIsAuth = true;
-                      List<Map<String, Object>> groups = DB.qr().query("SELECT role FROM safetymaps.incidentauthorization WHERE LOWER(mcs) LIKE '%' || ? || ',%'", new MapListHandler(), mc1.toLowerCase());
-                      for(Map<String,Object> group: groups) {
-                        String[] restrictedGroups = group.get("role").toString().split(",");
-                        for(int i = 0; i< restrictedGroups.length; i++) {
-                          if (request.isUserInRole(restrictedGroups[i])) {
-                            userIsAuth = false;
+                      Boolean userIsAuth = null;
+                      List<Map<String, Object>> auths = DB.qr().query("SELECT role, LOWER(mcs) mcs, locs FROM safetymaps.incidentauthorization WHERE mcs IS NOT NULL || locs IS NOT NULL", new MapListHandler());
+                      for(Map<String,Object> auth: auths) {
+                        String[] restrictedGroups = auth.get("role").toString().split(",");
+                        for(int i1 = 0; i1< restrictedGroups.length; i1++) {
+                          if (request.isUserInRole(restrictedGroups[i1])) {
+                            
+                            if (auth.get("mcs") != null && auth.get("mcs").toString().length() > 0) {
+                              userIsAuth = auth.get("mcs").toString().contains(mc1.toLowerCase() + ",");
+                            }
+
+                            if (auth.get("locs") != null && auth.get("locs").toString().length() > 0) {
+                              String[] locs = auth.get("locs").toString().split(",");
+                              for(int i2 = 0; i2< locs.length; i2++) {
+                                Map<String, Object> loc = DB.qr().query("SELECT loc FROM safetymaps.incidentlocations WHERE id=?", new MapHandler(), Integer.parseInt(locs[i2]));
+                                WKTReader reader = new WKTReader(geometryFactory);
+                                Polygon locPol = (Polygon) reader.read(loc.get("loc").toString());
+                                
+                                userIsAuth = locPol.contains(incLoc);
+                              }
+                            }
+
                           }
                         }
+                      }
+                      if (userIsAuth == null) {
+                        userIsAuth = true;
                       }
                       if (userIsAuth) {
                         incidents.put(incident); 

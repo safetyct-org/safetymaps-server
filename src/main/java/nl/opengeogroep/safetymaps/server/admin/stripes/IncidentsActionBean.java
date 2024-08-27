@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import nl.opengeogroep.safetymaps.server.db.DB;
 
 import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -54,6 +56,14 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
   }
   public void setGroups(List<Map<String, Object>> groups) {
       this.groups = groups;
+  }
+
+  private List<Map<String,Object>> allLocs = new ArrayList();
+  public List<Map<String, Object>> getAllLocs() {
+      return allLocs;
+  }
+  public void setAllLocs(List<Map<String, Object>> allLocs) {
+      this.allLocs = allLocs;
   }
 
   /*
@@ -90,6 +100,17 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
      this.mcs = mcs;
    }
 
+  @Validate
+  private List<String> locs = new ArrayList<>();
+
+  public List<String> getLocs() {
+    return locs;
+  }
+
+  public void setLocs(List<String> locs) {
+      this.locs = locs;
+  }
+
    /**
    * Load list information handler
    * 
@@ -99,6 +120,7 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
   @Before
   private void loadInfo() throws NamingException, SQLException {
     groups = DB.qr().query("select role, description from safetymaps.role where protected = false or role = 'admin' order by protected desc, role", new MapListHandler());
+    allLocs = DB.qr().query("select id, loc, description from safetymaps.incidentlocations", new MapListHandler());
   }
 
     /**
@@ -110,11 +132,12 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    */
   public Resolution edit() throws NamingException, SQLException { 
     if (group != null && group.length() > 0) {
-      Map<String,Object> data = DB.qr().query("SELECT id, role, mcs FROM safetymaps.incidentauthorization WHERE role=?", new MapHandler(), group);
+      Map<String,Object> data = DB.qr().query("SELECT id, role, mcs, locs FROM safetymaps.incidentauthorization WHERE role=?", new MapHandler(), group);
 
       if(data != null && data.get("id") != null) {
         id = (int)data.get("id");
-        mcs = data.get("mcs").toString();
+        mcs = data.get("mcs") != null ? data.get("mcs").toString() : null;
+        locs = data.get("locs") != null ? Arrays.asList(data.get("locs").toString().split(",")) : null;
       }
     }
 
@@ -128,12 +151,18 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    * @throws Exception
    */
   public Resolution save() throws Exception {
-    if (id > 0 && mcs != null && mcs.length() > 0) {
-      DB.qr().update("UPDATE safetymaps.incidentauthorization SET mcs=? WHERE id=?", mcs, id);
-    } else if (id > 0 && (mcs == null || mcs.length() == 0)) {
+    if (id > 0 && ((mcs != null && mcs.length() > 0) || (locs != null && locs.size() > 0))) {
+      if (mcs == null) mcs = "";
+      if (locs == null) locs = new ArrayList<>();
+      String locString = StringUtils.join(locs, ",");
+      DB.qr().update("UPDATE safetymaps.incidentauthorization SET mcs=?, locs=? WHERE id=?", mcs, locString, id);
+    } else if (id > 0 && ((mcs == null || mcs.length() == 0) && (locs == null || locs.size() == 0))) {
       DB.qr().update("DELETE FROM safetymaps.incidentauthorization WHERE id=?", id);
     } else {
-      DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs) VALUES(?, ?)", group, mcs);
+      if (mcs == null) mcs = "";
+      if (locs == null) locs = new ArrayList<>();
+      String locString = StringUtils.join(locs, ",");
+      DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs) VALUES(?, ?, ?)", group, mcs, locString);
     }
 
     return cancel();

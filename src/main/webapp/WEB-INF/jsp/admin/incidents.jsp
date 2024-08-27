@@ -65,6 +65,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <stripes:text class="form-control" name="mcs" />
           </div>
         </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Alleen voor locaties:</label>
+          <div class="col-sm-10">
+            <p class="help-block text-warning">
+              Selecteerd een of meerdere locaties, of selecteer niets voor alles.
+            </p>
+            <c:forEach var="loc" items="${actionBean.allLocs}" varStatus="status">
+                <div class="custom-control custom-checkbox">
+                    <stripes:checkbox name="locs" class="custom-control-input" value="${loc.id}" id="authLoc${status.index}"/>
+                    <label class="custom-control-label" for="authLoc${status.index}"><c:out value="${loc.description}"/></label>
+                </div>
+            </c:forEach>
+          </div>
+        </div>
       </c:if>
     </stripes:form>
 
