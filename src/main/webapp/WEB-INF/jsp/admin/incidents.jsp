@@ -53,6 +53,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <stripes:submit name="cancel" class="btn btn-default">Annuleren</stripes:submit>
         <c:if test="${!empty actionBean.group}">
           <stripes:hidden name="group" value="${actionBean.group}"/>
+          <stripes:hidden name="id" value="${actionBean.id}"/>
           <br /><br/>
         </c:if>
 
