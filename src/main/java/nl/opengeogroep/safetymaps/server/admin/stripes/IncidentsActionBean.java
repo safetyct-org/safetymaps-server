@@ -151,7 +151,7 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    * @throws Exception
    */
   public Resolution save() throws Exception {
-    if (id > 0 && ((mcs != null && mcs.length() > 0) || (locs != null && !locs.isEmpty > 0))) {
+    if (id > 0 && ((mcs != null && mcs.length() > 0) || (locs != null && !locs.isEmpty()))) {
       if (mcs == null) mcs = "";
       if (locs == null) locs = new ArrayList<>();
       String locString = StringUtils.join(locs, ",");
