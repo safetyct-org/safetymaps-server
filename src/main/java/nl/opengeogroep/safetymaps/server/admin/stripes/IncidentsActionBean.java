@@ -157,7 +157,8 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
       String locString = StringUtils.join(locs, ",");
       DB.qr().update("DELETE FROM safetymaps.incidentauthorization WHERE id=?", id);
       if (mcs.length() > 0 || locString.length() > 0) {
-        DB.qr().update("UPDATE safetymaps.incidentauthorization SET mcs=?, locs=? WHERE id=?", mcs, locString, id);
+        //DB.qr().update("UPDATE safetymaps.incidentauthorization SET mcs=?, locs=? WHERE id=?", mcs, locString, id);
+        DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs) VALUES(?, ?, ?)", group, mcs, locString);
       }
     } else {
       if (mcs == null) mcs = "";
