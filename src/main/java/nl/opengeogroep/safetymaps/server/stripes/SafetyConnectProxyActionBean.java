@@ -314,10 +314,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                           }
                         }
                       }
-                      if (userIsAuth == null) {
-                        userIsAuth = true;
-                      }
-                      if (userIsAuth) {
+                      if (userIsAuth == null || userIsAuth) {
                         incidents.put(incident); 
                       }
                     }
