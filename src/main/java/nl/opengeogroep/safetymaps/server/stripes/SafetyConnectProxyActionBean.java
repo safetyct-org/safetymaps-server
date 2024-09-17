@@ -300,7 +300,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                               userIsAuth = auth.get("mcs").toString().contains(mc1.toLowerCase());
                             }
 
-                            if (auth.get("locs") != null && auth.get("locs").toString().length() > 0) {
+                            if ((userIsAuth == null || userIsAuth) && auth.get("locs") != null && auth.get("locs").toString().length() > 0) {
                               String[] locs = auth.get("locs").toString().split(",");
                               for(int i2 = 0; i2< locs.length; i2++) {
                                 Map<String, Object> loc = DB.qr().query("SELECT loc FROM safetymaps.incidentlocations WHERE id=?", new MapHandler(), Integer.parseInt(locs[i2]));
@@ -310,7 +310,6 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                                 userIsAuth = locPol.contains(incLoc);
                               }
                             }
-
                           }
                         }
                       }
