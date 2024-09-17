@@ -297,7 +297,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                           if (request.isUserInRole(restrictedGroups[i1])) {
                             
                             if (auth.get("mcs") != null && auth.get("mcs").toString().length() > 0) {
-                              userIsAuth = auth.get("mcs").toString().contains(mc1.toLowerCase() + ",");
+                              userIsAuth = auth.get("mcs").toString().contains(mc1.toLowerCase());
                             }
 
                             if (auth.get("locs") != null && auth.get("locs").toString().length() > 0) {
