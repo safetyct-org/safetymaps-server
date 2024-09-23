@@ -401,6 +401,7 @@ public class ViewerApiActionBean implements ActionBean {
             options.put(prefixSmvng + "Drawing", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_photo_drawing")); // SMVNG-236
             options.put(prefixSmvng + "Whitepaper", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_photo_whitepaper")); // SMVNG-236
             options.put(prefixSmvng + "Takephoto", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_photo_takephoto")); // SMVNG-236
+            options.put(prefixSmvng + "withVideoRec", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_photo_withvideo"));
         } else if (isSmvng && "Databank".equals(name)) {
             List<Map<String, Object>> words = DB.qr().query("SELECT * FROM safetymaps.databank ORDER BY word ASC, become ASC", new MapListHandler());
             JSONArray wordsBecome = new JSONArray();
