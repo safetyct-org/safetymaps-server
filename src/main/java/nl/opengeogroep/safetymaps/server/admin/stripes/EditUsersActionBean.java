@@ -100,6 +100,9 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
     @Validate
     private String voertuignummer;
 
+    @Validate
+    private String guid;
+
     // <editor-fold defaultstate="collapsed" desc="getters and setters">
     @Override
     public ActionBeanContext getContext() {
@@ -174,6 +177,15 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
     public void setVoertuignummer(String voertuignummer) {
         this.voertuignummer = voertuignummer;
     }
+
+    public String getGuid() {
+      return guid;
+    }
+
+    public void setGuid(String guid) {
+        this.guid = guid;
+    }
+
     // </editor-fold>
 
     @Before
@@ -210,6 +222,7 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
 
             Map<String,Object> data = qr().query("select * from " + USER_TABLE + " where username = ?", new MapHandler(), username);
             expiry = data.containsKey("session_expiry_number") ? (Integer)data.get("session_expiry_number") : null;
+            guid = data.containsKey("guid") ? (String)data.get("guid") : null;
             expiryTimeUnit = (String)data.get("session_expiry_timeunit");
 
             if(data.get("details") != null) {
@@ -324,9 +337,9 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
             detailsString = details.toString();
         }
 
-        int update = qr().update("update " + USER_TABLE + " set password = ?, session_expiry_number = ?, session_expiry_timeunit = ?, details = ?::json where username = ?", hashedPassword, expiry, expiryTimeUnit, detailsString, username);
+        int update = qr().update("update " + USER_TABLE + " set password = ?, session_expiry_number = ?, session_expiry_timeunit = ?, details = ?::json, guid = ? where username = ?", hashedPassword, expiry, expiryTimeUnit, detailsString, guid, username);
         if(update == 0) {
-            qr().update("insert into " + USER_TABLE + " (username, password, session_expiry_number, session_expiry_timeunit) values(?, ?, ?, ?)", username, hashedPassword, expiry, expiryTimeUnit);
+            qr().update("insert into " + USER_TABLE + " (username, password, session_expiry_number, session_expiry_timeunit, guid) values(?, ?, ?, ?, ?)", username, hashedPassword, expiry, expiryTimeUnit, guid);
         }
         
         qr().update("delete from " + USER_ROLE_TABLE + " where username = ? and (left(role, 6) = 'smvng_' or role in (select role from safetymaps.role where protected = false or role in ('viewer', 'admin')))", username);

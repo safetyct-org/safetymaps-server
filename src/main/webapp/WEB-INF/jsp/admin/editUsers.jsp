@@ -122,6 +122,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                     </div>
                 </div>
                 <div class="form-group">
+                  <label class="col-sm-2 control-label">GUID:</label>
+                  <div class="col-sm-10">
+                      <stripes:text name="guid" minlength="12"/>
+                      <p class="help-block">Unieke GUID die gebruikt wordt voor het automatisch inloggen van de gebruiker. Laat leeg om automatisch inloggen voor deze gebruiker uit te schakelen.</p>
+                  </div>
+              </div>
+                <div class="form-group">
                     <label class="col-sm-2 control-label">Automatisch uitloggen na:</label>
                     <div class="col-sm-10">
                         <stripes:text name="expiry" size="3"/>

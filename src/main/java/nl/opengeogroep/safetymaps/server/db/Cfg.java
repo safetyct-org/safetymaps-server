@@ -35,6 +35,14 @@ public class Cfg {
 
     private static Map<String,CachedValue> settingsCache = new ConcurrentHashMap<>();
 
+    private static Boolean isAutoLogin = false;
+    public static void setAutoLoggedIn() {
+      isAutoLogin = true;
+    }
+    public static final Boolean getAutoLoggedIn() {
+      return isAutoLogin;
+    }
+
     public static final void updateSetting(String name, Object value, String sql) throws NamingException, SQLException {
         qr().update("delete from safetymaps.settings where name=?", name);
         qr().update("insert into safetymaps.settings (name, value) values(?, " + (sql != null ? sql : "?") + ")", name, value);
