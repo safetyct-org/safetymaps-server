@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.catalina.realm.SecretKeyCredentialHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
@@ -23,6 +25,7 @@ import nl.opengeogroep.safetymaps.server.security.PersistentSessionManager;
 @UrlBinding("/autologin")
 public class AutoLoginActionBean implements ActionBean  {
   private ActionBeanContext context;
+  private static final Log log = LogFactory.getLog("autologin");
 
     @Override
     public ActionBeanContext getContext() {
@@ -36,10 +39,12 @@ public class AutoLoginActionBean implements ActionBean  {
 
     @DefaultHandler
     public Resolution defaultHandler() throws Exception {
+      String forUserWithGuid = "";
+
       try {
         HttpServletRequest request = context.getRequest();
         HttpServletResponse response = context.getResponse();
-        String forUserWithGuid = request.getParameter("as").replaceAll("[^a-zA-Z0-9-]","");
+        forUserWithGuid = request.getParameter("as").replaceAll("[^a-zA-Z0-9-]","");
 
         if (forUserWithGuid == null) { throw new Exception(); }
 
@@ -74,17 +79,18 @@ public class AutoLoginActionBean implements ActionBean  {
             PersistentSessionManager.deleteSession(sessionId);
         }
         
-        qr().update("update " + USER_TABLE + " set password = ? where guid = ?", tempHashedPassword, username);
+        qr().update("update " + USER_TABLE + " set password = ? where username = ?", tempHashedPassword, username);
 
         request.logout();
         request.getSession().invalidate();
         request.getSession();
         request.login(username, tempPassword);
 
-        qr().update("update " + USER_TABLE + " set password = ? where guid = ?", userHashedPassword, username);
+        qr().update("update " + USER_TABLE + " set password = ? where username = ?", userHashedPassword, username);
 
         return new RedirectResolution(request.getContextPath() + "/admin"); 
       } catch (Exception ex) {
+        log.info("Exception occurred while auto login guid " + forUserWithGuid + ". Details: " + ex.getMessage());
         return new ErrorResolution(HttpServletResponse.SC_FORBIDDEN); 
       }
     }
