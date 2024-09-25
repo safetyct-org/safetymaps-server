@@ -17,6 +17,7 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
 @UrlBinding("/admin/action/settings")
 public class SettingsActionBean implements ActionBean {
     private ActionBeanContext context;
+    private static final String JSP = "/admin/app.jsp";
 
     private final SortedMap<String,String> settings = new TreeMap();
 
@@ -42,6 +43,6 @@ public class SettingsActionBean implements ActionBean {
             settings.put((String)s.get("name"), (String)s.get("value"));
         }
 
-        return null;
+        return new ForwardResolution(JSP);
     }
 }

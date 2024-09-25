@@ -34,8 +34,8 @@
     <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Configuratie <span class="caret"></span></a>
         <ul class="dropdown-menu">
-            <li${menuitem == 'app' ? ' class="active"' : ''}><a href="${contextPath}/admin/app.jsp">Instellingen</a></li>            
-            <li${menuitem == 'modules' ? ' class="active"' : ''}><a href="${contextPath}/admin/modules.jsp">Modules</a></li>
+            <li${menuitem == 'app' ? ' class="active"' : ''}><a href="${contextPath}/admin/action/settings">Instellingen</a></li>            
+            <li${menuitem == 'modules' ? ' class="active"' : ''}><a href="${contextPath}/admin/action/modules">Modules</a></li>
             <c:if test="${s.settings['linkify_enabled'] == 'true'}"><li${menuitem == 'linkify' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LinkifyActionBean">Steekwoorden</stripes:link></li></c:if>
             <li${menuitem == 'layers' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LayerActionBean">Lagen</stripes:link></li>
             <%--li${menuitem == 'customize' ? ' class="active"' : ''}><a href="${contextPath}/admin/customize.jsp">Maatwerk</a></li>
