@@ -10,6 +10,7 @@ import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.DefaultHandler;
 import net.sourceforge.stripes.action.ForwardResolution;
 import net.sourceforge.stripes.action.Resolution;
+import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import nl.opengeogroep.safetymaps.server.db.DB;
 import org.apache.commons.dbutils.handlers.MapListHandler;
@@ -18,6 +19,7 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
  *
  * @author Safety C&T
  */
+@StrictBinding
 @UrlBinding("/admin/action/authorization")
 public class AuthorizationActionBean implements ActionBean {
   private ActionBeanContext context;

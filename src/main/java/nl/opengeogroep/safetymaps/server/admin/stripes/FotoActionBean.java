@@ -25,6 +25,7 @@ import net.sourceforge.stripes.action.ForwardResolution;
 import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.SimpleMessage;
 import net.sourceforge.stripes.action.StreamingResolution;
+import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
@@ -37,6 +38,7 @@ import org.apache.commons.logging.LogFactory;
  *
  * @author martijn
  */
+@StrictBinding
 @UrlBinding("/admin/action/foto")
 public class FotoActionBean implements ActionBean {
     
