@@ -34,8 +34,8 @@
     <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Configuratie <span class="caret"></span></a>
         <ul class="dropdown-menu">
-            <li${menuitem == 'app' ? ' class="active"' : ''}><a href="${contextPath}/admin/action/settings">Instellingen</a></li>            
-            <li${menuitem == 'modules' ? ' class="active"' : ''}><a href="${contextPath}/admin/action/modules">Modules</a></li>
+            <li${menuitem == 'app' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.SettingsActionBean">Instellingen</stripes:link></li>            
+            <li${menuitem == 'modules' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.ModulesActionBean">Modules</stripes:link></li>
             <c:if test="${s.settings['linkify_enabled'] == 'true'}"><li${menuitem == 'linkify' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LinkifyActionBean">Steekwoorden</stripes:link></li></c:if>
             <li${menuitem == 'layers' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.LayerActionBean">Lagen</stripes:link></li>
             <%--li${menuitem == 'customize' ? ' class="active"' : ''}><a href="${contextPath}/admin/customize.jsp">Maatwerk</a></li>
@@ -52,10 +52,10 @@
             <li${menuitem == 'users' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.EditUsersActionBean">Gebruikers</stripes:link></li>
             <li${menuitem == 'groups' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.EditGroupsActionBean">Groepen</stripes:link></li>
             <li${menuitem == 'incidents' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.IncidentsActionBean">Incidenten</stripes:link></li>
-            <li${menuitem == 'authorization' ? ' class="active"' : ''}><a href="${contextPath}/admin/action/authorization">Autorisatie overzicht</a></li>
+            <li${menuitem == 'authorization' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.AuthorizationActionBean">Authorisatie overzicht </stripes:link></li>
         </ul>
     </li>
-    <li${menuitem == 'fotofunctie' ? ' class="active"' : ''}><a href="${contextPath}/admin/action/foto">Beheer fotofunctie</a></li>
+    <li${menuitem == 'fotofunctie' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.FotoActionBean">Beheer fotofunctie</stripes:link></li>
     <%--li${menuitem == 'edit' ? ' class="active"' : ''}><a href="${contextPath}/admin/edit.jsp">Tekening opslaan/laden</a></li--%>
     <%--li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Datasets <span class="caret"></span></a>
