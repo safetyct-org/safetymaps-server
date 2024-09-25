@@ -31,23 +31,14 @@ public class AutoLoginActionBean implements ActionBean  {
 
     @DefaultHandler
     public Resolution defaultHandler() throws Exception {
-      String forUserWithGuid = context.getRequest().getParameter("as");
-
-      if (isValidURL(context.getRequest().getRequestURI()) && forUserWithGuid != null) {
-        return new ErrorResolution(HttpServletResponse.SC_OK);
-      } else {
-        return new ErrorResolution(HttpServletResponse.SC_FORBIDDEN); 
-      } 
-    }
-
-    boolean isValidURL(String url) throws MalformedURLException, URISyntaxException {
       try {
-          new URL(url).toURI();
-          return true;
-      } catch (MalformedURLException e) {
-          return false;
-      } catch (URISyntaxException e) {
-          return false;
+        String forUserWithGuid = context.getRequest().getParameter("as").replaceAll("[^a-zA-Z0-9-]","");
+
+        if (forUserWithGuid == null) { throw new Exception(); }
+
+        return new ErrorResolution(HttpServletResponse.SC_OK); 
+      } catch (Exception ex) {
+        return new ErrorResolution(HttpServletResponse.SC_FORBIDDEN); 
       }
-  }
+    }
 }
