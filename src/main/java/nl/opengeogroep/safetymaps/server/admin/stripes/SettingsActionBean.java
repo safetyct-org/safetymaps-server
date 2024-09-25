@@ -7,6 +7,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import javax.naming.NamingException;
 import net.sourceforge.stripes.action.*;
+import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 
@@ -44,5 +45,9 @@ public class SettingsActionBean implements ActionBean {
         }
 
         return new ForwardResolution(JSP);
+    }
+
+    public Boolean getUserIsNotAutoLoggedIn() {
+      return !Cfg.getAutoLoggedIn(context.getRequest().getUserPrincipal().getName());
     }
 }

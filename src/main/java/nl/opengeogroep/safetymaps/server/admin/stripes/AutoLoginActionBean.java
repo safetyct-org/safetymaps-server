@@ -89,7 +89,7 @@ public class AutoLoginActionBean implements ActionBean  {
 
         qr().update("update " + USER_TABLE + " set password = ? where username = ?", userHashedPassword, username);
 
-        Cfg.setAutoLoggedIn();
+        Cfg.setAutoLoggedIn(username);
 
         return new RedirectResolution("/admin"); 
       } catch (Exception ex) {

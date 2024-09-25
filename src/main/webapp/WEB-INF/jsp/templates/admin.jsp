@@ -55,12 +55,12 @@
                     <div id="navbar" class="navbar-collapse collapse">
                         <jsp:include page="/WEB-INF/jsp/admin/menu.jsp"/>
                         <ul class="nav navbar-nav navbar-right">
-                          <c:if test="${s.getAutoLoggedIn() == false}">
+                          <c:if test="${s.getUserIsNotAutoLoggedIn()}">
                             <li><a href="${contextPath}/viewer.jsp" target="_blank">Open voertuigviewer</a></li>
                           </c:if>
                           <li><a href="${contextPath}/about.jsp">Versie</a></li>
                           <li><a href="<c:url value="/authinfo.jsp"/>">Ingelogd als: <span class="username"><c:out value="${pageContext.request.userPrincipal.name}"/></span></a></li>
-                          <c:if test="${s.getAutoLoggedIn() == false}">
+                          <c:if test="${s.getUserIsNotAutoLoggedIn()}">
                             <li><a href="<c:url value="/logout.jsp"/>">Uitloggen</a></li>
                           </c:if>
                         </ul>

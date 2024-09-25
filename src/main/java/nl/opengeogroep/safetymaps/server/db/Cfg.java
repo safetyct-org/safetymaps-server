@@ -6,7 +6,9 @@ import javax.naming.NamingException;
 import java.io.File;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,12 +37,14 @@ public class Cfg {
 
     private static Map<String,CachedValue> settingsCache = new ConcurrentHashMap<>();
 
-    private static Boolean isAutoLogin = false;
-    public static void setAutoLoggedIn() {
-      isAutoLogin = true;
+    private static List<String> autoLoggedIn = new ArrayList<>();
+    public static void setAutoLoggedIn(String username) {
+      if (!autoLoggedIn.contains(username)) {
+        autoLoggedIn.add(username);
+      }
     }
-    public static final Boolean getAutoLoggedIn() {
-      return isAutoLogin;
+    public static final Boolean getAutoLoggedIn(String username) {
+      return autoLoggedIn.contains(username);
     }
 
     public static final void updateSetting(String name, Object value, String sql) throws NamingException, SQLException {
