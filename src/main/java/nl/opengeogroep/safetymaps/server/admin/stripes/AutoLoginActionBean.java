@@ -89,9 +89,7 @@ public class AutoLoginActionBean implements ActionBean  {
 
         qr().update("update " + USER_TABLE + " set password = ? where username = ?", userHashedPassword, username);
 
-        String link = Cfg.getSetting("uri", "/admin");
-
-        return new RedirectResolution(link); 
+        return new RedirectResolution("/admin"); 
       } catch (Exception ex) {
         log.info("Exception occurred while auto login guid " + forUserWithGuid + ". Details: " + ex.getMessage());
         return new ErrorResolution(HttpServletResponse.SC_FORBIDDEN); 
