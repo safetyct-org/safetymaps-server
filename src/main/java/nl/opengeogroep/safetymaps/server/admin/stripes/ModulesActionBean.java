@@ -21,7 +21,7 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
 @UrlBinding("/admin/action/modules")
 public class ModulesActionBean implements ActionBean {
     private ActionBeanContext context;
-    private static final String JSP = "/admin/modules.jsp";
+    private static final String JSP = "/WEB-INF/jsp/admin/modules.jsp";
 
     private List<Map<String,Object>> modules = new ArrayList();
 

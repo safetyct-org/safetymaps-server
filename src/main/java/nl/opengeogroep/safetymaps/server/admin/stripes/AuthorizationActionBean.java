@@ -22,7 +22,7 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
 public class AuthorizationActionBean implements ActionBean {
   private ActionBeanContext context;
 
-  private static final String JSP = "/admin/authorization.jsp";
+  private static final String JSP = "/WEB-INF/jsp/admin/authorization.jsp";
 
     @Override
     public ActionBeanContext getContext() {

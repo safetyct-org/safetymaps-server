@@ -46,7 +46,7 @@ public class FotoActionBean implements ActionBean {
 
     private List<Map<String, Object>> fotos = new ArrayList();
     
-    private static final String JSP = "/admin/fotomanager.jsp";
+    private static final String JSP = "/WEB-INF/jsp/admin/fotomanager.jsp";
     
     private static final String TABLE = "\"FotoFunctie\"";
     

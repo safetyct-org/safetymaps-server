@@ -18,7 +18,7 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
 @UrlBinding("/admin/action/settings")
 public class SettingsActionBean implements ActionBean {
     private ActionBeanContext context;
-    private static final String JSP = "/admin/app.jsp";
+    private static final String JSP = "/WEB-INF/jsp/admin/app.jsp";
 
     private final SortedMap<String,String> settings = new TreeMap();
 
