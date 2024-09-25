@@ -20,6 +20,7 @@ import net.sourceforge.stripes.action.ErrorResolution;
 import net.sourceforge.stripes.action.RedirectResolution;
 import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.UrlBinding;
+import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.security.PersistentSessionManager;
 
 @UrlBinding("/autologin")
@@ -88,7 +89,9 @@ public class AutoLoginActionBean implements ActionBean  {
 
         qr().update("update " + USER_TABLE + " set password = ? where username = ?", userHashedPassword, username);
 
-        return new RedirectResolution(request.getContextPath() + "/admin"); 
+        String link = Cfg.getSetting("uri", "/admin");
+
+        return new RedirectResolution(link); 
       } catch (Exception ex) {
         log.info("Exception occurred while auto login guid " + forUserWithGuid + ". Details: " + ex.getMessage());
         return new ErrorResolution(HttpServletResponse.SC_FORBIDDEN); 
