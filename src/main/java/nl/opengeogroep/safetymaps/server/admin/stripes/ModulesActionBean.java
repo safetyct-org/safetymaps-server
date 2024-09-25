@@ -8,6 +8,7 @@ import javax.naming.NamingException;
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.ForwardResolution;
 import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.UrlBinding;
 import nl.opengeogroep.safetymaps.server.db.DB;
@@ -20,6 +21,7 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
 @UrlBinding("/admin/action/modules")
 public class ModulesActionBean implements ActionBean {
     private ActionBeanContext context;
+    private static final String JSP = "/admin/modules.jsp";
 
     private List<Map<String,Object>> modules = new ArrayList();
 
@@ -44,6 +46,6 @@ public class ModulesActionBean implements ActionBean {
     @DefaultHandler
     public Resolution list() throws NamingException, SQLException {
         modules = DB.qr().query("select * from organisation.modules order by issmvngmodule asc, name asc", new MapListHandler());
-        return null;
+        return new ForwardResolution(JSP);
     }
 }

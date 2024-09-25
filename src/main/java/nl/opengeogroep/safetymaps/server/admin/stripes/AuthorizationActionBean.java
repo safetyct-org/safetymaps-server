@@ -8,6 +8,7 @@ import javax.naming.NamingException;
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.DefaultHandler;
+import net.sourceforge.stripes.action.ForwardResolution;
 import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.UrlBinding;
 import nl.opengeogroep.safetymaps.server.db.DB;
@@ -20,6 +21,8 @@ import org.apache.commons.dbutils.handlers.MapListHandler;
 @UrlBinding("/admin/action/authorization")
 public class AuthorizationActionBean implements ActionBean {
   private ActionBeanContext context;
+
+  private static final String JSP = "/admin/authorization.jsp";
 
     @Override
     public ActionBeanContext getContext() {
@@ -44,6 +47,6 @@ public class AuthorizationActionBean implements ActionBean {
     @DefaultHandler
     public Resolution list() throws NamingException, SQLException {
       authorizations = DB.qr().query("select ur.username, r.* from safetymaps.user_roles ur inner join safetymaps.role r on r.role = ur.role order by 1 asc", new MapListHandler());
-      return null;
+      return new ForwardResolution(JSP);
     }
 }

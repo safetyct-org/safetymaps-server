@@ -52,10 +52,10 @@
             <li${menuitem == 'users' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.EditUsersActionBean">Gebruikers</stripes:link></li>
             <li${menuitem == 'groups' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.EditGroupsActionBean">Groepen</stripes:link></li>
             <li${menuitem == 'incidents' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.IncidentsActionBean">Incidenten</stripes:link></li>
-            <li${menuitem == 'authorization' ? ' class="active"' : ''}><a href="${contextPath}/admin/authorization.jsp">Autorisatie overzicht</a></li>
+            <li${menuitem == 'authorization' ? ' class="active"' : ''}><a href="${contextPath}/admin/action/authorization">Autorisatie overzicht</a></li>
         </ul>
     </li>
-    <li${menuitem == 'fotofunctie' ? ' class="active"' : ''}><a href="${contextPath}/admin/fotomanager.jsp">Beheer fotofunctie</a></li>
+    <li${menuitem == 'fotofunctie' ? ' class="active"' : ''}><a href="${contextPath}/admin/action/foto">Beheer fotofunctie</a></li>
     <%--li${menuitem == 'edit' ? ' class="active"' : ''}><a href="${contextPath}/admin/edit.jsp">Tekening opslaan/laden</a></li--%>
     <%--li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Datasets <span class="caret"></span></a>
