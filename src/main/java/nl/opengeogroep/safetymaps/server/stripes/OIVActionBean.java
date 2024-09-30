@@ -133,15 +133,14 @@ public class OIVActionBean implements ActionBean {
     dbks = dbkWithAddresList(id);
 
     Map<String,Object> dbk = DB.oivQr().query(
-      "select ot.formelenaam, bl.min_bouwlaag, bl.max_bouwlaag, vo.typeobject " +
-      "from objecten.object_terrein ot " +
-      "inner join objecten.mview_objectgegevens vo on vo.id = ot.object_id " + 
+      "select vo.formelenaam, bl.min_bouwlaag, bl.max_bouwlaag, vo.typeobject " +
+      "from objecten.mview_objectgegevens vo " +
       "left join ( " +
       "  select min(bouwlaag) min_bouwlaag, max(bouwlaag) max_bouwlaag, object_id " +
       "  from objecten.mview_bouwlagen vb  " +
       "  group by object_id " +
-      ") bl on bl.object_id = ot.object_id " +
-      "where ot.object_id = ?"
+      ") bl on bl.object_id = vo.id " +
+      "where vo.id = ?"
     , new MapHandler(), id);
 
     List<Map<String,Object>> gs = DB.oivQr().query(
