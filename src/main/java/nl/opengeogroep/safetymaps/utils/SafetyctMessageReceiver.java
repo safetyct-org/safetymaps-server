@@ -407,7 +407,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     
     if (
       // SMVNG-711 : only filter on tenant // incidentIsForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true ||
-      isForMe(incident, "tenantIndentifier", Arrays.asList(RQ_TENANTS.split(","))) == true ||
+      isForMe(incident, "tenantIdentifier", Arrays.asList(RQ_TENANTS.split(","))) == true ||
       (
         isForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true &&
         incidentHasUnitForMe(incident, regions) == true
@@ -427,7 +427,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         JSONObject polDisc = incident.has("polDisciplineGegevens") ? incident.getJSONObject("polDisciplineGegevens") : null;
         
         Integer number = incident.getInt("incidentNummer");
-        String tenantId = incident.getString("tenantIndentifier");
+        String tenantId = incident.getString("tenantIdentifier");
         String status = incident.getString("status");
         String sender = incident.getString("afzender");
         JSONArray notes = incident.has("kladblokregels") 

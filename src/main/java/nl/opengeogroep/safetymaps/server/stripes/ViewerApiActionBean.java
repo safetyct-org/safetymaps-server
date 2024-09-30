@@ -379,6 +379,9 @@ public class ViewerApiActionBean implements ActionBean {
             
             boolean isauthfor_alertation = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_alertation");
             options.put("useAlertation", isauthfor_alertation);
+
+            boolean isauthfor_toggledLiveData = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_openlivedatatoggled");
+            options.put("openLiveDataToggled", isauthfor_toggledLiveData);
             
         } else if (isSmvng && "IncidentMonitor".equals(name)) {
             options.put(prefixSmvng + "LeavingIncidentForLocalVehcile", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incidentmonitor_leaveincident")); 
