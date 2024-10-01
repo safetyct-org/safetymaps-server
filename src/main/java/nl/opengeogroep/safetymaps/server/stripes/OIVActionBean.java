@@ -156,7 +156,7 @@ public class OIVActionBean implements ActionBean {
         "where object_id = ?"
       , new MapListHandler(), id, layer, id);
 
-    List<Map<String,Object>> ber = DB.oivQr().query(
+    /*List<Map<String,Object>> ber = DB.oivQr().query(
       "select * from (select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
@@ -182,7 +182,19 @@ public class OIVActionBean implements ActionBean {
         "where vb.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.soortnaam asc "
+    , new MapListHandler(), id, id);*/
+
+    List<Map<String,Object>> ber = DB.oivQr().query(
+      "select * from (select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "from ( select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid from objecten.mview_bereikbaarheid vb where vb.object_id = ?) b " +
+      "left join algemeen.vw_styles s on s.id = b.styleid " +
+      "union " +
+      "select hoogte::varchar(255) as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "from ( select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+      "from ( SELECT * FROM objecten.mview_isolijnen) vb where vb.object_id = ? ) b " +
+      "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.soortnaam asc"
     , new MapListHandler(), id, id);
+
 
     List<Map<String,Object>> ruimten = DB.oivQr().query(
       "select * from (select '' as soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl, 1 as order " +
@@ -218,7 +230,7 @@ public class OIVActionBean implements ActionBean {
       "union select soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl, 5 as order " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-        "from objecten.view_schade_cirkel_bouwlaag vs " +
+        "from objecten.mview_schade_cirkel_bouwlaag vs " +
         "where vs.object_id = ? " +
         " and vs.bouwlaag = ? " +
       ") b " +
@@ -365,7 +377,7 @@ public class OIVActionBean implements ActionBean {
         "inner join objecten.object_type ot on ot.naam = vo.typeobject " + 
         "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id " +
         "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
-        "left join objecten.terrein t on vo.id = t.object_id " + where
+        "left join objecten.view_terrein t on vo.id = t.object_id " + where
       , new MapListHandler(), id);
     JSONArray results = new JSONArray();
 
