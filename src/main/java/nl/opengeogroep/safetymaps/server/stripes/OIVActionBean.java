@@ -250,7 +250,7 @@ public class OIVActionBean implements ActionBean {
 
     List<Map<String,Object>> cont = DB.oivQr().query(
       "select telefoonnummer, soort, 'onbekend' as naam " +
-      "from objecten.view_contactpersoon vc " +
+      "from objecten.mview_contactpersoon vc " +
       "where vc.object_id = ? "
     , new MapListHandler(), id);
 
