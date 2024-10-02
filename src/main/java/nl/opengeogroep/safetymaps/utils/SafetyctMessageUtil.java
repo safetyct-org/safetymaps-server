@@ -1,6 +1,7 @@
 package nl.opengeogroep.safetymaps.utils;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +9,27 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class SafetyctMessageUtil {
+  public static boolean IncidentDbRowHasUnitForRegion(Map<String, Object> incidentDbRow, String regions) {
+    String unitsString = (String)incidentDbRow.get("units");
+    JSONArray units = incidentDbRow.get("units") != null ? new JSONArray(unitsString) : new JSONArray();
+    List<String> regionCodes = Arrays.asList(regions.split(","));
+    boolean hasRegionUnit = false;
+
+    for(int i=0; i<units.length(); i++) {
+      JSONObject unit = (JSONObject)units.get(i);
+
+      String unitName = unit.has("roepnaam") ? unit.getString("roepnaam") : "aaaaaaaaaa";
+      String unitRegion = unitName.length() > 2 ? unitName.substring(0, 2) : "notfound";
+
+      boolean found = regionCodes.contains(unitRegion);
+      if (found) {
+        hasRegionUnit = true;
+      }
+    }
+
+    return hasRegionUnit;
+  }
+
   public static JSONObject IncidentDbRowHasActiveUnit(List<Map<String, Object>> dbIncidents, String unitSourceId) {
     JSONObject activeUnitFound = null;
 

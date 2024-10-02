@@ -206,8 +206,16 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             String tenant = Cfg.getSetting("safetyconnect_rq_tenants", "").split(",")[0];
 
             for (Map<String, Object> res : results) {              
+              boolean handle = false;
+
               boolean isauthfor_interregio = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_interregio");
               if (isauthfor_interregio || res.get("tenantid").equals(tenant)) {
+                handle = true;
+              } else {
+                handle = SafetyctMessageUtil.IncidentDbRowHasUnitForRegion(res, Cfg.getSetting("safetyconnect_rq_regios", ""));
+              }
+
+              if (handle) {
                 JSONObject incident = SafetyctMessageUtil.MapIncidentDbRowAllColumnsAsJSONObject(res);
 
                 /**
