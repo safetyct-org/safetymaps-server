@@ -374,7 +374,7 @@ public class OIVActionBean implements ActionBean {
         "inner join objecten.object_type ot on ot.naam = vo.typeobject " + 
         "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id " +
         "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
-        "left join objecten.view_terrein t on vo.id = t.object_id " + where
+        "left join objecten.mview_terrein t on vo.id = t.object_id " + where
       , new MapListHandler(), id);
     JSONArray results = new JSONArray();
 
