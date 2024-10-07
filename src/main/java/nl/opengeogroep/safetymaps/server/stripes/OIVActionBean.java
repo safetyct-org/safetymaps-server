@@ -178,14 +178,18 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id, id);*/
 
     List<Map<String,Object>> ber = DB.oivQr().query(
-      "select * from (select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
-      "from ( select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid from objecten.mview_bereikbaarheid vb where vb.object_id = ?) b " +
-      "left join algemeen.vw_styles s on s.id = b.styleid " +
-      "union " +
-      "select hoogte::varchar(255) as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
-      "from ( select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-      "from ( SELECT * FROM objecten.mview_isolijnen) vb where vb.object_id = ? ) b " +
-      "left join algemeen.vw_styles s on s.id = b.styleid) order by soortnaam asc "
+      "select * " +
+      "from (select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "      from (select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+      "            from objecten.mview_bereikbaarheid vb " +
+      "            where vb.object_id = ?) b " +
+      "      left join algemeen.vw_styles s on s.id = b.styleid " +
+      "      union " +
+      "      select hoogte::varchar(255) as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
+      "      from (select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
+      "            from (SELECT * FROM objecten.mview_isolijnen) vb where vb.object_id = ? ) b " +
+      "      left join algemeen.vw_styles s on s.id = b.styleid) a " +
+      "order by a.soortnaam asc "
     , new MapListHandler(), id, id);
 
 
