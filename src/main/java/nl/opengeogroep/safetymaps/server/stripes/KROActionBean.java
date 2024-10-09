@@ -312,7 +312,7 @@ public class KROActionBean implements ActionBean {
             };
         }
 
-        String sql = "select bagvboid, bagpandid, straatnaam, huisnr, huisletter, huistoevg, plaatsnaam, gemnaam, pand_bouwjaar, adres_oppervlak, pand_status, pand_maxhoogte, pand_bouwlagen, adres, monument, postcode," +
+        String sql = "select bagvboid, bagpandid, straatnaam, huisnr, huisletter, huistoevg, plaatsnaam, gemnaam, pand_bouwjaar, adres_oppervlak, pand_status, pand_maxhoogte, pand_bouwlagen, adres, monument, rietendak, zonnepanelen, postcode," +
           "string_agg(aanzien_objecttypering, '||') aanzien_objecttypering, " +
           "string_agg(adres_objecttypering, '||') adres_objecttypering, " +
           "string_agg(adres_bedrijfsnaam, ', ') adres_bedrijfsnaam " +
