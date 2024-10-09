@@ -318,7 +318,7 @@ public class KROActionBean implements ActionBean {
           "string_agg(adres_bedrijfsnaam, ', ') adres_bedrijfsnaam " +
           "from " + getViewObjectInfo("oovkro.object_info") + " " +
           "where " + wherePartOfSql + " " +
-          "group by bagvboid, bagpandid, straatnaam, huisnr, huisletter, huistoevg, plaatsnaam, gemnaam, pand_bouwjaar, adres_oppervlak, pand_status, pand_maxhoogte, pand_bouwlagen, adres, monument, postcode;";
+          "group by rietendak, zonnepanelen, bagvboid, bagpandid, straatnaam, huisnr, huisletter, huistoevg, plaatsnaam, gemnaam, pand_bouwjaar, adres_oppervlak, pand_status, pand_maxhoogte, pand_bouwlagen, adres, monument, postcode;";
 
         List<Map<String, Object>> rows = qr.query(sql, new MapListHandler(), qparams);
         return rows;
