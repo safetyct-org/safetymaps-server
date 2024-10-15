@@ -110,7 +110,7 @@ public class DatabankActionBean implements ActionBean, ValidationErrorHandler {
    */
   public Resolution edit() throws NamingException, SQLException { 
     if (id > 0) {
-      Map<String,Object> data = DB.qr().query("SELECT id, word, become, FROM safetymaps.databank WHERE id=?", new MapHandler(), id);
+      Map<String,Object> data = DB.qr().query("SELECT id, word, become FROM safetymaps.databank WHERE id=?", new MapHandler(), id);
 
       if(data.get("id") != null) {
         word = data.get("word").toString();
@@ -138,7 +138,7 @@ public class DatabankActionBean implements ActionBean, ValidationErrorHandler {
   }
 
   public Resolution delete() throws Exception {
-    DB.qr().update("DELETE FROM safetymaps.support WHERE id=?", id);
+    DB.qr().update("DELETE FROM safetymaps.databank WHERE id=?", id);
 
     return cancel();
   }
