@@ -467,25 +467,22 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
           String unitId = unit.getString("roepnaam");
           String unitEnvId = vhost + '-' + unitId;
-          Integer gmsStatusCode = unit.getInt("statusCode");
-          String primairevoertuigsoort = unit.has("primaireVoertuigSoort") ? unit.getString("primaireVoertuigSoort") : null;
-          JSONArray abbs = unit.has("meldkamerStatusAbonnementen") ? unit.getJSONArray("meldkamerStatusAbonnementen") : new JSONArray();
 
-          // Disable addupdateunit on incident so correct status is always that from unitchanged
-          //addOrUpdateDbUnit(vhost, unitId, unitEnvId, gmsStatusCode, sender, primairevoertuigsoort, abbs.toString(), null);
-
+          // Remove unit from possible trainingsincident
           Optional<IncidentCacheItem> oici = CACHE.FindActiveNonGMSIncident(envId, vhost, unitId);
           if (oici.isPresent()) {
             oici.get().RemoveUnit(unitId);
           }
 
+          // MOdify unit and attach post
           Optional<UnitCacheItem> ouci = CACHE.FindUnit(unitEnvId);
           JSONObject dbUnit = ouci.isPresent() ? SafetyctMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(ouci.get().ConvertToMap()) : new JSONObject();
-          
           unit.put("standPlaatsKazerneCode", dbUnit.has("post") ? dbUnit.getString("post") : "");
 
+          // Add modified unit to incident, but not when incident is NOT GMS and unit is already on GMS incident
+          Boolean isGMSIncident = !incidentId.startsWith("FLK") && !incidentId.startsWith("DCU");
           oici = CACHE.FindActiveGMSIncident(envId, vhost, unitId);
-          if (!oici.isPresent()) {
+          if (isGMSIncident || !oici.isPresent()) {
             modifiedUnits.put(unit);
           }
         }

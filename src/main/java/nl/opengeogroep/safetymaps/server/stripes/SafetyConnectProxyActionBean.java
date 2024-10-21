@@ -250,7 +250,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   Point incLoc = geometryFactory.createPoint(incCoordinate);
                   String closureCode = discipline.has("afsluitCode") ? discipline.getString("afsluitCode") : "";
                   String concattedClosureCode = "Samengevoegd incident";
-                  boolean incIsNotConcattedOrIsUserisAuthForConcatted = closureCode != concattedClosureCode || (closureCode == concattedClosureCode && isauthfor_concatted);
+                  boolean incIsNotConcattedOrIsUserisAuthForConcatted = closureCode.equals(concattedClosureCode) == false || (closureCode.equals(concattedClosureCode) && isauthfor_concatted);
   
                   JSONArray notepad;
                   JSONArray discnotepad = new JSONArray();
