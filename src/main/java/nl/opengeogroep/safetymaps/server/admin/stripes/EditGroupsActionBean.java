@@ -56,6 +56,7 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
     private List<Map<String,Object>> allExtraRoles;
     private List<Map<String,Object>> allModules;
     private List<Map<String,Object>> allLayers;
+    private List<Map<String,Object>> allBgLayers;
     private List<String> allUsers;
 
     private boolean protectedGroup;
@@ -74,6 +75,12 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
 
     @Validate
     List<String> defaultlayers = new ArrayList<>();
+
+    @Validate
+    List<String> bglayers = new ArrayList<>();
+
+    @Validate
+    List<String> defaultBglayers = new ArrayList<>();
 
     @Validate
     List<String> users = new ArrayList<>();
@@ -101,8 +108,16 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
         return allLayers;
     }
 
-    public void setAllLayers(List<Map<String, Object>> allLayers) {
-        this.allLayers = allLayers;
+    public void setAllLayers(List<Map<String, Object>> allBgLayers) {
+        this.allLayers = allBgLayers;
+    }
+
+    public List<Map<String, Object>> getAllBgLayers() {
+      return allBgLayers;
+    }
+
+    public void setAllBgLayers(List<Map<String, Object>> allBgLayers) {
+        this.allBgLayers = allBgLayers;
     }
 
     public String getRole() {
@@ -169,6 +184,14 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
         this.defaultlayers = defaultlayers;
     }
 
+    public List<String> getBgLayers() {
+      return bglayers;
+    }
+
+    public void setBgLayers(List<String> bglayers) {
+        this.bglayers = bglayers;
+    }
+
     public List<String> getAllUsers() {
         return allUsers;
     }
@@ -195,6 +218,8 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
         allModules = qr().query("select issmvngmodule, name, enabled, description from organisation.modules where issmvngmodule = true order by description asc", new MapListHandler());
 
         allLayers = qr().query("select issmvngwms, uid, enabled, name from organisation.wms where issmvngwms = true and coalesce(isbackgroundlayer, false) = false and enabled = true order by 1, 2", new MapListHandler());
+
+        allBgLayers = qr().query("select issmvngwms, uid, enabled, name from organisation.wms where issmvngwms = true and coalesce(isbackgroundlayer, false) = true and enabled = true order by 1, 2", new MapListHandler());
 
         allUsers = qr().query("select username from " + USER_TABLE + " order by 1", new ColumnListHandler<String>());
     }
@@ -227,6 +252,10 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
         String dl = qr().query("select defaultwms from " + ROLE_TABLE + " where role = ?", new ScalarHandler<String>(), role);
         if(dl != null) {
             defaultlayers = Arrays.asList(dl.split(", "));
+        }
+        String bgl = qr().query("select bgwms from " + ROLE_TABLE + " where role = ?", new ScalarHandler<String>(), role);
+        if(bgl != null) {
+            bglayers = Arrays.asList(bgl.split(", "));
         }
         protectedGroup = Boolean.TRUE.equals(qr().query("select protected from " + ROLE_TABLE + " where role = ?", new ScalarHandler<>(), role));
 
@@ -285,10 +314,11 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
         String r = StringUtils.join(extraRoles, ", ");
         String l = StringUtils.join(layers, ", ");
         String dl = StringUtils.join(defaultlayers, ", ");
+        String bgl = StringUtils.join(bglayers, ", ");
 
-        int update = qr().update("update " + ROLE_TABLE + " set modules = ?, wms = ?, defaultwms = ?, roles = ? where role = ?", m, l, dl, r, role);
+        int update = qr().update("update " + ROLE_TABLE + " set modules = ?, wms = ?, defaultwms = ?, roles = ?, bgwms = ? where role = ?", m, l, dl, r, bgl, role);
         if(update == 0) {
-            qr().update("insert into " + ROLE_TABLE + " (role, modules, wms, defaultwms, roles) values(?, ?, ?, ?, ?)", role, m, l, dl, r);
+            qr().update("insert into " + ROLE_TABLE + " (role, modules, wms, defaultwms, roles, bgwms) values(?, ?, ?, ?, ?)", role, m, l, dl, r, bgl);
         }
 
         qr().update("delete from " + USER_ROLE_TABLE + " where role = ?", role);

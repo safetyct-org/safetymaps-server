@@ -167,9 +167,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                             </c:forEach>
                         </div>
                     </div>
+                    <div class="form-group">
+                      <label class="col-sm-2 control-label">Geautoriseerde achtergrondslagen:</label>
+                      <div class="col-sm-10">
+                          <p>
+                          <c:forEach var="layer" items="${actionBean.allBgLayers}" varStatus="status">
+                              <div class="custom-control custom-checkbox">
+                                  <stripes:checkbox name="layers" class="custom-control-input" value="${layer.uid}" id="authBgLayer${status.index}"/>
+                                  <label class="custom-control-label" for="authBgLayer${status.index}" style="${layer.enabled ? '' : 'text-decoration: line-through;'}"><c:out value="${layer.name} (${layer.uid})"/></label>
+                              </div>
+                          </c:forEach>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="col-sm-2 control-label">Standaard achtergrondslagen:</label>
+                      <div class="col-sm-10">
+                          <p>
+                          <c:forEach var="layer" items="${actionBean.bglayers}" varStatus="status">
+                              <div class="custom-control custom-checkbox">
+                                  <stripes:checkbox name="defaultlayers" class="custom-control-input" value="${layer}" id="bglayer${status.index}"/>
+                                  <label class="custom-control-label" for="bglayer${status.index}"><c:out value="${layer}"/></label>
+                              </div>
+                          </c:forEach>
+                      </div>
+                    </div>
                 </c:if>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">Gebruikers lid van deze groep:</label>
+                    <label class="col-sm-2 control-label">Gebruikers die lid zijn van deze groep:</label>
                     <div class="col-sm-10">
                         <p class="help-block text-warning">Let op: wijzigingen in groeplidmaatschap worden pas toegepast na uit- en inloggen. Als de uitlogknop is
                             verborgen kan alleen worden uitgelogd door de hele browsercache te legen of door een beheerder met de "Overal uitloggen" knop op de gebruikerspagina.</p>

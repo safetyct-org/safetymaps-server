@@ -165,6 +165,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                         </div--%>
                         <%--div class="checkbox">
                             <label><stripes:checkbox name="visible"/>Standaard ingeschakeld</label>
+                            <label><stripes:checkbox name="isBackground"/>Is achtergrondskaartlaag</label>
                         </div--%>                       
                         <div class="checkbox">
                             <label><stripes:checkbox name="hidefeatureinfo"/>Geen feature info weergeven</label>

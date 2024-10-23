@@ -81,6 +81,9 @@ public class LayerActionBean implements ActionBean, ValidationErrorHandler {
     private boolean visible = true;
 
     @Validate
+    private boolean isBackground = false;
+
+    @Validate
     private boolean hidefeatureinfo = true;
 
     @Validate
@@ -162,6 +165,14 @@ public class LayerActionBean implements ActionBean, ValidationErrorHandler {
 
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    public boolean isBackground() {
+      return isBackground;
+    }
+
+    public void setIsBackground(boolean isBackground) {
+        this.isBackground = isBackground;
     }
 
     public boolean isHidefeatureinfo() {
@@ -437,6 +448,7 @@ public class LayerActionBean implements ActionBean, ValidationErrorHandler {
 
         Object[] qparams = new Object[] {
             name,
+            isBackground,
             layer.getUrl(),
             layer.isProxy(),
             layer.isEnabled(),
@@ -449,13 +461,13 @@ public class LayerActionBean implements ActionBean, ValidationErrorHandler {
             layer.getLayertype(),
             layer.getIndex(),
             layer.getNotes(),
-            layer.getLegend()
+            layer.getLegend(),
         };
         if(layer.getGid() == null) {
             log.debug("inserting new layer: " + Arrays.toString(qparams));
             Integer newId = qr().insert(
                     "insert into " + TABLE
-                    + "(name,url,proxy,enabled,baselayer,params,options,getcapabilities,parent,pl,layertype,index,abstract,legend) "
+                    + "(name,isbackgroundlayer,url,proxy,enabled,baselayer,params,options,getcapabilities,parent,pl,layertype,index,abstract,legend) "
                     + "values(?,?,?,?,?,?::json,?::json,?,?,?,?,?,?,?)",
                     new ScalarHandler<Integer>(),
                     qparams);
@@ -466,7 +478,7 @@ public class LayerActionBean implements ActionBean, ValidationErrorHandler {
             log.debug("updating layer id " + layer.getGid() + ": " + Arrays.toString(qparams));
             qr().update(
                     "update " + TABLE
-                    + "set name=?,url=?,proxy=?,enabled=?,baselayer=?,params=?::json,options=?::json,getcapabilities=?,parent=?,pl=?,layertype=?,index=?,abstract=?,legend=? "
+                    + "set name=?,isbackgroundlayer=?,url=?,proxy=?,enabled=?,baselayer=?,params=?::json,options=?::json,getcapabilities=?,parent=?,pl=?,layertype=?,index=?,abstract=?,legend=? "
                     + "where gid=" + layer.getGid(),
                     qparams);
         }
