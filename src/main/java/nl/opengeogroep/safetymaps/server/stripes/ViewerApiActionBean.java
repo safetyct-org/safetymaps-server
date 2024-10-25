@@ -315,7 +315,7 @@ public class ViewerApiActionBean implements ActionBean {
         for(int i = 0; i < bglayers.length(); i++) {
             JSONObject layer = bglayers.getJSONObject(i);
             if(authorizedBgLayers.contains(layer.getString("uid"))) {
-                jaAuthorizedLayers.put(layer);
+              jaAuthorizedBgLayers.put(layer);
             }
         }
 
