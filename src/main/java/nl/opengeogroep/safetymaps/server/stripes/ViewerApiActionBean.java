@@ -273,12 +273,11 @@ public class ViewerApiActionBean implements ActionBean {
         organisation.put("username", request.getRemoteUser());
         organisation.put("helpUrl", Cfg.getSetting("help_url"));
 
-        List<Map<String,Object>> roles = new QueryRunner().query(c, "select role, modules, coalesce(wms, '') as wms, coalesce(defaultwms, '') as defaultwms, coalesce(bgwms, '') as bgwms, coalesce(defaultbgwms, '') as defaultbgwms from " + ROLE_TABLE + " where modules is not null", new MapListHandler());
+        List<Map<String,Object>> roles = new QueryRunner().query(c, "select role, modules, coalesce(wms, '') as wms, coalesce(defaultwms, '') as defaultwms, coalesce(bgwms, '') as bgwms from " + ROLE_TABLE + " where modules is not null", new MapListHandler());
         Set<String> authorizedModules = new HashSet();
         Set<String> authorizedLayers = new HashSet();
         Set<String> authorizedBgLayers = new HashSet();
         Set<String> defaultLayers = new HashSet();
-        Set<String> defaultBgLayers = new HashSet();
         for(Map<String,Object> role: roles) {
             if(request.isUserInRole(role.get("role").toString()) || request.isUserInRole(ROLE_ADMIN)) {
                 String modules = (String)role.get("modules");
@@ -289,8 +288,6 @@ public class ViewerApiActionBean implements ActionBean {
                 defaultLayers.addAll(Arrays.asList(dlayers.toLowerCase().split(", ")));
                 String bglayers = (String)role.get("bgwms");
                 authorizedBgLayers.addAll(Arrays.asList(bglayers.toLowerCase().split(", ")));
-                String dbglayers = (String)role.get("defaultbgwms");
-                defaultBgLayers.addAll(Arrays.asList(dbglayers.toLowerCase().split(", ")));
             }
         }
         JSONArray modules = organisation.getJSONArray("modules");
