@@ -179,18 +179,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                           </c:forEach>
                       </div>
                     </div>
-                    <div class="form-group">
-                      <label class="col-sm-2 control-label">Standaard achtergrondslagen:</label>
-                      <div class="col-sm-10">
-                          <p>
-                          <c:forEach var="layer" items="${actionBean.bglayers}" varStatus="status">
-                              <div class="custom-control custom-checkbox">
-                                  <stripes:checkbox name="defaultlayers" class="custom-control-input" value="${layer}" id="bglayer${status.index}"/>
-                                  <label class="custom-control-label" for="bglayer${status.index}"><c:out value="${layer}"/></label>
-                              </div>
-                          </c:forEach>
-                      </div>
-                    </div>
                 </c:if>
                 <div class="form-group">
                     <label class="col-sm-2 control-label">Gebruikers die lid zijn van deze groep:</label>
