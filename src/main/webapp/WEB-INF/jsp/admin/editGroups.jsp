@@ -173,7 +173,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                           <p>
                           <c:forEach var="layer" items="${actionBean.allBgLayers}" varStatus="status">
                               <div class="custom-control custom-checkbox">
-                                  <stripes:checkbox name="layers" class="custom-control-input" value="${layer.uid}" id="authBgLayer${status.index}"/>
+                                  <stripes:checkbox name="bglayers" class="custom-control-input" value="${layer.uid}" id="authBgLayer${status.index}"/>
                                   <label class="custom-control-label" for="authBgLayer${status.index}" style="${layer.enabled ? '' : 'text-decoration: line-through;'}"><c:out value="${layer.name} (${layer.uid})"/></label>
                               </div>
                           </c:forEach>
