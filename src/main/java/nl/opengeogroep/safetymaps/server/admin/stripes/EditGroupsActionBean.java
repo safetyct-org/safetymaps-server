@@ -80,9 +80,6 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
     List<String> bglayers = new ArrayList<>();
 
     @Validate
-    List<String> defaultBglayers = new ArrayList<>();
-
-    @Validate
     List<String> users = new ArrayList<>();
 
     // <editor-fold defaultstate="collapsed" desc="getters and setters">
@@ -184,11 +181,11 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
         this.defaultlayers = defaultlayers;
     }
 
-    public List<String> getBgLayers() {
+    public List<String> getBglayers() {
       return bglayers;
     }
 
-    public void setBgLayers(List<String> bglayers) {
+    public void setBglayers(List<String> bglayers) {
         this.bglayers = bglayers;
     }
 
