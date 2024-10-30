@@ -368,15 +368,24 @@ public class OIVActionBean implements ActionBean {
 
   private JSONArray dbkWithAddresList(Integer id) throws Exception {
     String where = id > 0 ? "where vo.id = ?" : "where vo.id <> ?";
-    List<Map<String,Object>> dbks = DB.oivQr().query(
+    /*List<Map<String,Object>> dbks = DB.oivQr().query(
         "select typeobject, ot.symbol_name, vo.id, vo.formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
         "from objecten.mview_objectgegevens vo " +
         "inner join objecten.object_type ot on ot.naam = vo.typeobject " + 
         "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id " +
         "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
         "left join objecten.mview_terrein t on vo.id = t.object_id " + where
-      , new MapListHandler(), id);
-    JSONArray results = new JSONArray();
+      , new MapListHandler(), id);*/
+
+    List<Map<String,Object>> dbks = DB.oivQr().query(
+      "select typeobject, ot.symbol_name, vo.id, vo.formelenaam, st_astext(vo.geom) geom, basisreg_identifier as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
+      "from objecten.mview_objectgegevens vo " + 
+      "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
+      "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id and vb.pand_id = basisreg_identifier " + 
+      "left join objecten.mview_terrein t on vo.id = t.object_id " + where
+    , new MapListHandler(), id);
+    
+      JSONArray results = new JSONArray();
 
     for(Map<String, Object> dbk: dbks) {
         String source = (String)dbk.get("bron");
