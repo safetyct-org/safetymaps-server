@@ -86,6 +86,12 @@ public class CACHE {
     CACHE.authCacheInitialized = new Date();
   }
 
+  public static final void ReInitializeAuthCache() throws SQLException, NamingException {
+    CACHE.authIncLocs.clear();
+    CACHE.auths.clear();
+    CACHE.InitializeAuthCache();
+  }
+
   public static final Boolean IsIncidentCacheInitialized() { return incidentCacheInitialized != null; }
   public static final void InitializeIncidentCache() throws SQLException, NamingException {
     List<Map<String, Object>> dbList = DB.qr().query("select * from safetymaps.incidents", new MapListHandler());

@@ -24,6 +24,7 @@ import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
 import net.sourceforge.stripes.validation.ValidationErrorHandler;
 import net.sourceforge.stripes.validation.ValidationErrors;
+import nl.opengeogroep.safetymaps.server.cache.CACHE;
 import nl.opengeogroep.safetymaps.server.db.DB;
 
 import org.apache.commons.dbutils.handlers.MapHandler;
@@ -166,6 +167,8 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
       String locString = StringUtils.join(locs, ",");
       DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs) VALUES(?, ?, ?)", group, mcs, locString);
     }
+
+    CACHE.ReInitializeAuthCache();
 
     return cancel();
   }

@@ -285,16 +285,12 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   {
                     Boolean isPutWithDefaultAuth = false;
                     if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
-                      //incidents.put(incident);
                       isPutWithDefaultAuth = true; 
                     } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
-                      //incidents.put(incident); 
                       isPutWithDefaultAuth = true;
                     } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && incident.getString("incidentId").startsWith(("FLK")) == false && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
-                      //incidents.put(incident); 
                       isPutWithDefaultAuth = true;
                     } else if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && incident.getString("incidentId").startsWith(("FLK")) == false && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") <= 3) {
-                      //incidents.put(incident); 
                       isPutWithDefaultAuth = true;
                     }
 
