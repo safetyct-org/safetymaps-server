@@ -188,7 +188,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       }
 
       try {
-        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_RA_CHANGED, "roadattention_changed");
+        //initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_RA_CHANGED, "roadattention_changed");
         LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_RA_CHANGED + "') initialized.");
       } catch (Exception e) {
         LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_RA_CHANGED + ")'", e);
