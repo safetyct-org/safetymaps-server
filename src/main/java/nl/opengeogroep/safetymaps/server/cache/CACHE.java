@@ -20,12 +20,71 @@ public class CACHE {
 
   private static Date incidentCacheInitialized = null;
   private static Date unitCacheInitialized = null;
+  private static Date roadAttentionCacheInitialized = null;
+  private static Date authCacheInitialized = null;
+
   private static final ArrayList<RoadAttentionCacheItem> roadAttentions = new ArrayList<RoadAttentionCacheItem>();
   private static final ArrayList<UnitCacheItem> units = new ArrayList<UnitCacheItem>();
   private static final ArrayList<IncidentCacheItem> incidents = new ArrayList<IncidentCacheItem>();
-  private static final Map<Integer, String> unitStatusList = new HashMap<Integer, String>();
+  private static final ArrayList<AuthCacheItem> auths = new ArrayList<AuthCacheItem>();
+  private static final ArrayList<AuthIncLocCacheItem> authIncLocs = new ArrayList<AuthIncLocCacheItem>();
 
+  private static final Map<Integer, String> unitStatusList = new HashMap<Integer, String>();
   public static List<Map<String,Object>> bag = new ArrayList<Map<String,Object>>();
+
+  //#region INITIALIZATION
+  public static final Boolean IsRoadAttentionCacheInitialized() { return roadAttentionCacheInitialized != null; }
+  public static final void InitializeRoadAttentionCache() throws SQLException, NamingException {
+    List<Map<String, Object>> dbList = DB.qr().query("select * from safetymaps.roadattentions", new MapListHandler());
+    for (Map<String, Object> dbItem : dbList) {
+      RoadAttentionCacheItem ci = new RoadAttentionCacheItem(
+        (String)dbItem.get("source"), 
+        (String)dbItem.get("sourceEnv"), 
+        (String)dbItem.get("sourceId"),
+        (String)dbItem.get("sourceEnvId"),
+        (String)dbItem.get("tenantId"),
+        (String)dbItem.get("kindOfAttention"),
+        "", 
+        (String)dbItem.get("attention"),
+        (Date)dbItem.get("beginDate"),
+        (Date)dbItem.get("endDate"),
+        (String)dbItem.get("geoLocation")
+      );
+
+      ci.Save();
+      CACHE.AddRoadAttention(ci);
+    }
+    
+    CACHE.authCacheInitialized = new Date();
+  }
+
+  public static final Boolean IsAuthCacheInitialized() { return authCacheInitialized != null; }
+  public static final void InitializeAuthCache() throws SQLException, NamingException {
+    List<Map<String, Object>> dbList = DB.qr().query("select id, loc from safetymaps.incidentlocations", new MapListHandler());
+    for (Map<String, Object> dbItem : dbList) {
+      AuthIncLocCacheItem ci = new AuthIncLocCacheItem(
+        (Integer)dbItem.get("id"),
+        (String)dbItem.get("loc")
+      );
+
+      CACHE.authIncLocs.add(ci);
+    }
+    
+    dbList = DB.qr().query("select * from safetymaps.incidentauthorization", new MapListHandler());
+    for (Map<String, Object> dbItem : dbList) {
+      AuthCacheItem ci = new AuthCacheItem(
+        (String)dbItem.get("role"), 
+        (String)dbItem.get("mcs"), 
+        (String)dbItem.get("locs"),
+        authIncLocs
+      );
+
+      ci.Save();
+      CACHE.AddAuth(ci);
+    }
+    
+    CACHE.authCacheInitialized = new Date();
+  }
 
   public static final Boolean IsIncidentCacheInitialized() { return incidentCacheInitialized != null; }
   public static final void InitializeIncidentCache() throws SQLException, NamingException {
@@ -87,18 +146,9 @@ public class CACHE {
     
     CACHE.unitCacheInitialized = new Date();
   }
+  //#endregion
 
-  public static final Map<Integer, String> GetUnitStatusList() throws SQLException, NamingException { 
-    if (CACHE.unitStatusList.size() == 0) {
-      List<Map<String, Object>> dbList = DB.qr().query("select * from safetymaps.mdstatusses", new MapListHandler());
-      for (Map<String, Object> dbItem : dbList) {
-        CACHE.unitStatusList.put((Integer)dbItem.get("gmsstatuscode"), (String)dbItem.get("gmsstatustext"));
-      }
-    }
-
-    return CACHE.unitStatusList; 
-  }
-
+  //#region ROADATTENTIONS 
   public static final Optional<RoadAttentionCacheItem> FindRoadAttention(String sourceEnvId) { 
     return CACHE.roadAttentions.stream().filter(ra -> ra.GetSourceEnvId().equals(sourceEnvId)).findFirst();
   }
@@ -122,6 +172,69 @@ public class CACHE {
 
   public static final List<RoadAttentionCacheItem> GetDirtyRoadAttentions() {
     return CACHE.roadAttentions.stream().filter(ci -> ci.IsDirty()).collect(Collectors.toList());
+  }
+
+  public static final void SaveRoadAttentions() throws SQLException, NamingException {
+    for (RoadAttentionCacheItem ci : CACHE.GetDirtyRoadAttentions()) {
+      ci.SaveToDb();
+      ci.Save();
+      CACHE.UpdateRoadAttention(ci.GetSourceEnvId(), ci);
+    }
+  }
+
+  public static final void CleanupRoadAttentions() throws SQLException, NamingException {
+    for (RoadAttentionCacheItem ci : CACHE.GetReadyToCleanupRoadAttentions()) {
+      ci.RemoveFromDb();
+      CACHE.roadAttentions.remove(ci);
+    }
+  }
+  //#endregion
+
+  //#region AUTH 
+  public static final List<AuthCacheItem> GetDirtyAuths() {
+    return CACHE.auths.stream().filter(ci -> ci.IsDirty()).collect(Collectors.toList());
+  }
+
+  public static final void SaveAuths() throws SQLException, NamingException {
+    for (AuthCacheItem ci : CACHE.GetDirtyAuths()) {
+      ci.SaveToDb();
+      ci.Save();
+      CACHE.UpdateAuth(ci.GetRoles(), ci);
+    }
+  }
+
+  public static final Optional<AuthCacheItem> FindAuth(String roles) { 
+    return CACHE.auths.stream().filter(a -> a.GetRoles().equals(roles)).findFirst();
+  }
+
+  public static final void UpdateAuth(String roles, AuthCacheItem aci) {
+    Optional<AuthCacheItem> oldAci = CACHE.FindAuth(roles);
+
+    if (oldAci.isPresent()) {
+      Integer index = CACHE.auths.indexOf(oldAci.get());
+      CACHE.auths.set(index, aci);
+    }
+  }
+
+  public static final void AddAuth(AuthCacheItem aci) {
+    CACHE.auths.add(aci);
+  }
+
+  public static final ArrayList<AuthCacheItem> GetAllAuths() {
+    return CACHE.auths;
+  }
+  //#endregion
+
+  //#region UNITS 
+  public static final Map<Integer, String> GetUnitStatusList() throws SQLException, NamingException { 
+    if (CACHE.unitStatusList.size() == 0) {
+      List<Map<String, Object>> dbList = DB.qr().query("select * from safetymaps.mdstatusses", new MapListHandler());
+      for (Map<String, Object> dbItem : dbList) {
+        CACHE.unitStatusList.put((Integer)dbItem.get("gmsstatuscode"), (String)dbItem.get("gmsstatustext"));
+      }
+    }
+
+    return CACHE.unitStatusList; 
   }
 
   public static final ArrayList<UnitCacheItem> GetAllUnits() { return CACHE.units; }
@@ -150,6 +263,16 @@ public class CACHE {
     }
   }
 
+  public static final void SaveUnits() throws SQLException, NamingException {
+    for (UnitCacheItem ci : CACHE.GetDirtyUnits()) {
+      ci.SaveToDb();
+      ci.Save();
+      CACHE.UpdateUnit(ci.GetSourceEnvId(), ci);
+    }
+  }
+  //#endregion
+
+  //#region INCIDENTS 
   public static final ArrayList<IncidentCacheItem> GetAllIncidents() { return CACHE.incidents; }
   public static final void AddIncident(IncidentCacheItem ci) {
     CACHE.incidents.add(ci);
@@ -192,34 +315,11 @@ public class CACHE {
     }
   }
 
-  public static final void SaveUnits() throws SQLException, NamingException {
-    for (UnitCacheItem ci : CACHE.GetDirtyUnits()) {
-      ci.SaveToDb();
-      ci.Save();
-      CACHE.UpdateUnit(ci.GetSourceEnvId(), ci);
-    }
-  }
-
   public static final void SaveIncidents() throws SQLException, NamingException {
     for (IncidentCacheItem ci : CACHE.GetDirtyIncidents()) {
       ci.SaveToDb();
       ci.Save();
       CACHE.UpdateIncident(ci.GetSourceEnvId(), ci);
-    }
-  }
-
-  public static final void SaveRoadAttentions() throws SQLException, NamingException {
-    for (RoadAttentionCacheItem ci : CACHE.GetDirtyRoadAttentions()) {
-      ci.SaveToDb();
-      ci.Save();
-      CACHE.UpdateRoadAttention(ci.GetSourceEnvId(), ci);
-    }
-  }
-
-  public static final void CleanupRoadAttentions() throws SQLException, NamingException {
-    for (RoadAttentionCacheItem ci : CACHE.GetReadyToCleanupRoadAttentions()) {
-      ci.RemoveFromDb();
-      CACHE.roadAttentions.remove(ci);
     }
   }
 
@@ -229,4 +329,6 @@ public class CACHE {
       CACHE.incidents.remove(ci);
     }
   }
+  //#endregion
+
 }

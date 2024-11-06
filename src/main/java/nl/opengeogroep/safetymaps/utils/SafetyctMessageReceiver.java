@@ -95,6 +95,15 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     }
 
     try {
+      CACHE.InitializeRoadAttentionCache();
+      CACHE.InitializeAuthCache();
+      
+      LOG.info("RoadAttention- and IncidentAuthCache initialized.");
+    } catch (Exception e) {
+      LOG.error("Exception while initializing RoadAttention- and IncidentAuthCache: ", e);
+    }
+
+    try {
       SCHEDULER = getSchedulerInstance();
 
       JobDetail cacheCleanJob = JobBuilder.newJob(CacheCleanJob.class)

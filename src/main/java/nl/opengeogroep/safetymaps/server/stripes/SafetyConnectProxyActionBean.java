@@ -6,6 +6,8 @@ import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.UrlBinding;
 import nl.b3p.web.stripes.ErrorMessageResolution;
+import nl.opengeogroep.safetymaps.server.cache.AuthCacheItem;
+import nl.opengeogroep.safetymaps.server.cache.AuthIncLocCacheItem;
 import nl.opengeogroep.safetymaps.server.cache.CACHE;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
@@ -298,24 +300,21 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
                     if (isPutWithDefaultAuth) {
                       Boolean userIsAuth = null;
-                      List<Map<String, Object>> auths = DB.qr().query("SELECT role, LOWER(mcs) mcs, locs FROM safetymaps.incidentauthorization WHERE mcs IS NOT NULL || locs IS NOT NULL", new MapListHandler());
-                      for(Map<String,Object> auth: auths) {
-                        String[] restrictedGroups = auth.get("role").toString().split(",");
+                      List<AuthCacheItem> auths = CACHE.GetAllAuths();
+                      for(AuthCacheItem auth: auths) {
+                        String[] restrictedGroups = auth.GetRolesArray();
                         for(int i1 = 0; i1< restrictedGroups.length; i1++) {
+                          // Userrole requires xtra auth on incident
                           if (request.isUserInRole(restrictedGroups[i1])) {
-                            
-                            if (auth.get("mcs") != null && auth.get("mcs").toString().length() > 0) {
-                              userIsAuth = auth.get("mcs").toString().contains(mc1.toLowerCase());
+                            // Xtra auth on mc
+                            if (auth.HasMcs()) {                            
+                              userIsAuth = auth.ContainsMc(mc1.toLowerCase());
                             }
-
-                            if ((userIsAuth == null || userIsAuth) && auth.get("locs") != null && auth.get("locs").toString().length() > 0) {
-                              String[] locs = auth.get("locs").toString().split(",");
-                              for(int i2 = 0; i2< locs.length; i2++) {
-                                Map<String, Object> loc = DB.qr().query("SELECT loc FROM safetymaps.incidentlocations WHERE id=?", new MapHandler(), Integer.parseInt(locs[i2]));
-                                WKTReader reader = new WKTReader(geometryFactory);
-                                Polygon locPol = (Polygon) reader.read(loc.get("loc").toString());
-                                
-                                userIsAuth = locPol.contains(incLoc);
+                            // Xtra auth on location
+                            if (auth.HasLocs()) {
+                              List<AuthIncLocCacheItem> locs = auth.GetIncLocs();
+                              for(AuthIncLocCacheItem loc : locs) {
+                                userIsAuth = loc.PointIsInLoc(incLoc);
                               }
                             }
                           }
