@@ -2,6 +2,7 @@ package nl.opengeogroep.safetymaps.server.cache;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ public class AuthCacheItem extends CacheItem {
     this.mcs = mcs.toLowerCase();
     this.locs = locs;
 
-    this.incLocs = allIncLocs.stream().filter(il -> locs.contains(il.GetIdString())).collect(Collectors.toList());
+    this.incLocs = allIncLocs.stream().filter(il -> Arrays.stream(locs.split(",")).filter(l -> l.equals(il.GetIdString())).count() > 0).collect(Collectors.toList());
 
     this.Renew();
   }

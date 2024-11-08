@@ -311,6 +311,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                               List<AuthIncLocCacheItem> locs = auth.GetIncLocs();
                               log.info("TEMP AUTH LOG: " + locs.size());
                               for(AuthIncLocCacheItem loc : locs) {
+                                log.info("TEMP AUTHITEM LOG: " + loc.GetIdString());
                                 if (loc.PointIsInLoc(incLoc)) {
                                   userIsAuth = true;
                                 }
