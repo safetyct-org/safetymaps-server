@@ -303,15 +303,17 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                           // Userrole requires xtra auth on incident
                           if (request.isUserInRole(restrictedGroups[i1])) {
                             // Xtra auth on mc
-                            if (auth.HasMcs() && auth.ContainsMc(mc1.toLowerCase())) {                            
-                              userIsAuth = true;
+                            if (auth.HasMcs()) {
+                              userIsAuth = false;
+                              if (auth.ContainsMc(mc1.toLowerCase())) {                            
+                                userIsAuth = true;
+                              }
                             }
                             // Xtra auth on location
-                            if (auth.HasLocs()) {
+                            if (userIsAuth == null || userIsAuth && auth.HasLocs()) {
+                              userIsAuth = false;
                               List<AuthIncLocCacheItem> locs = auth.GetIncLocs();
-                              log.info("TEMP AUTH LOG: " + locs.size());
                               for(AuthIncLocCacheItem loc : locs) {
-                                log.info("TEMP AUTHITEM LOG: " + loc.GetIdString());
                                 if (loc.PointIsInLoc(incLoc)) {
                                   userIsAuth = true;
                                 }
