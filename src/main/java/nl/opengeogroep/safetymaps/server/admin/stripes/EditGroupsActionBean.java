@@ -315,7 +315,7 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
 
         int update = qr().update("update " + ROLE_TABLE + " set modules = ?, wms = ?, defaultwms = ?, roles = ?, bgwms = ? where role = ?", m, l, dl, r, bgl, role);
         if(update == 0) {
-            qr().update("insert into " + ROLE_TABLE + " (role, modules, wms, defaultwms, roles, bgwms) values(?, ?, ?, ?, ?)", role, m, l, dl, r, bgl);
+            qr().update("insert into " + ROLE_TABLE + " (role, modules, wms, defaultwms, roles, bgwms) values(?, '?', '?', '?', '?')", role, m, l, dl, r, bgl);
         }
 
         qr().update("delete from " + USER_ROLE_TABLE + " where role = ?", role);
