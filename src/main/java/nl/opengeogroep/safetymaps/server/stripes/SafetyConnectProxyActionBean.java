@@ -3,7 +3,6 @@ package nl.opengeogroep.safetymaps.server.stripes;
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.Resolution;
-import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.UrlBinding;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.cache.AuthCacheItem;
@@ -13,9 +12,6 @@ import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
 import nl.opengeogroep.safetymaps.utils.SafetyctMessageUtil;
 
-import org.apache.commons.dbutils.handlers.ColumnListHandler;
-import org.apache.commons.dbutils.handlers.MapHandler;
-import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.time.DateUtils;
@@ -34,8 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,19 +40,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.GZIPOutputStream;
-/*import java.awt.Polygon;
-import java.awt.Point;*/
-import org.geotools.geometry.jts.JTS;
-import org.geotools.geometry.jts.JTSFactoryFinder;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.Polygon;
-import org.locationtech.jts.io.WKTReader;
 
 import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
 import static nl.opengeogroep.safetymaps.server.db.DB.getUserDetails;
@@ -310,10 +297,10 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                               }
                             }
                             // Xtra auth on location
-                            if (userIsAuth == null || userIsAuth && auth.HasLocs()) {
+                            if ((userIsAuth == null || userIsAuth) && auth.HasLocs()) {
                               userIsAuth = false;
                               List<AuthIncLocCacheItem> locs = auth.GetIncLocs();
-                              for(AuthIncLocCacheItem loc : locs) {
+                              for(AuthIncLocCacheItem loc: locs) {
                                 if (loc.PointIsInLoc(incLoc)) {
                                   userIsAuth = true;
                                 }
