@@ -378,11 +378,12 @@ public class OIVActionBean implements ActionBean {
       , new MapListHandler(), id);*/
 
     List<Map<String,Object>> dbks = DB.oivQr().query(
-      "select typeobject, ot.symbol_name, vo.id, vo.formelenaam, st_astext(vo.geom) geom, basisreg_identifier as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
+      "select typeobject, ot.symbol_name, vo.id, vo.formelenaam, st_astext(vo.geom) geom, basisreg_identifier as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(ST_Union(ST_SnapToGrid(t.geom, 0.0001))) as terrein_geom " +
       "from objecten.mview_objectgegevens vo " + 
       "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
       "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id and vb.pand_id = basisreg_identifier " + 
-      "left join objecten.mview_terrein t on vo.id = t.object_id " + where
+      "left join objecten.mview_terrein t on vo.id = t.object_id " + where +
+      " group by typeobject, ot.symbol_name, vo.id, vo.formelenaam, vo.geom, basisreg_identifier, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag"
     , new MapListHandler(), id);
     
       JSONArray results = new JSONArray();
