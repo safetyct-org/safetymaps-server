@@ -468,7 +468,7 @@ public class LayerActionBean implements ActionBean, ValidationErrorHandler {
             Integer newId = qr().insert(
                     "insert into " + TABLE
                     + "(name,isbackgroundlayer,url,proxy,enabled,baselayer,params,options,getcapabilities,parent,pl,layertype,index,abstract,legend) "
-                    + "values(?,?,?,?,?,?::json,?::json,?,?,?,?,?,?,?)",
+                    + "values(?,?,?,?,?,?,?::json,?::json,?,?,?,?,?,?,?)",
                     new ScalarHandler<Integer>(),
                     qparams);
             layer.setGid(newId);
