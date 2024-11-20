@@ -1,5 +1,6 @@
 package nl.opengeogroep.safetymaps.utils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -515,39 +516,41 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
   private static String bindQueue(Channel channel, String rqMb, String event, String vhost, String host) {
     String queueName = RQ_OPTIONAL_NAME_PREFIX + "_" + RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
-    Boolean boundToExisting = true, boundToNew = false;
+    List<Exception> eList = new ArrayList<Exception>();
     // Try to bind to exisiting queue
     try {
       channel.queueBind(queueName, rqMb, "");
-      boundToExisting = true;
     } catch (Exception e) {
-      boundToExisting = false;
+      eList.add(e);
     }
     // When queue with queueName does not exist create new queue and bind to it
-    try {
-      // Backwards compatibility, disallow args on old server
-      Map<String, Object> args = new HashMap<>();
-      if (host.equals("10.233.184.139") == false) {
-        List<String> params = Arrays.asList(RQ_PARAMS.split(","));
-        params.forEach((param) -> {
-          String[] paramArr = param.split(":");
-          if (paramArr.length == 2) {
-            args.put(paramArr[0], paramArr[1]);
-          }
-        });
+    if (eList.size() > 0) {
+      try {
+        // Backwards compatibility, disallow args on old server
+        Map<String, Object> args = new HashMap<>();
+        if (host.equals("10.233.184.139") == false) {
+          List<String> params = Arrays.asList(RQ_PARAMS.split(","));
+          params.forEach((param) -> {
+            String[] paramArr = param.split(":");
+            if (paramArr.length == 2) {
+              args.put(paramArr[0], paramArr[1]);
+            }
+          });
+        }
+        // Create queue and bind to it
+        channel.queueDeclare(queueName, true, false, false, args);
+        channel.queueBind(queueName, rqMb, "");
+      } catch (Exception e) {
+        eList.add(e);
       }
-      // Create queue and bind to it
-      channel.queueDeclare(queueName, true, false, false, args);
-      channel.queueBind(queueName, rqMb, "");
-      boundToNew = true;
-    } catch (Exception e) {
-      boundToNew = false;
     }
-    if (!boundToExisting && !boundToNew) {
+    if (eList.size() > 0) {
+      for (Exception e : eList) {
+        LOG.error("Exception while binding queue '" + queueName + "': " + e);
+      }
       try {
         DB.qr().update("DELETE FROM safetymaps.rq WHERE queuenname = ?", queueName);
       } catch (Exception e) { }
-      LOG.error("Exception while executing bindQueue('" + rqMb + "', '" + event + "')");
       return null;
     } else {
       try {
