@@ -260,17 +260,22 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     RQ_CONNECTIONS.put(vhost, rqConFac.newConnection());
   }
 
-  private static void initRabbitMqChannel(String vhost, String host, String rqMb, String internalEvent) throws Exception {    
-    Channel channel = RQ_CONNECTIONS.get(vhost).createChannel();
-    channel.basicQos(1);
-
+  private static void initRabbitMqChannel(String vhost, String host, String rqMb, String internalEvent) throws Exception {  
+    String queueName = RQ_OPTIONAL_NAME_PREFIX + "_" + RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + internalEvent;
     String channelName = nameChannel(vhost, rqMb);
     DeliverCallback messageHandler = getMessageHandler(vhost, rqMb, channelName);
-    String queueName = bindQueue(channel, rqMb, internalEvent, vhost, host);
 
-    channel.basicConsume(queueName, false, messageHandler, consumerTag -> { });
+    Channel channel = tryCreateChannel(vhost);
+    Boolean queueIsBinded = tryBindQueue(channel, rqMb, queueName);
+    if (!queueIsBinded) {
+      channel = tryCreateChannel(vhost);
+      queueIsBinded = tryDeclareAndBindQueue(channel, rqMb, queueName, host);
+    }
 
-    RQ_CHANNELS.put(channelName, channel);
+    if (queueIsBinded) {
+      channel.basicConsume(queueName, false, messageHandler, consumerTag -> { });
+      RQ_CHANNELS.put(channelName, channel);
+    }
   }
 
   private static DeliverCallback getMessageHandler(String vhost, String rqMb, String channelName) {
@@ -514,37 +519,52 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     return object;
   }
 
-  private static String bindQueue(Channel channel, String rqMb, String event, String vhost, String host) {
-    String queueName = RQ_OPTIONAL_NAME_PREFIX + "_" + RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
-    List<Exception> eList = new ArrayList<Exception>();
+  private static Channel tryCreateChannel(String vhost) {
+    try {
+      Channel channel = RQ_CONNECTIONS.get(vhost).createChannel();
+      channel.basicQos(1);
+      return channel;
+    } catch (Exception e) {
+      LOG.error("Exception while creating channel on '" + vhost + "': " + e);
+      return null;
+    }
+  }
+
+  private static Boolean tryBindQueue(Channel channel, String rqMb, String queueName) {
     // Try to bind to exisiting queue
     try {
       channel.queueBind(queueName, rqMb, "");
+      return true;
     } catch (Exception e) {
-      eList.add(e);
+      LOG.error("Exception while binding queue '" + queueName + "': " + e);
+      return false;
     }
-    // When queue with queueName does not exist create new queue and bind to it
-    if (eList.size() > 0) {
-      try {
-        // Backwards compatibility, disallow args on old server
-        Map<String, Object> args = new HashMap<>();
-        if (host.equals("10.233.184.139") == false) {
-          List<String> params = Arrays.asList(RQ_PARAMS.split(","));
-          params.forEach((param) -> {
-            String[] paramArr = param.split(":");
-            if (paramArr.length == 2) {
-              args.put(paramArr[0], paramArr[1]);
-            }
-          });
-        }
-        // Create queue and bind to it
-        channel.queueDeclare(queueName, true, false, false, args);
-        channel.queueBind(queueName, rqMb, "");
-      } catch (Exception e) {
-        eList.add(e);
+  }
+
+  private static Boolean tryDeclareAndBindQueue(Channel channel, String rqMb, String queueName, String host) {
+    try {
+      // Backwards compatibility, disallow args on old server
+      Map<String, Object> args = new HashMap<>();
+      if (host.equals("10.233.184.139") == false) {
+        List<String> params = Arrays.asList(RQ_PARAMS.split(","));
+        params.forEach((param) -> {
+          String[] paramArr = param.split(":");
+          if (paramArr.length == 2) {
+            args.put(paramArr[0], paramArr[1]);
+          }
+        });
       }
+      // Create queue and bind to it
+      channel.queueDeclare(queueName, true, false, false, args);
+      channel.queueBind(queueName, rqMb, "");
+      return true;
+    } catch (Exception e) {
+      LOG.error("Exception while binding queue '" + queueName + "': " + e);
+      return false;
     }
-    if (eList.size() > 0) {
+  }
+
+    /*if (eList.size() > 0) {
       for (Exception e : eList) {
         LOG.error("Exception while binding queue '" + queueName + "': " + e);
       }
@@ -561,7 +581,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       } catch (Exception e) { }
       return queueName;
     }
-  }
+  }*/
 
   /*private static String nameQueue(Channel channel, String rqMb, String event, String vhost, String host) {
     String name = null;
