@@ -222,12 +222,6 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         LOG.error("Exception on 'RQ_CONNECTIONS.get(" + key + ").close()'", e);
       }
     });
-
-    try {
-      DB.qr().update("DELETE FROM safetymaps.rq");
-    } catch (Exception e) {
-      LOG.error("Exception while cleaning up after contextDestroyed: ", e);
-    }
   }
 
   private static void getConfigFromDb() throws Exception {
@@ -268,9 +262,10 @@ public class SafetyctMessageReceiver implements ServletContextListener {
   private static void initRabbitMqChannel(String vhost, String host, String rqMb, String internalEvent) throws Exception {    
     Channel channel = RQ_CONNECTIONS.get(vhost).createChannel();
     channel.basicQos(1);
-    String queueName = nameQueue(channel, rqMb, internalEvent, vhost, host);
+
     String channelName = nameChannel(vhost, rqMb);
     DeliverCallback messageHandler = getMessageHandler(vhost, rqMb, channelName);
+    String queueName = bindQueue(channel, rqMb, internalEvent, vhost, host);
 
     channel.basicConsume(queueName, false, messageHandler, consumerTag -> { });
 
@@ -518,10 +513,57 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     return object;
   }
 
-  private static String nameQueue(Channel channel, String rqMb, String event, String vhost, String host) {
+  private static String bindQueue(Channel channel, String rqMb, String event, String vhost, String host) {
+    String queueName = RQ_OPTIONAL_NAME_PREFIX + "_" + RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
+    Boolean boundToExisting = true, boundToNew = false;
+    // Try to bind to exisiting queue
+    try {
+      channel.queueBind(queueName, rqMb, "");
+      boundToExisting = true;
+    } catch (Exception e) {
+      boundToExisting = false;
+    }
+    // When queue with queueName does not exist create new queue and bind to it
+    try {
+      // Backwards compatibility, disallow args on old server
+      Map<String, Object> args = new HashMap<>();
+      if (host.equals("10.233.184.139") == false) {
+        List<String> params = Arrays.asList(RQ_PARAMS.split(","));
+        params.forEach((param) -> {
+          String[] paramArr = param.split(":");
+          if (paramArr.length == 2) {
+            args.put(paramArr[0], paramArr[1]);
+          }
+        });
+      }
+      // Create queue and bind to it
+      channel.queueDeclare(queueName, true, false, false, args);
+      channel.queueBind(queueName, rqMb, "");
+      boundToNew = true;
+    } catch (Exception e) {
+      boundToNew = false;
+    }
+    if (!boundToExisting && !boundToNew) {
+      try {
+        DB.qr().update("DELETE FROM safetymaps.rq WHERE queuenname = ?", queueName);
+      } catch (Exception e) { }
+      LOG.error("Exception while executing bindQueue('" + rqMb + "', '" + event + "')");
+      return null;
+    } else {
+      try {
+        Integer dbRec = DB.qr().query("select count(*) from safetymaps.rq where queuenname = ?", new ScalarHandler<Integer>(), queueName);
+        if (dbRec == 0) {
+          DB.qr().update("INSERT INTO safetymaps.rq (queuenname, messagebus) VALUES (?, ?)", queueName, rqMb);
+        }
+      } catch (Exception e) { }
+      return queueName;
+    }
+  }
+
+  /*private static String nameQueue(Channel channel, String rqMb, String event, String vhost, String host) {
     String name = null;
     String checkByName = RQ_OPTIONAL_NAME_PREFIX + "_" + RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
-    
+    // Record in DB always exists, try to bind and then on error make new one and update db.
     try {
       name = DB.qr().query("select queuenname from safetymaps.rq where queuenname = ?", new ScalarHandler<String>(), checkByName);
       if (name != null) {
@@ -530,7 +572,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       } else {
         Map<String, Object> args = new HashMap<>();
 
-        // Backwards compatible, disallow args on old server
+        // Backwards compatibility, disallow args on old server
         if (host.equals("10.233.184.139") == false) {
           List<String> params = Arrays.asList(RQ_PARAMS.split(","));
           params.forEach((param) -> {
@@ -552,7 +594,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       LOG.error("Exception while executing nameQueue('" + rqMb + "', '" + event + "'): ", e);
       return null;
     }
-  }
+  }*/
 
   private static String nameChannel(String vhost, String rqMb) {
     return RQ_VHOSTS.substring(0, 1) + "-" + vhost + "-" + rqMb;
