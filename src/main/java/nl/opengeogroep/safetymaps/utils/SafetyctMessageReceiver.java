@@ -276,7 +276,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       channel.basicConsume(queueName, false, messageHandler, consumerTag -> { });
       RQ_CHANNELS.put(channelName, channel);
 
-      Integer dbRec = DB.qr().query("select count(*) from safetymaps.rq where queuenname = ?", new ScalarHandler<Integer>(), queueName);
+      Long dbRec = DB.qr().query("select count(*) from safetymaps.rq where queuenname = ?", new ScalarHandler<Long>(), queueName);
       if (dbRec == 0) {
         LOG.info("Queue '" + queueName + "' is binded su6fully.");
         DB.qr().update("INSERT INTO safetymaps.rq (queuenname, messagebus) VALUES (?, ?)", queueName, rqMb);
