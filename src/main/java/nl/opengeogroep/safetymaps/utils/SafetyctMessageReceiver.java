@@ -364,7 +364,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         Double lat = (Double)move.getDouble("lat");
         Integer speed = move.has("speed") && move.get("speed").toString() != "null" ? move.getInt("speed") : 0;
         Integer heading = move.has("heading") && move.get("heading").toString() != "null" ? move.getInt("heading") : 0;
-        Integer eta = move.has("eta") && move.get("eta").toString() != "null" ? move.getInt("eta") : 0;
+        Integer eta = move.has("eta") && move.get("eta").toString() != "null" ? move.getInt("eta") : null;
 
         Optional<UnitCacheItem> oci = CACHE.FindUnit(envId);
         if (oci.isPresent()) {

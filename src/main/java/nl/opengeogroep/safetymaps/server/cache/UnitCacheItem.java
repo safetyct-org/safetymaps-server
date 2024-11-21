@@ -63,7 +63,10 @@ public class UnitCacheItem extends CacheItem {
     this.lat = lat;
     this.speed = speed;
     this.heading = heading;
-    this.eta = eta;
+    
+    if (eta != null) {
+      this.eta = eta;
+    }
 
     this.Renew();
   }
