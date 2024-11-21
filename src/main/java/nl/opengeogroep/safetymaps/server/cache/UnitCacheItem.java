@@ -68,6 +68,12 @@ public class UnitCacheItem extends CacheItem {
     this.Renew();
   }
 
+  public void UpdateEta(Integer etaInSec) {
+    this.eta = etaInSec;
+
+    this.Renew();
+  }
+
   public Map<String, Object> ConvertToMap() {
     Map<String, Object> cacheObject = new HashMap<String, Object>();
 

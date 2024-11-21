@@ -67,9 +67,10 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
   private static final String RQ_MB_INCIDENT_CHANGED = "SafetyConnect.Messages.IncidentChanged:IIncidentChangedEvent";
   private static final String RQ_MB_UNIT_CHANGED = "SafetyConnect.Messages.EenheidChanged:IEenheidChangedEvent";
-  private static final String RQ_MB_UNIT_MOVED = "SafetyConnect.Messages.PositionReceived:IPositionReceivedEvent";
+  private static final String RQ_MB_POSITION_RECEIVED = "SafetyConnect.Messages.PositionReceived:IPositionReceivedEvent";
   private static final String RQ_MB_RA_CHANGED = "SafetyConnect.Messages.RoadAttentionChanged:IRoadAttentionChangedEvent";
   private static final String RQ_MB_RA_SYNC = "SafetyConnect.Messages.RoadAttentionsSynchronize:IRoadAttentionsSynchronizeEvent";
+  private static final String RQ_MB_ETA_RECEIVED = "SafetyConnect.Messages.EtaReceived:IEtaReceivedEvent";
 
   @Override
   public void contextInitialized(ServletContextEvent sce) {
@@ -168,7 +169,6 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       if (onlyUnitSubscription == false) {
         try {
           initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_INCIDENT_CHANGED, "incident_changed");
-          LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_INCIDENT_CHANGED + "') initialized.");
         } catch (Exception e) {
           LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_INCIDENT_CHANGED + ")'", e);
         }
@@ -176,28 +176,30 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
       try {
         initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_UNIT_CHANGED, "unit_changed");
-        LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_CHANGED + "') initialized.");
       } catch (Exception e) {
         LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_CHANGED + ")'", e);
       }
 
       try {
-        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_UNIT_MOVED, "unit_moved");
-        LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_UNIT_MOVED + "') initialized.");
+        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_POSITION_RECEIVED, "unit_moved");
       } catch (Exception e) {
-        LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_MOVED + ")'", e);
+        LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_POSITION_RECEIVED + ")'", e);
+      }
+
+      try {
+        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_ETA_RECEIVED, "eta_received");
+      } catch (Exception e) {
+        LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_ETA_RECEIVED + ")'", e);
       }
 
       try {
         //initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_RA_CHANGED, "roadattention_changed");
-        LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_RA_CHANGED + "') initialized.");
       } catch (Exception e) {
         LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_RA_CHANGED + ")'", e);
       }
 
       try {
-        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_RA_SYNC, "roadattention_synchronized");
-        LOG.info("SafetyConnectMessageReceiver RabbitMqChannel('" + vhost + "', '" + RQ_MB_RA_SYNC + "') initialized.");
+        //initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_RA_SYNC, "roadattention_synchronized");
       } catch (Exception e) {
         LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_RA_SYNC + ")'", e);
       }
@@ -298,8 +300,11 @@ public class SafetyctMessageReceiver implements ServletContextListener {
           case RQ_MB_UNIT_CHANGED:
             handleUnitChangedMessage(vhost, msgBody);
             break;
-          case RQ_MB_UNIT_MOVED:
+          case RQ_MB_POSITION_RECEIVED:
             handleUnitMovedMessage(vhost, msgBody);
+            break;
+          case RQ_MB_ETA_RECEIVED:
+            handleEtaReceivedMessage(vhost, msgBody);
             break;
           case RQ_MB_RA_CHANGED:
             handleRoadAttentionChangeMessage(vhost, msgBody);
@@ -371,6 +376,24 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     } catch (Exception e) {
       LOG.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
       throw new RuntimeException(e);
+    }
+  }
+
+  private static void handleEtaReceivedMessage(String vhost, String msgBody) {
+    JSONObject eta = extractObjectFromMessage(msgBody);
+    
+    String etaId = eta.getString("unit");
+    String envId = vhost + '-' + etaId;
+
+    if (unitIsForMyRegion(eta, Arrays.asList(RQ_REGIONS.split(",")))) {
+      Integer etaInSec = eta.has("etaInSec") && eta.get("etaInSec").toString() != "null" ? eta.getInt("etaInSec") : 0;
+
+      Optional<UnitCacheItem> oci = CACHE.FindUnit(envId);
+      if (oci.isPresent()) {
+        UnitCacheItem ci = oci.get();
+        ci.UpdateEta(etaInSec);
+        CACHE.UpdateUnit(envId, ci);
+      }
     }
   }
 
@@ -571,61 +594,6 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       return false;
     }
   }
-
-    /*if (eList.size() > 0) {
-      for (Exception e : eList) {
-        LOG.error("Exception while binding queue '" + queueName + "': " + e);
-      }
-      try {
-        DB.qr().update("DELETE FROM safetymaps.rq WHERE queuenname = ?", queueName);
-      } catch (Exception e) { }
-      return null;
-    } else {
-      try {
-        Integer dbRec = DB.qr().query("select count(*) from safetymaps.rq where queuenname = ?", new ScalarHandler<Integer>(), queueName);
-        if (dbRec == 0) {
-          DB.qr().update("INSERT INTO safetymaps.rq (queuenname, messagebus) VALUES (?, ?)", queueName, rqMb);
-        }
-      } catch (Exception e) { }
-      return queueName;
-    }
-  }*/
-
-  /*private static String nameQueue(Channel channel, String rqMb, String event, String vhost, String host) {
-    String name = null;
-    String checkByName = RQ_OPTIONAL_NAME_PREFIX + "_" + RQ_VHOSTS.substring(0, 1) + "_" + vhost + "_SMVNG_" + StringUtils.join(RQ_SENDERS, "_") + "_" + event;
-    // Record in DB always exists, try to bind and then on error make new one and update db.
-    try {
-      name = DB.qr().query("select queuenname from safetymaps.rq where queuenname = ?", new ScalarHandler<String>(), checkByName);
-      if (name != null) {
-        channel.queueBind(name, rqMb, "");
-        return name;
-      } else {
-        Map<String, Object> args = new HashMap<>();
-
-        // Backwards compatibility, disallow args on old server
-        if (host.equals("10.233.184.139") == false) {
-          List<String> params = Arrays.asList(RQ_PARAMS.split(","));
-          params.forEach((param) -> {
-            String[] paramArr = param.split(":");
-            if (paramArr.length == 2) {
-              args.put(paramArr[0], paramArr[1]);
-            }
-          });
-        }
-
-        name = channel.queueDeclare(checkByName, true, false, false, args).getQueue();
-        channel.queueBind(name, rqMb, "");
-
-        DB.qr().update("INSERT INTO safetymaps.rq (queuenname, messagebus) VALUES (?, ?)", name, rqMb);
-
-        return name;
-      }
-    } catch (Exception e) {
-      LOG.error("Exception while executing nameQueue('" + rqMb + "', '" + event + "'): ", e);
-      return null;
-    }
-  }*/
 
   private static String nameChannel(String vhost, String rqMb) {
     return RQ_VHOSTS.substring(0, 1) + "-" + vhost + "-" + rqMb;
