@@ -384,7 +384,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     
     String etaId = eta.getString("unit");
     String envId = vhost + '-' + etaId;
-
+    LOG.info(etaId + " : " + envId);
     if (unitIsForMyRegion(eta, Arrays.asList(RQ_REGIONS.split(",")))) {
       Integer etaInSec = eta.has("etaInSec") && eta.get("etaInSec").toString() != "null" ? eta.getInt("etaInSec") : 0;
 
