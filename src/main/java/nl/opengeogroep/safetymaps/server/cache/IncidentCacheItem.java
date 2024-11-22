@@ -154,12 +154,12 @@ public class IncidentCacheItem extends CacheItem {
   }
 
   public void RemoveFromDb() throws SQLException, NamingException {
-    DB.qr().update("DELETE FROM safetymaps.incidents WHERE source = ? and sourceEnvId = ?", source, sourceEnvId);
+    DB.qr().update("DELETE FROM safetymaps.incidents WHERE sourceEnvId = ?", sourceEnvId);
   }
 
   public Boolean IsActive() { return this.status.equals("operationeel"); }
 
   public Boolean IsReadyForCleanup() {
-    return !IsDirty() && IsExpiredAfter(1 * 60 * 24 * 5) && !status.equals("operationeel");
+    return !IsDirty() && IsExpiredAfter(1 * 60 * 24 * 2) && !IsActive();
   }
 }
