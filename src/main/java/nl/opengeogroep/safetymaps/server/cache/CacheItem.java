@@ -12,7 +12,11 @@ public class CacheItem {
   protected String sourceEnvId;
 
   public void Renew() {
-    this.updated = new Date();
+    this.dirty = true;
+  }
+
+  public void Renew(Date lastUpdated) {
+    this.updated = lastUpdated;
     this.dirty = true;
   }
 

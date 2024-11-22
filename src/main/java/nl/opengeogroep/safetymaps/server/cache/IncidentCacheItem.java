@@ -1,8 +1,10 @@
 package nl.opengeogroep.safetymaps.server.cache;
 
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Date;
 
 import javax.naming.NamingException;
 
@@ -53,7 +55,17 @@ public class IncidentCacheItem extends CacheItem {
     this.talkinggroups = talkinggroups;
     this.number = number;
 
-    this.Renew();
+    JSONObject disciplineJSON = new JSONObject(discipline);
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    
+    Date startDate;
+    try {
+      startDate = disciplineJSON.has("startDtg") ? dateFormat.parse(disciplineJSON.getString("startDtg").replaceAll("T", " ")) : new Date();
+    } catch (Exception e) {
+      startDate = new Date();
+    }
+
+    this.Renew(startDate);
   }
 
   public void UpdateIncident(String notes,
