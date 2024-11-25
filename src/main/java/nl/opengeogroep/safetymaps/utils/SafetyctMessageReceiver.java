@@ -2,6 +2,7 @@ package nl.opengeogroep.safetymaps.utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -210,6 +211,15 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
   @Override
   public void contextDestroyed(ServletContextEvent sce) {
+    if(SCHEDULER != null) {
+      try {
+        SCHEDULER.shutdown(true);
+        LOG.debug("Incident- and UnitCache scheduler stopped");
+      } catch (SchedulerException ex) {
+        LOG.error("Cannot shutdown quartz scheduler Incident- and UnitCache", ex);
+      }
+    }
+
     RQ_CHANNELS.forEach((key, value) -> {
       try { 
         RQ_CHANNELS.get(key).close();
