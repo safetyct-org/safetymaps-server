@@ -1,18 +1,25 @@
 package nl.opengeogroep.safetymaps.server.cache;
 
+import static nl.opengeogroep.safetymaps.server.db.DB.getUserDetails;
+
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import javax.naming.NamingException;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.dbutils.handlers.MapListHandler;
+import org.json.JSONObject;
 
 import nl.opengeogroep.safetymaps.server.db.DB;
 
@@ -23,14 +30,42 @@ public class CACHE {
   private static Date roadAttentionCacheInitialized = null;
   private static Date authCacheInitialized = null;
 
-  private static final ArrayList<RoadAttentionCacheItem> roadAttentions = new ArrayList<RoadAttentionCacheItem>();
-  private static final ArrayList<UnitCacheItem> units = new ArrayList<UnitCacheItem>();
-  private static final ArrayList<IncidentCacheItem> incidents = new ArrayList<IncidentCacheItem>();
-  private static final ArrayList<AuthCacheItem> auths = new ArrayList<AuthCacheItem>();
-  private static final ArrayList<AuthIncLocCacheItem> authIncLocs = new ArrayList<AuthIncLocCacheItem>();
+  /*private static final List<RoadAttentionCacheItem> roadAttentions = new CopyOnWriteArrayList<RoadAttentionCacheItem>();
+  private static final List<UnitCacheItem> units = new CopyOnWriteArrayList<UnitCacheItem>();
+  private static final List<IncidentCacheItem> incidents = new CopyOnWriteArrayList<IncidentCacheItem>();*/
 
-  private static final Map<Integer, String> unitStatusList = new HashMap<Integer, String>();
-  public static List<Map<String,Object>> bag = new ArrayList<Map<String,Object>>();
+  private static final Map<Integer, String> unitStatusList = new ConcurrentHashMap<Integer, String>();
+  private static final Map<String, RoadAttentionCacheItem> roadAttentions = new ConcurrentHashMap<String, RoadAttentionCacheItem>();
+  private static final Map<String, UnitCacheItem> units = new ConcurrentHashMap<String, UnitCacheItem>();
+  private static final Map<String, IncidentCacheItem> incidents = new ConcurrentHashMap<String, IncidentCacheItem>();
+  private static final Map<String, List<String>> userVehicles = new ConcurrentHashMap<String, List<String>>();
+  private static final List<AuthCacheItem> auths = new CopyOnWriteArrayList<AuthCacheItem>();
+  private static final List<AuthIncLocCacheItem> authIncLocs = new CopyOnWriteArrayList<AuthIncLocCacheItem>();
+
+  public static List<Map<String,Object>> bag = new CopyOnWriteArrayList<Map<String,Object>>();
+
+  //#region  USERVEHICLE
+  public static final List<String> GetUserVehicles(HttpServletRequest request) {
+    String username = request.getRemoteUser();
+    Optional<List<String>> vehicleList = Optional.ofNullable(userVehicles.get(username));
+
+    if (!vehicleList.isPresent()) {
+      try(Connection c = DB.getConnection()) {
+        JSONObject details = getUserDetails(request, c);   
+        vehicleList = Optional.of(Arrays.asList(details.optString("voertuignummer", "-").replaceAll("\\s", ",").replaceAll("-", "").split(",")));
+        userVehicles.put(username, vehicleList.get());
+      } catch(Exception e) {
+        return null;
+      }
+    }
+
+    return vehicleList.get();
+  }
+  
+  public static final void ClearUserVehicles(String username) {
+    userVehicles.remove(username);
+  }
+  //#endregion 
 
   //#region INITIALIZATION
   public static final Boolean IsRoadAttentionCacheInitialized() { return roadAttentionCacheInitialized != null; }
@@ -156,28 +191,31 @@ public class CACHE {
 
   //#region ROADATTENTIONS 
   public static final Optional<RoadAttentionCacheItem> FindRoadAttention(String sourceEnvId) { 
-    return CACHE.roadAttentions.stream().filter(ra -> ra.GetSourceEnvId().equals(sourceEnvId)).findFirst();
+    return Optional.ofNullable(CACHE.roadAttentions.get(sourceEnvId));
+    //return CACHE.roadAttentions.values().stream().filter(ra -> ra.GetSourceEnvId().equals(sourceEnvId)).findFirst();
   }
 
   public static final void AddRoadAttention(RoadAttentionCacheItem raci) {
-    CACHE.roadAttentions.add(raci);
+    CACHE.roadAttentions.put(raci.GetSourceEnvId(), raci);
+    //CACHE.roadAttentions.add(raci);
   }
 
   public static final void UpdateRoadAttention(String sourceEnvId, RoadAttentionCacheItem raci) {
-    Optional<RoadAttentionCacheItem> oldRaci = CACHE.FindRoadAttention(sourceEnvId);
+    CACHE.roadAttentions.put(sourceEnvId, raci);
+    /*Optional<RoadAttentionCacheItem> oldRaci = CACHE.FindRoadAttention(sourceEnvId);
 
     if (oldRaci.isPresent()) {
       Integer index = CACHE.roadAttentions.indexOf(oldRaci.get());
       CACHE.roadAttentions.set(index, raci);
-    }
+    }*/
   }
 
   public static final List<RoadAttentionCacheItem> GetReadyToCleanupRoadAttentions() {
-    return CACHE.roadAttentions.stream().filter(ci -> ci.IsReadyForCleanup()).collect(Collectors.toList());
+    return CACHE.roadAttentions.values().stream().filter(ci -> ci.IsReadyForCleanup()).collect(Collectors.toList());
   }
 
   public static final List<RoadAttentionCacheItem> GetDirtyRoadAttentions() {
-    return CACHE.roadAttentions.stream().filter(ci -> ci.IsDirty()).collect(Collectors.toList());
+    return CACHE.roadAttentions.values().stream().filter(ci -> ci.IsDirty()).collect(Collectors.toList());
   }
 
   public static final void SaveRoadAttentions() throws SQLException, NamingException {
@@ -191,7 +229,7 @@ public class CACHE {
   public static final void CleanupRoadAttentions() throws SQLException, NamingException {
     for (RoadAttentionCacheItem ci : CACHE.GetReadyToCleanupRoadAttentions()) {
       ci.RemoveFromDb();
-      CACHE.roadAttentions.remove(ci);
+      CACHE.roadAttentions.remove(ci.GetSourceEnvId());
     }
   }
   //#endregion
@@ -226,7 +264,7 @@ public class CACHE {
     CACHE.auths.add(aci);
   }
 
-  public static final ArrayList<AuthCacheItem> GetAllAuths() {
+  public static final List<AuthCacheItem> GetAllAuths() {
     return CACHE.auths;
   }
   //#endregion
@@ -243,30 +281,33 @@ public class CACHE {
     return CACHE.unitStatusList; 
   }
 
-  public static final ArrayList<UnitCacheItem> GetAllUnits() { return CACHE.units; }
+  public static final List<UnitCacheItem> GetAllUnits() { return CACHE.units.values().stream().collect(Collectors.toList()); }
   public static final void AddUnit(UnitCacheItem ci) {
-    CACHE.units.add(ci);
+    CACHE.units.put(ci.GetSourceEnvId(), ci);
+    //CACHE.units.add(ci);
   }
 
   public static final Optional<UnitCacheItem> FindUnit(String sourceEnvId) { 
-    return CACHE.units.stream().filter(u -> u.GetSourceEnvId().equals(sourceEnvId)).findFirst();
+    return Optional.ofNullable(CACHE.units.get(sourceEnvId));
+    //return CACHE.units.stream().filter(u -> u.GetSourceEnvId().equals(sourceEnvId)).findFirst();
   }
 
   public static final List<Map<String, Object>> GetUnits(String sourceEnv) {
-    return CACHE.units.stream().filter(u -> u.GetSourceEnv().equals(sourceEnv)).map(u -> u.ConvertToMap()).collect(Collectors.toList());
+    return CACHE.units.values().stream().filter(u -> u.GetSourceEnv().equals(sourceEnv)).map(u -> u.ConvertToMap()).collect(Collectors.toList());
   }
 
   public static final List<UnitCacheItem> GetDirtyUnits() {
-    return CACHE.units.stream().filter(u -> u.IsDirty()).collect(Collectors.toList());
+    return CACHE.units.values().stream().filter(u -> u.IsDirty()).collect(Collectors.toList());
   }
 
   public static final void UpdateUnit(String sourceEnvId, UnitCacheItem ci) {
-    Optional<UnitCacheItem> oldCi = CACHE.FindUnit(sourceEnvId);
+    CACHE.units.put(sourceEnvId, ci);
+    /*Optional<UnitCacheItem> oldCi = CACHE.FindUnit(sourceEnvId);
 
     if (oldCi.isPresent()) {
       Integer index = CACHE.units.indexOf(oldCi.get());
       CACHE.units.set(index, ci);
-    }
+    }*/
   }
 
   public static final void SaveUnits() throws SQLException, NamingException {
@@ -279,46 +320,49 @@ public class CACHE {
   //#endregion
 
   //#region INCIDENTS 
-  public static final ArrayList<IncidentCacheItem> GetAllIncidents() { return CACHE.incidents; }
+  public static final List<IncidentCacheItem> GetAllIncidents() { return CACHE.incidents.values().stream().collect(Collectors.toList()); }
   public static final void AddIncident(IncidentCacheItem ci) {
-    CACHE.incidents.add(ci);
+    CACHE.incidents.put(ci.GetSourceEnvId(), ci);
+    //CACHE.incidents.add(ci);
   }
 
   public static final Optional<IncidentCacheItem> FindIncident(String sourceEnvId) { 
-    return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnvId)).findFirst();
+    return Optional.ofNullable(CACHE.incidents.get(sourceEnvId));
+    //return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnvId)).findFirst();
   }
 
   public static final Optional<IncidentCacheItem> FindActiveNonGMSIncident(String sourceEnvId, String env, String unitSourceId) {
-    return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnvId) == false && i.IsActive() && i.GetSourceEnv().equals(env) && !i.IsFromGMS() && i.IsForUnit(unitSourceId)).findFirst();
+    return CACHE.incidents.values().stream().filter(i -> i.GetSourceEnvId().equals(sourceEnvId) == false && i.IsActive() && i.GetSourceEnv().equals(env) && !i.IsFromGMS() && i.IsForUnit(unitSourceId)).findFirst();
   }
 
   public static final Optional<IncidentCacheItem> FindActiveGMSIncident(String sourceEnvId, String env, String unitSourceId) {
-    return CACHE.incidents.stream().filter(i -> i.GetSourceEnvId().equals(sourceEnvId) == false && i.IsActive() && i.GetSourceEnv().equals(env) && i.IsFromGMS() && i.IsForUnit(unitSourceId)).findFirst();
+    return CACHE.incidents.values().stream().filter(i -> i.GetSourceEnvId().equals(sourceEnvId) == false && i.IsActive() && i.GetSourceEnv().equals(env) && i.IsFromGMS() && i.IsForUnit(unitSourceId)).findFirst();
   }
 
   public static final Optional<IncidentCacheItem> FindActiveIncident(String sourceEnv, String unitSourceId) {
-    return CACHE.incidents.stream().filter(i -> i.GetSourceEnv().equals(sourceEnv) && i.IsActive() && i.IsForUnit(unitSourceId)).findFirst();
+    return CACHE.incidents.values().stream().filter(i -> i.GetSourceEnv().equals(sourceEnv) && i.IsActive() && i.IsForUnit(unitSourceId)).findFirst();
   }
 
   public static final List<Map<String, Object>> GetIncidents(String sourceEnv) {
-    return CACHE.incidents.stream().filter(i -> i.GetSourceEnv().equals(sourceEnv)).map(i -> i.ConvertToMap()).collect(Collectors.toList());
+    return CACHE.incidents.values().stream().filter(i -> i.GetSourceEnv().equals(sourceEnv)).map(i -> i.ConvertToMap()).collect(Collectors.toList());
   }
 
   public static final List<IncidentCacheItem> GetDirtyIncidents() {
-    return CACHE.incidents.stream().filter(u -> u.IsDirty()).collect(Collectors.toList());
+    return CACHE.incidents.values().stream().filter(u -> u.IsDirty()).collect(Collectors.toList());
   }
 
   public static final List<IncidentCacheItem> GetReadyToCleanupIncidents() {
-    return CACHE.incidents.stream().filter(u -> u.IsReadyForCleanup()).collect(Collectors.toList());
+    return CACHE.incidents.values().stream().filter(u -> u.IsReadyForCleanup()).collect(Collectors.toList());
   }
 
   public static final void UpdateIncident(String sourceEnvId, IncidentCacheItem ci) {
-    Optional<IncidentCacheItem> oldCi = CACHE.FindIncident(sourceEnvId);
+    CACHE.incidents.put(sourceEnvId, ci);
+    /*Optional<IncidentCacheItem> oldCi = CACHE.FindIncident(sourceEnvId);
 
     if (oldCi.isPresent()) {
       Integer index = CACHE.incidents.indexOf(oldCi.get());
       CACHE.incidents.set(index, ci);
-    }
+    }*/
   }
 
   public static final void SaveIncidents() throws SQLException, NamingException {
@@ -332,7 +376,7 @@ public class CACHE {
   public static final void CleanupIncidents() throws SQLException, NamingException {
     for (IncidentCacheItem ci : CACHE.GetReadyToCleanupIncidents()) {
       ci.RemoveFromDb();
-      CACHE.incidents.remove(ci);
+      CACHE.incidents.remove(ci.GetSourceEnvId());
     }
   }
   //#endregion

@@ -32,6 +32,7 @@ import net.sourceforge.stripes.validation.SimpleError;
 import net.sourceforge.stripes.validation.Validate;
 import net.sourceforge.stripes.validation.ValidationErrorHandler;
 import net.sourceforge.stripes.validation.ValidationErrors;
+import nl.opengeogroep.safetymaps.server.cache.CACHE;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.security.PersistentSessionManager;
 import nl.opengeogroep.safetymaps.server.security.UpdatableLoginSessionFilter;
@@ -335,6 +336,8 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
             JSONObject details = new JSONObject();
             details.put("voertuignummer", voertuignummer);
             detailsString = details.toString();
+            // Reset uservehcile on cache
+            CACHE.ClearUserVehicles(username);
         }
 
         int update = qr().update("update " + USER_TABLE + " set password = ?, session_expiry_number = ?, session_expiry_timeunit = ?, details = ?::json, guid = ? where username = ?", hashedPassword, expiry, expiryTimeUnit, detailsString, guid, username);

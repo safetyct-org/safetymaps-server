@@ -21,7 +21,7 @@ public class AuthCacheItem extends CacheItem {
   private String locs;
   private List<AuthIncLocCacheItem> incLocs;
 
-  public AuthCacheItem(String roles, String mcs, String locs, ArrayList<AuthIncLocCacheItem> allIncLocs) {
+  public AuthCacheItem(String roles, String mcs, String locs, List<AuthIncLocCacheItem> allIncLocs) {
     this.roles = roles;
     this.mcs = mcs.toLowerCase();
     this.locs = locs;

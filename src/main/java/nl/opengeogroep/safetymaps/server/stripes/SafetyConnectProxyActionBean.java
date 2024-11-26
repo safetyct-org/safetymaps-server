@@ -602,7 +602,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
       String incidentForUserVehicle = "";
       for(int v=0; v<units.length(); v++) {
           JSONObject vehicle = (JSONObject)units.get(v);
-          if (incidentForUserVehicle == "" && getUserVehicleList().contains(vehicle.get("roepnaam"))) {
+          if (incidentForUserVehicle == "" && CACHE.GetUserVehicles(context.getRequest()).contains(vehicle.get("roepnaam"))) {
               incidentForUserVehicle = (String)incident.get("incidentId");
           }
       }
@@ -610,7 +610,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
       return incidentForUserVehicle;
     }
 
-    private List<String> getUserVehicleList() {
+    /*private List<String> getUserVehicleList() {
       HttpServletRequest request = context.getRequest();
 
       try(Connection c = DB.getConnection()) {
@@ -619,7 +619,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
       } catch(Exception e) {
         return null;
       }
-    }
+    }*/
 
     private Resolution unAuthorizedResolution() {
         return new ErrorMessageResolution(HttpServletResponse.SC_FORBIDDEN, "Gebruiker heeft geen toegang tot webservice");
