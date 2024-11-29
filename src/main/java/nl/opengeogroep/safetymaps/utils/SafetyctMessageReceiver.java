@@ -611,7 +611,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
   private static boolean isForMe(JSONObject object, String key, List<String> valuesToCheck) {
     boolean matched = false;
-    String keyValue = object.getString(key);
+    String keyValue = object.has(key) ? object.getString(key) : "897hkjsbdfkhbvas-u0uefjdsnvzxckn9083928u84723hkjdjksdhf";
 
     matched = valuesToCheck.contains(keyValue);
     
