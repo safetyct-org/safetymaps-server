@@ -53,7 +53,10 @@ public class CACHE {
       try(Connection c = DB.getConnection()) {
         JSONObject details = getUserDetails(request, c);   
         vehicleList = Optional.of(Arrays.asList(details.optString("voertuignummer", "-").replaceAll("\\s", ",").replaceAll("-", "").split(",")));
-        userVehicles.put(username, vehicleList.get());
+
+        synchronized(CACHE.userVehicles) {
+          CACHE.userVehicles.put(username, vehicleList.get());
+        }
       } catch(Exception e) {
         return null;
       }
@@ -63,7 +66,9 @@ public class CACHE {
   }
   
   public static final void ClearUserVehicles(String username) {
-    userVehicles.remove(username);
+    synchronized(CACHE.userVehicles) {
+      userVehicles.remove(username);
+    }
   }
   //#endregion 
 
@@ -256,12 +261,16 @@ public class CACHE {
 
     if (oldAci.isPresent()) {
       Integer index = CACHE.auths.indexOf(oldAci.get());
-      CACHE.auths.set(index, aci);
+      synchronized(CACHE.auths) {
+        CACHE.auths.set(index, aci);
+      }
     }
   }
 
   public static final void AddAuth(AuthCacheItem aci) {
-    CACHE.auths.add(aci);
+    synchronized(CACHE.auths) {
+      CACHE.auths.add(aci);
+    }
   }
 
   public static final List<AuthCacheItem> GetAllAuths() {
@@ -283,7 +292,9 @@ public class CACHE {
 
   public static final List<UnitCacheItem> GetAllUnits() { return CACHE.units.values().stream().collect(Collectors.toList()); }
   public static final void AddUnit(UnitCacheItem ci) {
-    CACHE.units.put(ci.GetSourceEnvId(), ci);
+    synchronized(CACHE.units) {
+      CACHE.units.put(ci.GetSourceEnvId(), ci);
+    }
     //CACHE.units.add(ci);
   }
 
@@ -301,7 +312,9 @@ public class CACHE {
   }
 
   public static final void UpdateUnit(String sourceEnvId, UnitCacheItem ci) {
-    CACHE.units.put(sourceEnvId, ci);
+    synchronized(CACHE.units) {
+      CACHE.units.put(sourceEnvId, ci);
+    }
     /*Optional<UnitCacheItem> oldCi = CACHE.FindUnit(sourceEnvId);
 
     if (oldCi.isPresent()) {
@@ -322,7 +335,9 @@ public class CACHE {
   //#region INCIDENTS 
   public static final List<IncidentCacheItem> GetAllIncidents() { return CACHE.incidents.values().stream().collect(Collectors.toList()); }
   public static final void AddIncident(IncidentCacheItem ci) {
-    CACHE.incidents.put(ci.GetSourceEnvId(), ci);
+    synchronized(CACHE.incidents) {
+      CACHE.incidents.put(ci.GetSourceEnvId(), ci);
+    }
     //CACHE.incidents.add(ci);
   }
 
@@ -356,7 +371,9 @@ public class CACHE {
   }
 
   public static final void UpdateIncident(String sourceEnvId, IncidentCacheItem ci) {
-    CACHE.incidents.put(sourceEnvId, ci);
+    synchronized(CACHE.incidents) {
+      CACHE.incidents.put(sourceEnvId, ci);
+    }
     /*Optional<IncidentCacheItem> oldCi = CACHE.FindIncident(sourceEnvId);
 
     if (oldCi.isPresent()) {
@@ -376,7 +393,9 @@ public class CACHE {
   public static final void CleanupIncidents() throws SQLException, NamingException {
     for (IncidentCacheItem ci : CACHE.GetReadyToCleanupIncidents()) {
       ci.RemoveFromDb();
-      CACHE.incidents.remove(ci.GetSourceEnvId());
+      synchronized(CACHE.incidents) {
+        CACHE.incidents.remove(ci.GetSourceEnvId());
+      }
     }
   }
   //#endregion
