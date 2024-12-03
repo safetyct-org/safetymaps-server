@@ -3,17 +3,23 @@ package nl.opengeogroep.safetymaps.server.stripes;
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowsToJson;
 
+import java.io.OutputStream;
+import java.io.StringReader;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
 
 import javax.naming.NamingException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.dbutils.handlers.MapHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
@@ -95,19 +101,56 @@ public class OIVActionBean implements ActionBean {
 
     result.put("symbols", result_symbols);
     
-    return new StreamingResolution("application/json", result.toString());
+    //return new StreamingResolution("application/json", result.toString());
+    return new Resolution() {
+      @Override
+      public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        OutputStream out;
+        String encoding = "UTF-8";
+        String acceptEncoding = request.getHeader("Accept-Encoding");
+        response.setCharacterEncoding(encoding);
+        response.setContentType("application/json");
+        if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+            response.setHeader("Content-Encoding", "gzip");
+            out = new GZIPOutputStream(response.getOutputStream(), true);
+        } else {
+            out = response.getOutputStream();
+        }
+        IOUtils.copy(new StringReader(result.toString()), out, encoding);
+        out.flush();
+        out.close();
+      }
+    };
   }
 
-  private Resolution objects() throws SQLException, NamingException {
-    JSONArray results = new JSONArray();
-
-    try {
+  private Resolution objects() throws SQLException, NamingException, Exception {
+    final JSONArray results = dbkWithAddresList(0);
+    /*try {
       results = dbkWithAddresList(0);
     } catch(Exception e) {
       log.error("Error while handling object in OVIActionBean.objects", e);
     }
-
-    return new StreamingResolution("application/json", results.toString());
+    */
+    //return new StreamingResolution("application/json", results.toString());
+    return new Resolution() {
+      @Override
+      public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        OutputStream out;
+        String encoding = "UTF-8";
+        String acceptEncoding = request.getHeader("Accept-Encoding");
+        response.setCharacterEncoding(encoding);
+        response.setContentType("application/json");
+        if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+            response.setHeader("Content-Encoding", "gzip");
+            out = new GZIPOutputStream(response.getOutputStream(), true);
+        } else {
+            out = response.getOutputStream();
+        }
+        IOUtils.copy(new StringReader(results.toString()), out, encoding);
+        out.flush();
+        out.close();
+      }
+    };
   }
 
   private Resolution object() throws JSONException, Exception {
@@ -363,7 +406,26 @@ public class OIVActionBean implements ActionBean {
     dbkJSON.put("symbolen", rowsToJson(symbols, false, false));
     dbkJSON.put("labels", rowsToJson(labels, false, false));
 
-    return new StreamingResolution("application/json", dbkJSON.toString());
+    //return new StreamingResolution("application/json", dbkJSON.toString());
+    return new Resolution() {
+      @Override
+      public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        OutputStream out;
+        String encoding = "UTF-8";
+        String acceptEncoding = request.getHeader("Accept-Encoding");
+        response.setCharacterEncoding(encoding);
+        response.setContentType("application/json");
+        if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
+            response.setHeader("Content-Encoding", "gzip");
+            out = new GZIPOutputStream(response.getOutputStream(), true);
+        } else {
+            out = response.getOutputStream();
+        }
+        IOUtils.copy(new StringReader(dbkJSON.toString()), out, encoding);
+        out.flush();
+        out.close();
+      }
+    };
   }
 
   private JSONArray dbkWithAddresList(Integer id) throws Exception {
