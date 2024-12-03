@@ -1,6 +1,7 @@
 package nl.opengeogroep.safetymaps.server.cache;
 
 import static nl.opengeogroep.safetymaps.server.db.DB.getUserDetails;
+import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -19,6 +20,7 @@ import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.dbutils.handlers.MapListHandler;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import nl.opengeogroep.safetymaps.server.db.DB;
@@ -43,6 +45,61 @@ public class CACHE {
   private static final List<AuthIncLocCacheItem> authIncLocs = new CopyOnWriteArrayList<AuthIncLocCacheItem>();
 
   public static List<Map<String,Object>> bag = new CopyOnWriteArrayList<Map<String,Object>>();
+  public static JSONArray dbkwithaddress = new JSONArray();
+
+  //#region  DBK
+  public static final void AddDbk(JSONObject dbk) {
+    synchronized(CACHE.dbkwithaddress) {
+      CACHE.dbkwithaddress.put(dbk);
+    }
+  }
+
+  public static final void ClearDbks() {
+    synchronized(CACHE.dbkwithaddress) {
+      CACHE.dbkwithaddress = new JSONArray();
+    }
+  }
+
+  public static final void ReInitDbks() throws SQLException, NamingException, Exception {
+    ClearDbks();
+    
+    List<Map<String,Object>> dbks = DB.oivQr().query(
+      "select typeobject, ot.symbol_name, vo.id, vo.formelenaam, st_astext(vo.geom) geom, basisreg_identifier as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(ST_Union(ST_SnapToGrid(t.geom, 0.0001))) as terrein_geom " +
+      "from objecten.mview_objectgegevens vo " + 
+      "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
+      "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id and vb.pand_id = basisreg_identifier " + 
+      "left join objecten.mview_terrein t on vo.id = t.object_id " +
+      " group by typeobject, ot.symbol_name, vo.id, vo.formelenaam, vo.geom, basisreg_identifier, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag"
+    , new MapListHandler());
+    
+    for(Map<String, Object> dbk: dbks) {
+        String source = (String)dbk.get("bron");
+        String bid = (String)dbk.get("bid");
+        JSONObject result = rowToJson(dbk, false, false);
+
+        if ("BAG".equals(source)) {
+          List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
+              "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam, pandid " +
+              "from bag_actueel.adres_full " +
+              "where pandid = ?"
+            , new MapListHandler(), bid);
+          
+          JSONArray addresses = new JSONArray();
+          for(Map<String, Object> da: dbkAdresses) {
+            CACHE.bag.add(da);
+            addresses.put(rowToJson(da, true, false));
+          }
+          result.put("adressen", addresses);
+        } else {
+          result.put("adressen", new JSONArray());
+        }
+
+        synchronized(CACHE.dbkwithaddress) {
+          CACHE.dbkwithaddress.put(result);
+        }
+    }
+  }
+  //#endregion
 
   //#region  USERVEHICLE
   public static final List<String> GetUserVehicles(HttpServletRequest request) {

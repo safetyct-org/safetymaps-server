@@ -39,6 +39,7 @@ import com.rabbitmq.client.DeliverCallback;
 
 import nl.opengeogroep.safetymaps.server.cache.CACHE;
 import nl.opengeogroep.safetymaps.server.cache.CacheCleanJob;
+import nl.opengeogroep.safetymaps.server.cache.CacheDbkJob;
 import nl.opengeogroep.safetymaps.server.cache.CacheSaveJob;
 import nl.opengeogroep.safetymaps.server.cache.IncidentCacheItem;
 import nl.opengeogroep.safetymaps.server.cache.RoadAttentionCacheItem;
@@ -51,6 +52,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
   private static ServletContext CONTEXT;
   private static Scheduler SCHEDULER = null;
+  private static String OIV_DBK;
   private static String RQ_SENDERS;
   private static String RQ_TENANTS;
   private static String RQ_REGIONS;
@@ -107,6 +109,13 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     }
 
     try {
+      CACHE.ReInitDbks();
+      LOG.info("DbkCache initialized.");
+    } catch (Exception e) {
+      LOG.error("Exception while initializing DbkCache: ", e);
+    }
+
+    try {
       SCHEDULER = getSchedulerInstance();
 
       JobDetail cacheCleanJob = JobBuilder.newJob(CacheCleanJob.class)
@@ -135,10 +144,24 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         .withSchedule(csCacheSave)
         .build();
 
-        SCHEDULER.scheduleJob(cacheCleanJob, cacheCleanTrigger);
-        SCHEDULER.scheduleJob(cacheSaveJob, cacheSaveTrigger);
+      SCHEDULER.scheduleJob(cacheCleanJob, cacheCleanTrigger);
+      SCHEDULER.scheduleJob(cacheSaveJob, cacheSaveTrigger);
 
-        LOG.info("Incident- and UnitCache schedule configred.");
+      if (OIV_DBK.equals("true")) {
+        JobDetail cacheDbkJob = JobBuilder.newJob(CacheDbkJob.class)
+        .withIdentity("CacheDbk job")
+        .withDescription("Load DBK list into cach each hour at the start of each hour")
+        .build();
+        CronScheduleBuilder csCacheDbk = CronScheduleBuilder.cronSchedule(ceCacheClean);
+        Trigger cacheDbkTrigger = TriggerBuilder.newTrigger()
+          .withIdentity("CacheDbk trigger")
+          .startNow()
+          .withSchedule(csCacheDbk)
+          .build();
+        SCHEDULER.scheduleJob(cacheDbkJob, cacheDbkTrigger);
+      }
+
+      LOG.info("Incident- and UnitCache schedule configred.");
     } catch (Exception e) {
       LOG.error("Exception while configuring schedules for Incident- and UnitCache: ", e);
     }
@@ -238,6 +261,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
   }
 
   private static void getConfigFromDb() throws Exception {
+    OIV_DBK = Cfg.getSetting("oivdbk", "false");
     RQ_HOST = Cfg.getSetting("safetyconnect_rq_host");
     RQ_VHOSTS = Cfg.getSetting("safetyconnect_rq_vhost");
     RQ_USER = Cfg.getSetting("safetyconnect_rq_user");

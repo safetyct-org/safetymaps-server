@@ -429,52 +429,56 @@ public class OIVActionBean implements ActionBean {
   }
 
   private JSONArray dbkWithAddresList(Integer id) throws Exception {
-    String where = id > 0 ? "where vo.id = ?" : "where vo.id <> ?";
-    /*List<Map<String,Object>> dbks = DB.oivQr().query(
-        "select typeobject, ot.symbol_name, vo.id, vo.formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
-        "from objecten.mview_objectgegevens vo " +
-        "inner join objecten.object_type ot on ot.naam = vo.typeobject " + 
-        "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id " +
-        "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
-        "left join objecten.mview_terrein t on vo.id = t.object_id " + where
-      , new MapListHandler(), id);*/
+    if (id > 0 ) {
+      String where = id > 0 ? "where vo.id = ?" : "where vo.id <> ?";
+      /*List<Map<String,Object>> dbks = DB.oivQr().query(
+          "select typeobject, ot.symbol_name, vo.id, vo.formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
+          "from objecten.mview_objectgegevens vo " +
+          "inner join objecten.object_type ot on ot.naam = vo.typeobject " + 
+          "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id " +
+          "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
+          "left join objecten.mview_terrein t on vo.id = t.object_id " + where
+        , new MapListHandler(), id);*/
 
-    List<Map<String,Object>> dbks = DB.oivQr().query(
-      "select typeobject, ot.symbol_name, vo.id, vo.formelenaam, st_astext(vo.geom) geom, basisreg_identifier as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(ST_Union(ST_SnapToGrid(t.geom, 0.0001))) as terrein_geom " +
-      "from objecten.mview_objectgegevens vo " + 
-      "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
-      "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id and vb.pand_id = basisreg_identifier " + 
-      "left join objecten.mview_terrein t on vo.id = t.object_id " + where +
-      " group by typeobject, ot.symbol_name, vo.id, vo.formelenaam, vo.geom, basisreg_identifier, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag"
-    , new MapListHandler(), id);
-    
-      JSONArray results = new JSONArray();
+      List<Map<String,Object>> dbks = DB.oivQr().query(
+        "select typeobject, ot.symbol_name, vo.id, vo.formelenaam, st_astext(vo.geom) geom, basisreg_identifier as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(ST_Union(ST_SnapToGrid(t.geom, 0.0001))) as terrein_geom " +
+        "from objecten.mview_objectgegevens vo " + 
+        "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
+        "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id and vb.pand_id = basisreg_identifier " + 
+        "left join objecten.mview_terrein t on vo.id = t.object_id " + where +
+        " group by typeobject, ot.symbol_name, vo.id, vo.formelenaam, vo.geom, basisreg_identifier, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag"
+      , new MapListHandler(), id);
+      
+        JSONArray results = new JSONArray();
 
-    for(Map<String, Object> dbk: dbks) {
-        String source = (String)dbk.get("bron");
-        String bid = (String)dbk.get("bid");
-        JSONObject result = rowToJson(dbk, false, false);
+      for(Map<String, Object> dbk: dbks) {
+          String source = (String)dbk.get("bron");
+          String bid = (String)dbk.get("bid");
+          JSONObject result = rowToJson(dbk, false, false);
 
-        if ("BAG".equals(source)) {
-          List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
-              "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam, pandid " +
-              "from bag_actueel.adres_full " +
-              "where pandid = ?"
-            , new MapListHandler(), bid);
-          
-          JSONArray addresses = new JSONArray();
-          for(Map<String, Object> da: dbkAdresses) {
-            CACHE.bag.add(da);
-            addresses.put(rowToJson(da, true, false));
+          if ("BAG".equals(source)) {
+            List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
+                "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam, pandid " +
+                "from bag_actueel.adres_full " +
+                "where pandid = ?"
+              , new MapListHandler(), bid);
+            
+            JSONArray addresses = new JSONArray();
+            for(Map<String, Object> da: dbkAdresses) {
+              CACHE.bag.add(da);
+              addresses.put(rowToJson(da, true, false));
+            }
+            result.put("adressen", addresses);
+          } else {
+            result.put("adressen", new JSONArray());
           }
-          result.put("adressen", addresses);
-        } else {
-          result.put("adressen", new JSONArray());
-        }
 
-        results.put(result);
+          results.put(result);
+      }
+
+      return results;
+    } else {
+      return CACHE.dbkwithaddress;
     }
-
-    return results;
   }
 }
