@@ -108,11 +108,13 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       LOG.error("Exception while initializing RoadAttention- and IncidentAuthCache: ", e);
     }
 
-    try {
-      CACHE.ReInitDbks();
-      LOG.info("DbkCache initialized.");
-    } catch (Exception e) {
-      LOG.error("Exception while initializing DbkCache: ", e);
+    if (OIV_DBK.equals("true")) {
+      try {
+        CACHE.ReInitDbks();
+        LOG.info("DbkCache initialized.");
+      } catch (Exception e) {
+        LOG.error("Exception while initializing DbkCache: ", e);
+      }
     }
 
     try {
