@@ -340,7 +340,9 @@ public class CACHE {
     if (CACHE.unitStatusList.size() == 0) {
       List<Map<String, Object>> dbList = DB.qr().query("select * from safetymaps.mdstatusses", new MapListHandler());
       for (Map<String, Object> dbItem : dbList) {
-        CACHE.unitStatusList.put((Integer)dbItem.get("gmsstatuscode"), (String)dbItem.get("gmsstatustext"));
+        synchronized(CACHE.unitStatusList) {
+          CACHE.unitStatusList.put((Integer)dbItem.get("gmsstatuscode"), (String)dbItem.get("gmsstatustext"));
+        }
       }
     }
 

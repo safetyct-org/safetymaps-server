@@ -355,7 +355,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
             for (Map<String, Object> res : results) {
               Integer gmsStatusCode = (Integer)res.get("gmsstatuscode");
-              String gmsStatusText = unitStatusList.get(gmsStatusCode);
+              String gmsStatusText = gmsStatusCode == null ? "" : unitStatusList.get(gmsStatusCode);
               res.put("gmsstatustext", gmsStatusText);
               JSONObject unit = SafetyctMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(res);
 
