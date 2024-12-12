@@ -225,7 +225,23 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                 boolean isauthfor_trainingincident = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_trainingincident");              
                 boolean isauthfor_im = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("IncidentMonitor");
                 boolean isauthfor_withoutunits = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_incidentwithoutunit");
-                boolean isauthfor_incident = incidentIsForUserVehicle(incident) != "" || (isauthfor_im && (isauthfor_alldiscunits || incidentHasBrwUnit(incident) || isauthfor_withoutunits)) || isauthfor_ownvehiclenumber;
+                boolean isauthfor_incident = incidentIsForUserVehicle(incident) != "" || 
+                  (isauthfor_im && isauthfor_withoutunits && !incidentHasUnits(incident)) || 
+                  (isauthfor_im && isauthfor_alldiscunits) ||
+                  (isauthfor_im && incidentHasBrwUnit(incident)) || 
+                  (isauthfor_ownvehiclenumber);
+
+                /*
+                  voor je eigen voertuignummer
+                  ...OF...
+                  je hebt IM rechten en het incident is voor een BRW unit
+                  ...OF...
+                  je hebt IM rechten en je mag alle discipline-units zien
+                  ...OF...
+                  je hebt IM rechten en je mag incidenten zien zonder units (gaat nu mis)
+                  ...OF...
+                  je hebt IM rechten en je mag je eigen voertuignummer wijzigen              
+                */
   
                 if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { 
                   JSONObject discipline = incident.has("brwDisciplineGegevens") ? (JSONObject)incident.get("brwDisciplineGegevens") : null;
@@ -570,6 +586,17 @@ public class SafetyConnectProxyActionBean implements ActionBean {
       return map;  
     }
 
+    private Boolean incidentHasUnits(JSONObject incident) {
+      JSONArray units;
+      if (incident.has("betrokkenEenheden") && !JSONObject.NULL.equals(incident.get("betrokkenEenheden"))) {
+          units = (JSONArray)incident.get("betrokkenEenheden");
+      } else {
+          units = new JSONArray();
+      }
+
+      return units.length() > 0;
+    }
+
     private Boolean incidentHasBrwUnit(JSONObject incident) {
       JSONArray units;
       if (incident.has("betrokkenEenheden") && !JSONObject.NULL.equals(incident.get("betrokkenEenheden"))) {
@@ -581,8 +608,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
       Boolean containsBrwUnit = false;
       for(int v=0; v<units.length(); v++) {
         JSONObject vehicle = (JSONObject)units.get(v);
-          String disc = incident.has("discipline") ? (String)incident.get("discipline") : "B";
-          if (disc.equals("B")) {
+          String roepnaam = vehicle.has("sourceid") ? (String)vehicle.get("sourceid") : "-";
+          if (roepnaam.length() > 5) {
             containsBrwUnit = true;
           }
       }
