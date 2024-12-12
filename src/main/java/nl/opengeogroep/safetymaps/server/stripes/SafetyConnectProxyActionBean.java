@@ -609,13 +609,25 @@ public class SafetyConnectProxyActionBean implements ActionBean {
       for(int v=0; v<units.length(); v++) {
         JSONObject vehicle = (JSONObject)units.get(v);
           String roepnaam = vehicle.has("sourceid") ? (String)vehicle.get("sourceid") : "-";
-          if (roepnaam.length() > 5) {
+          if (roepnaam.length() > 5 && isNumeric(roepnaam)) {
             containsBrwUnit = true;
           }
       }
 
       return containsBrwUnit;
     }
+
+    private Boolean isNumeric(String strNum) {
+      if (strNum == null) {
+          return false;
+      }
+      try {
+          Integer d = Integer.parseInt(strNum);
+      } catch (NumberFormatException nfe) {
+          return false;
+      }
+      return true;
+  }
 
     private String incidentIsForUserVehicle(JSONObject incident) {
       // Incident voor eigen voertuig?
