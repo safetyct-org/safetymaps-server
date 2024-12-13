@@ -229,7 +229,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   (isauthfor_im && isauthfor_withoutunits && !incidentHasUnits(incident)) || 
                   (isauthfor_im && isauthfor_alldiscunits) ||
                   (isauthfor_im && incidentHasBrwUnit(incident)) || 
-                  (isauthfor_ownvehiclenumber);
+                  (incidentHasUnits(incident) && isauthfor_ownvehiclenumber);
 
                 /*
                   voor je eigen voertuignummer
@@ -240,7 +240,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                   ...OF...
                   je hebt IM rechten en je mag incidenten zien zonder units (gaat nu mis)
                   ...OF...
-                  je hebt IM rechten en je mag je eigen voertuignummer wijzigen              
+                  incident heeft voertuigen en je mag je eigen voertuignummer wijzigen              
                 */
   
                 if (incidentNummer == 0 || incidentNummer == incident.getInt("incidentNummer")) { 

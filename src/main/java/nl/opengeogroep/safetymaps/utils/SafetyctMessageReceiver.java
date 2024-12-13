@@ -487,7 +487,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       isForMe(incident, "tenantIdentifier", Arrays.asList(RQ_TENANTS.split(","))) == true ||
       (
         isForMe(incident, "afzender", Arrays.asList(RQ_SENDERS.split(","))) == true &&
-        incidentHasUnitForMe(incident, regions) == true
+        incidentHasBrwUnitForMe(incident, regions) == true
       )
     ) {
 
@@ -644,7 +644,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     return matched;
   }
 
-  private static boolean incidentHasUnitForMe(JSONObject incident, List<String> regionCodes) {
+  private static boolean incidentHasBrwUnitForMe(JSONObject incident, List<String> regionCodes) {
     boolean matched = false;
 
     JSONArray units = incident.has("betrokkenEenheden") 
@@ -653,10 +653,11 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
     for(int i=0; i<units.length(); i++) {
       JSONObject unit = (JSONObject)units.get(i);
+      String disc = unit.has("discipline") ? (String)unit.get("discipline") : "-";
       String unitName = unit.has("roepnaam") ? unit.getString("roepnaam") : "aaaaaaaaaa";
       String unitRegion = unitName.substring(0, 2);
 
-      boolean found = regionCodes.contains(unitRegion);
+      boolean found = regionCodes.contains(unitRegion) && disc.equals("B");
       if (found) { 
         matched = true;
       }
