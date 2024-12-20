@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 margin: 0 auto;
                 margin-top: 0px;
                 max-width: 310px;
-                margin-top: calc(50vh - 175px);
+                margin-top: 15px;
                 max-height: 350px;
                 min-height: 350px;
                 border: 1px solid black;
