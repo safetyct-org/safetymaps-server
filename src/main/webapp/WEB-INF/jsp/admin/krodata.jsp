@@ -15,7 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <%@include file="/WEB-INF/jsp/taglibs.jsp"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 
-<stripes:layout-render name="/WEB-INF/jsp/templates/admin.jsp" pageTitle="KRO data" menuitem="KRO data">
+<stripes:layout-render name="/WEB-INF/jsp/templates/admin.jsp" pageTitle="KRO data" menuitem="krodata">
   <stripes:layout-component name="content">
     
     <h1>KRO data</h1>
