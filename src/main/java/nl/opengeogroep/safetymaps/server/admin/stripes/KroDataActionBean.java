@@ -136,8 +136,6 @@ public class KroDataActionBean implements ActionBean, ValidationErrorHandler {
 
         if (data.get("alertering") != null) {
           alertering = Boolean.parseBoolean(data.get("alertering").toString());
-        } else {
-          alertering = false;
         }
       }
     }
