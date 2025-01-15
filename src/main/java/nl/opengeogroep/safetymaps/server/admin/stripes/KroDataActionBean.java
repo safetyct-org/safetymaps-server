@@ -163,10 +163,6 @@ public class KroDataActionBean implements ActionBean, ValidationErrorHandler {
     return cancel();
   }
 
-  public void toggle() {
-    alertering = !alertering;
-  }
-
   /**
    * Default handlers
    */
