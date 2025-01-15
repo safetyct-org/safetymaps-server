@@ -173,9 +173,13 @@ public class KROActionBean implements ActionBean {
                 }
 
                 // Add extra kro data
-                List<Map<String, Object>> kroData = getKroData(kroFromDb.getString("bagvboid"));
-                if (kroData.size() > 0) {
-                  kroFromDb.put("regio_data", kroData);
+                try {
+                  List<Map<String, Object>> kroData = getKroData(kroFromDb.getString("bagvboid"));
+                  if (kroData.size() > 0) {
+                    kroFromDb.put("regio_data", kroData);
+                  }
+                } catch(Exception ex) {
+                  log.error("Tabel safetymaps.krodata niet (goed) geconfigureerd. Check de database of werk deze bij!", ex);
                 }
 
                 response.put(kroFromDb);
