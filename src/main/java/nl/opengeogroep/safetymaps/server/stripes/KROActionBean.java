@@ -174,7 +174,7 @@ public class KROActionBean implements ActionBean {
 
                 // Add extra kro data
                 try {
-                  List<Map<String, Object>> kroData = getKroData(kroFromDb.getString("bagpandid"));
+                  List<Map<String, Object>> kroData = getKroData((String)row.get("bagpandid"));
                   if (kroData.size() > 0) {
                     kroFromDb.put("regio_data", kroData);
                   }
