@@ -58,6 +58,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       <c:set var="event" value="${actionBean.context.eventName}"/>
       <c:if test="${(event == 'edit' || event == 'save')}">
         <stripes:submit name="save" class="btn btn-primary">Opslaan</stripes:submit>
+        <c:if test="${!empty actionBean.id && actionBean.alertering}">
+          <stripes:submit name="toggle" class="btn btn-success handle-item">Verwijder alertering</stripes:submit>
+        </c:if>
+        <c:if test="${!empty actionBean.id && !actionBean.alertering}">
+          <stripes:submit name="toggle" class="btn btn-success handle-item">Voeg alertering toe</stripes:submit>
+        </c:if>
         <c:if test="${!empty actionBean.id}">
           <stripes:submit name="delete" class="btn btn-danger remove-item">Verwijderen</stripes:submit>
         </c:if>
@@ -82,12 +88,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <label class="col-sm-2 control-label">Inhoud:</label>
           <div class="col-sm-10">
             <stripes:text class="form-control" name="inhoud" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="col-sm-2 control-label">Alertering:</label>
-          <div class="col-sm-10">
-            <stripes:checkbox name="alertering" value="${actionBean.alertering}"/>
           </div>
         </div>
       </c:if>
