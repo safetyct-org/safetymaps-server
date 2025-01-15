@@ -87,8 +87,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <div class="form-group">
           <label class="col-sm-2 control-label">Alertering:</label>
           <div class="col-sm-10">
-            Ja <stripes:radiobutton name="alertering" value="true"/>
-            Nee <stripes:radiobutton name="alertering" value="false"/>
+            Ja <input type="radio" name="alertering" value="1" ${ actionBean.alertering ? 'checked' : '' }/>
+            Nee <input type="radio" name="alertering" value="0" ${ !actionBean.alertering ? 'checked' : '' }/>
           </div>
         </div>
       </c:if>
