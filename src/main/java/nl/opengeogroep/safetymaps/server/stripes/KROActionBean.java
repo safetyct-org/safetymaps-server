@@ -1,6 +1,8 @@
 package nl.opengeogroep.safetymaps.server.stripes;
 
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
+import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowsToJson;
+
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
 import nl.b3p.web.stripes.ErrorMessageResolution;
@@ -170,6 +172,12 @@ public class KROActionBean implements ActionBean {
                     kroFromDb.put("address_objecttypering_ordered", orderedObjectTypes);
                 }
 
+                // Add extra kro data
+                List<Map<String, Object>> kroData = getKroData(kroFromDb.getString("bagvboid"));
+                if (kroData.size() > 0) {
+                  kroFromDb.put("regio_data", kroData);
+                }
+
                 response.put(kroFromDb);
             }
 
@@ -179,6 +187,18 @@ public class KROActionBean implements ActionBean {
 
           return new StreamingResolution("application/json", cache.response);
         }
+    }
+
+    public  List<Map<String, Object>> getKroData(String bagpandid) throws Exception {
+      QueryRunner qr = DB.qr();
+
+      Object[] qparams = new Object[] {
+        bagpandid
+      };
+
+      List<Map<String, Object>> rows = qr.query("SELECT titel, inhoud, alertering FROM safetymaps.krodata WHERE bagpandid=?", new MapListHandler(), qparams);
+
+      return rows;
     }
 
     private static final Map<String,CachedResponseString> cache_config = new HashMap<>();
