@@ -4,15 +4,28 @@ import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 import java.util.zip.GZIPOutputStream;
 
-import javax.servlet.ServletException;
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMessage.RecipientType;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,6 +39,12 @@ import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import net.lingala.zip4j.ZipFile;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.model.enums.AesKeyStrength;
+import net.lingala.zip4j.model.enums.CompressionLevel;
+import net.lingala.zip4j.model.enums.CompressionMethod;
+import net.lingala.zip4j.model.enums.EncryptionMethod;
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.DefaultHandler;
@@ -43,7 +62,9 @@ import nl.opengeogroep.safetymaps.server.db.DB;
 @UrlBinding("/viewer/api/foto")
 public class FotoFuncttionActionBean_v2 implements ActionBean {
   
+  private final ExecutorService EXEC = Executors.newCachedThreadPool();
   private static final Log LOG = LogFactory.getLog(FotoFunctionActionBean.class);
+  private static final Map<String,CachedResponseString> LOADCACHE = new HashMap<>();
   private static final String TABLE = "\"FotoFunctie\"";
   
   private ActionBeanContext context;
@@ -146,24 +167,63 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
   // #region RESOLUTIONS 
 
   @DefaultHandler
-  public Resolution foto() throws Exception {
+  public Resolution foto() {
     JSONObject result = new JSONObject();
+    result.put("result", false);
 
-    return ZippedJSONResponse(result.toString());
-  }
-
-  public Resolution fotoForIncident() {
     try {
-      JSONArray result = new JSONArray();
-
-      List<Map<String, Object>> rows = getFromDb();
-      for (Map<String, Object> row : rows) {
-        result.put(rowToJson(row, false, false));
+      String path = Cfg.getSetting("fotofunctie");
+      if (path == null) {
+        return new ErrorMessageResolution(HttpServletResponse.SC_BAD_REQUEST, "Serverpad voor het opslaan van fotos is niet geconfigureerd");
       }
+
+      if (extraInfo == null) extraInfo = "";
+      if (incidentNummer == null) incidentNummer = "N.V.T.";
+
+      fileName = fileName.replace('/','_');
+      
+      insertIntoDb();
+
+      result.put("result", true);
+
+      EXEC.submit(() -> {
+        try {
+          File savedFile = SaveFileToDisk(path);
+          ZipFileAndEmail(savedFile);
+        } catch (Exception e) {
+          LOG.error("Unexpected error occurred while handling photo upload in seprate thread: ", e);
+        }
+      });
 
       return ZippedJSONResponse(result.toString());
     } catch (Exception e) {
-      return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Onverwachte fout opgetreden in fotoForIncident().");
+      return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Onverwachte fout opgetreden in @DefaultHandler.");
+    }
+  }
+
+  public Resolution fotoForIncident() {
+    synchronized(LOADCACHE) {
+      CleanupCacheLoad();
+
+      try {
+        CachedResponseString cache = LOADCACHE.get(this.incidentNummer);
+
+        if (!LOADCACHE.containsKey(this.incidentNummer) || cache == null || cache.isOutDated()) {
+          JSONArray result = new JSONArray();
+    
+          List<Map<String, Object>> rows = getFromDb();
+          for (Map<String, Object> row : rows) {
+            result.put(rowToJson(row, false, false));
+          }
+
+          cache = new CachedResponseString(result.toString());
+          LOADCACHE.put(this.incidentNummer, cache);
+        }
+  
+        return ZippedJSONResponse(cache.response);
+      } catch (Exception e) {
+        return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Onverwachte fout opgetreden in fotoForIncident().");
+      }
     }
   }
 
@@ -178,6 +238,10 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
       String path = Cfg.getSetting("fotofunctie");
       File pathDir = new File(path);
       File file = new File(path + File.separator + fileName);
+
+      if (path == null) {
+        return new ErrorMessageResolution(HttpServletResponse.SC_BAD_REQUEST, "Serverpad voor het opslaan van fotos is niet geconfigureerd");
+      }
 
       if(!file.getParentFile().equals(pathDir)) {
         return new ErrorMessageResolution(HttpServletResponse.SC_BAD_REQUEST, "Bestandsnaam bevat een /: " + fileName);
@@ -196,6 +260,34 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
   // #endregion
 
   // #region PRIVATES
+
+  private class CachedResponseString {
+    Date created;
+    String response; 
+
+    public CachedResponseString(String response) {
+      this.created = new Date();
+      this.response = response;
+    }
+
+    public boolean isOutDated() {
+      int outdatedAfterSecondes = 10;
+      Date now = new Date();
+      Date outDated = new Date(now.getTime() - outdatedAfterSecondes * 1000);
+      return this.created.before(outDated);
+    }
+
+    public boolean isReadyToCleanup() {
+      int outdatedAfterHours = 1;
+      Date now = new Date();
+      Date outDated = new Date(now.getTime() - outdatedAfterHours * 60 * 60 * 1000);
+      return this.created.before(outDated);
+    }
+  }
+
+  private void CleanupCacheLoad() {
+    LOADCACHE.values().removeIf(value -> value.isReadyToCleanup());
+  }
 
   private Resolution ZippedJSONResponse(String result) {
     return new Resolution() {
@@ -255,5 +347,88 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
     return rows;
   }
 
+  private void insertIntoDb() throws Exception {
+      Calendar calendar = Calendar.getInstance();
+      java.sql.Date date = new java.sql.Date(calendar.getTime().getTime());
+      Object[] qparams = new Object[] {
+          fileName,
+          type,
+          voertuigNummer,
+          incidentNummer,
+          date,
+          extraInfo,
+          location
+      };
+      QueryRunner qr = DB.qr();
+      qr.insert("insert into wfs." + TABLE + " (filename, datatype, voertuig_nummer, incident_nummer, date, omschrijving, location) values(?,?,?,?,?,?,?)", new MapListHandler(), qparams);
+  }
+
+  private File SaveFileToDisk(String path) throws Exception {
+    String filePath = path + File.separator + fileName;
+    final File file = new File(filePath);
+    picture.save(file);
+
+    return file;
+  }
+
+  private void ZipFileAndEmail(File savedFile) throws Exception {
+    String zipPhoto = Cfg.getSetting("fotofunctie_zip");
+    String zipPass = Cfg.getSetting("fotofunctie_zipPass");
+    String zipPath = savedFile.getPath() + ".zip";
+    Boolean zipSuccess = false;
+    
+    if (zipPhoto != null && "true".equals(zipPhoto) && zipPass != null) {
+      try {
+        ZipParameters zipParameters = new ZipParameters();
+        zipParameters.setCompressionMethod(CompressionMethod.DEFLATE);
+        zipParameters.setCompressionLevel(CompressionLevel.NORMAL);
+        zipParameters.setEncryptFiles(true);
+        zipParameters.setEncryptionMethod(EncryptionMethod.AES);
+        zipParameters.setAesKeyStrength(AesKeyStrength.KEY_STRENGTH_256);
+
+        ZipFile zip = new ZipFile(zipPath, zipPass.toCharArray());
+        zip.addFile(savedFile, zipParameters);
+        zip.close();
+
+        zipSuccess = true;
+      } catch(Exception e) { }
+    }
+
+    if (zipSuccess) {
+      Path target = Paths.get(zipPath);
+      Session session = null;
+      String to = null;
+      String from = null;
+
+      Context ctx = new InitialContext();
+      session = (Session)ctx.lookup("java:comp/env/mail/session");
+      to = Cfg.getSetting("fotofunctie_mail_to");
+      from = Cfg.getSetting("fotofunctie_mail_from");
+
+      if(to != null || from != null) {
+        String subject = "Foto/screenshot voor incident " + incidentNummer + " toegevoegd.";
+        String mail = subject + " Bestandsnaam: " + fileName;
+
+        javax.mail.Message msg = new MimeMessage(session);
+        msg.setFrom(new InternetAddress(from));
+        msg.addRecipient(RecipientType.TO, new InternetAddress(to));
+        String sender = context.getRequest().getParameter("email");
+        if(sender != null) {
+            msg.addRecipient(RecipientType.CC, new InternetAddress(sender));
+        }
+        msg.setSubject(subject);
+        msg.setSentDate(new Date());
+        msg.setContent(mail, "text/plain");
+        msg.setDataHandler(new DataHandler(new FileDataSource(target.toFile())));
+        msg.setFileName(fileName + ".zip");
+
+        Transport.send(msg);
+
+        File zipFile = new File(zipPath);
+        zipFile.delete();
+      }
+    }
+  }
+  
   // #endregion
 }
