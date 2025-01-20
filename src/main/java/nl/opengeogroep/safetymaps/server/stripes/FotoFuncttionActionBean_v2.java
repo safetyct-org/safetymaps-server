@@ -184,6 +184,9 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
       
       insertIntoDb();
 
+      CachedResponseString cache = LOADCACHE.get(this.incidentNummer);
+      UpdateCache(cache);
+
       result.put("result", true);
 
       EXEC.submit(() -> {
@@ -209,15 +212,7 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
         CachedResponseString cache = LOADCACHE.get(this.incidentNummer);
 
         if (!LOADCACHE.containsKey(this.incidentNummer) || cache == null || cache.isOutDated()) {
-          JSONArray result = new JSONArray();
-    
-          List<Map<String, Object>> rows = getFromDb();
-          for (Map<String, Object> row : rows) {
-            result.put(rowToJson(row, false, false));
-          }
-
-          cache = new CachedResponseString(result.toString());
-          LOADCACHE.put(this.incidentNummer, cache);
+          cache = UpdateCache(cache);
         }
   
         return ZippedJSONResponse(cache.response);
@@ -260,6 +255,20 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
   // #endregion
 
   // #region PRIVATES
+
+  private CachedResponseString UpdateCache(CachedResponseString cache) throws Exception {
+    JSONArray result = new JSONArray();
+    
+    List<Map<String, Object>> rows = getFromDb();
+    for (Map<String, Object> row : rows) {
+      result.put(rowToJson(row, false, false));
+    }
+
+    cache = new CachedResponseString(result.toString());
+    LOADCACHE.put(this.incidentNummer, cache);
+
+    return cache;
+  }
 
   private class CachedResponseString {
     Date created;
