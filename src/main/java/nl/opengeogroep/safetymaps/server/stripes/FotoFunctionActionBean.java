@@ -57,7 +57,7 @@ import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
  */
 @StrictBinding
 @MultipartConfig
-@UrlBinding("/viewer/api/foto")
+@UrlBinding("/viewer/api/foto-old")
 public class FotoFunctionActionBean implements ActionBean {
 
     private static final Log log = LogFactory.getLog(FotoFunctionActionBean.class);
