@@ -1,11 +1,15 @@
 package nl.opengeogroep.safetymaps.server.stripes;
 
+import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.nio.file.Files;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.ServletException;
@@ -13,10 +17,13 @@ import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import net.sourceforge.stripes.action.ActionBean;
@@ -140,9 +147,24 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
 
   @DefaultHandler
   public Resolution foto() throws Exception {
-    JSONObject response = new JSONObject();
+    JSONObject result = new JSONObject();
 
-    return ZippedJSONResponse(response);
+    return ZippedJSONResponse(result.toString());
+  }
+
+  public Resolution fotoForIncident() {
+    try {
+      JSONArray result = new JSONArray();
+
+      List<Map<String, Object>> rows = getFromDb();
+      for (Map<String, Object> row : rows) {
+        result.put(rowToJson(row, false, false));
+      }
+
+      return ZippedJSONResponse(result.toString());
+    } catch (Exception e) {
+      return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Onverwachte fout opgetreden in fotoForIncident().");
+    }
   }
 
   public Resolution download()  {
@@ -175,7 +197,7 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
 
   // #region PRIVATES
 
-  private Resolution ZippedJSONResponse(JSONObject response) {
+  private Resolution ZippedJSONResponse(String result) {
     return new Resolution() {
       @Override
       public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -190,7 +212,7 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
         } else {
             out = response.getOutputStream();
         }
-        IOUtils.copy(new StringReader(response.toString()), out, encoding);
+        IOUtils.copy(new StringReader(result), out, encoding);
         out.flush();
         out.close();
       }
@@ -223,6 +245,14 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
         out.close();
       }
     };
+  }
+
+  private List<Map<String, Object>> getFromDb() throws Exception {
+    QueryRunner qr = DB.qr();
+
+    List<Map<String, Object>> rows = qr.query("SELECT \"filename\", \"omschrijving\", \"location\" from wfs."+TABLE+" where incident_nummer =?", new MapListHandler(),incidentNummer);
+
+    return rows;
   }
 
   // #endregion
