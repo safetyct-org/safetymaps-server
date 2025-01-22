@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.Resolution;
-import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.UrlBinding;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
@@ -159,8 +158,6 @@ public class VrhAGSProxyActionBean implements ActionBean {
                     }
                 }
             };
-
-            //return new StreamingResolution(contentType.getValue(), new StringReader(content));
         } catch(IOException e) {
             //log.error("Failed to write output:", e);
             return null;

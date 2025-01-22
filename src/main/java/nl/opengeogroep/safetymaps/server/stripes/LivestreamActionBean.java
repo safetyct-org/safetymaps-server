@@ -3,14 +3,13 @@ package nl.opengeogroep.safetymaps.server.stripes;
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.DefaultHandler;
-import net.sourceforge.stripes.action.ErrorResolution;
 import net.sourceforge.stripes.action.Resolution;
-import net.sourceforge.stripes.action.StreamingResolution;
-import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
+
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 
 import java.util.Calendar;
@@ -103,7 +102,7 @@ public class LivestreamActionBean implements ActionBean {
           return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
         }
 
-        return new StreamingResolution("application/json", "");
+        return SafetyctResponseUtil.ZippedJSONResponse("");
       }
 
       if("clean".equals(path)) {
@@ -113,7 +112,7 @@ public class LivestreamActionBean implements ActionBean {
           return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
         }
 
-        return new StreamingResolution("application/json", "");
+        return SafetyctResponseUtil.ZippedJSONResponse("");
       }
 
       return null;
@@ -130,7 +129,7 @@ public class LivestreamActionBean implements ActionBean {
             response.put(rowToJson(resultRow, false, false));
         }
 
-        return new StreamingResolution("application/json", response.toString());
+        return SafetyctResponseUtil.ZippedJSONResponse(response.toString());
       } catch(Exception e) {
           return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error: " + e.getClass() + ": " + e.getMessage());
       }  

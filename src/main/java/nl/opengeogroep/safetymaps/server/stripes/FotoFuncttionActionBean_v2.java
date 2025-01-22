@@ -56,6 +56,7 @@ import net.sourceforge.stripes.validation.Validate;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
 
 @StrictBinding
 @MultipartConfig
@@ -198,7 +199,7 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
         }
       });
 
-      return ZippedJSONResponse(result.toString());
+      return SafetyctResponseUtil.ZippedJSONResponse(result.toString());
     } catch (Exception e) {
       return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Onverwachte fout opgetreden in @DefaultHandler.");
     }
@@ -215,7 +216,7 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
           cache = UpdateCache(cache);
         }
   
-        return ZippedJSONResponse(cache.response);
+        return SafetyctResponseUtil.ZippedJSONResponse(cache.response);
       } catch (Exception e) {
         return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Onverwachte fout opgetreden in fotoForIncident().");
       }
@@ -246,7 +247,7 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
         return new ErrorMessageResolution(HttpServletResponse.SC_NOT_FOUND, "Foto '" + fileName + "' niet gevonden of niet toegankelijk!");
       }
 
-      return ZippedFileResponse(file);
+      return SafetyctResponseUtil.ZippedFileResponse(file);
     } catch (Exception e) {
       return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Onverwachte fout opgetreden in download().");
     }
@@ -296,56 +297,6 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
 
   private void CleanupCacheLoad() {
     LOADCACHE.values().removeIf(value -> value.isReadyToCleanup());
-  }
-
-  private Resolution ZippedJSONResponse(String result) {
-    return new Resolution() {
-      @Override
-      public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        OutputStream out;
-        String encoding = "UTF-8";
-        String acceptEncoding = request.getHeader("Accept-Encoding");
-        response.setCharacterEncoding(encoding);
-        response.setContentType("application/json");
-        if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
-            response.setHeader("Content-Encoding", "gzip");
-            out = new GZIPOutputStream(response.getOutputStream(), true);
-        } else {
-            out = response.getOutputStream();
-        }
-        IOUtils.copy(new StringReader(result), out, encoding);
-        out.flush();
-        out.close();
-      }
-    };
-  }
-
-  private Resolution ZippedFileResponse(File file) {
-    return new Resolution() {
-      @Override
-      public void execute(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        OutputStream out;
-        String encoding = "UTF-8";
-        String acceptEncoding = request.getHeader("Accept-Encoding");
-        String contentType = Files.probeContentType(file.toPath());
-        response.setCharacterEncoding(encoding);
-        response.setContentType(contentType);
-        if(acceptEncoding != null && acceptEncoding.contains("gzip")) {
-            response.setHeader("Content-Encoding", "gzip");
-            out = new GZIPOutputStream(response.getOutputStream(), true);
-        } else {
-            out = response.getOutputStream();
-        }
-        FileInputStream fis = new FileInputStream(file);
-        byte[] buffer = new byte[1024];
-        int len;
-        while ((len = fis.read(buffer)) > 0) {
-            out.write(buffer, 0, len);
-        }
-        out.flush();
-        out.close();
-      }
-    };
   }
 
   private List<Map<String, Object>> getFromDb() throws Exception {

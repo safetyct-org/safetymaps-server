@@ -1,22 +1,20 @@
 package nl.opengeogroep.safetymaps.server.stripes;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.net.URLDecoder;
-import java.nio.file.Files;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletResponse;
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.DefaultHandler;
 import net.sourceforge.stripes.action.Resolution;
-import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
+
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 
 /**
@@ -54,32 +52,33 @@ public class LibraryActionBean implements ActionBean{
     }
     
     @DefaultHandler
-    public Resolution download() throws Exception{
-        
-        // First pathname security check: must exist in db
+    public Resolution download()  {
+      try {
         boolean exists = DB.qr().query("select 1 from wfs." + TABLE + " where \"Documentnaam\" = ?", new ScalarHandler<>(), filename) != null;
-        
-        // Second security check: No path breaker like /../ in filename
+
         if(!exists || filename.contains("..")) {
-            return new ErrorMessageResolution(HttpServletResponse.SC_NOT_FOUND, "Document '" + filename + "' niet gevonden");
+          return new ErrorMessageResolution(HttpServletResponse.SC_NOT_FOUND, "Media '" + filename + "' niet gevonden in de database!");
         }
-        
-        
-        String libraryPath = Cfg.getSetting("library");
-        File libraryPathDir = new File(libraryPath);
-        File f = new File(libraryPath,filename);
-        
-        // Third security check: resulting path parent file must be the foto directory,
-        // not another directory using path breakers like /../ etc.
-        if(!f.getParentFile().equals(libraryPathDir)) {
-            return new ErrorMessageResolution(HttpServletResponse.SC_BAD_REQUEST, "Filename contains path breaker: " + filename);
+
+        String path = Cfg.getSetting("library");
+        File pathDir = new File(path);
+        File file = new File(path + File.separator + filename);
+
+        if (path == null) {
+          return new ErrorMessageResolution(HttpServletResponse.SC_BAD_REQUEST, "Serverpad voor het ophalen van media is niet geconfigureerd");
         }
-        
-        if(!f.exists() || !f.canRead()) {
-            return new ErrorMessageResolution(HttpServletResponse.SC_NOT_FOUND, "Document '" + filename + "' niet gevonden");
+
+        if(!file.getParentFile().equals(pathDir)) {
+          return new ErrorMessageResolution(HttpServletResponse.SC_BAD_REQUEST, "Bestandsnaam bevat een /: " + filename);
         }
-        
-        String mimeType = Files.probeContentType(f.toPath());
-        return new StreamingResolution(mimeType, new FileInputStream(f));
+
+        if(!file.exists() || !file.canRead()) {
+          return new ErrorMessageResolution(HttpServletResponse.SC_NOT_FOUND, "Media '" + filename + "' niet gevonden of niet toegankelijk!");
+        }
+
+        return SafetyctResponseUtil.ZippedFileResponse(file);
+      } catch (Exception e) {
+        return new ErrorMessageResolution(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Onverwachte fout opgetreden in download().");
+      }
     }
 }

@@ -13,6 +13,8 @@ import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.validation.Validate;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
+
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 import static nl.opengeogroep.safetymaps.server.db.JsonExceptionUtils.logExceptionAndReturnJSONObject;
 import org.apache.commons.dbutils.QueryRunner;
@@ -102,7 +104,7 @@ public class NLExtractBagAddressSearchActionBean  implements ActionBean {
                 }
             }
 
-            return new StreamingResolution("application/json", new StringReader(result.toString(4)));
+            return SafetyctResponseUtil.ZippedJSONResponse(result.toString(4));
         } catch (IOException e) {
           return null;
         } catch(Exception e) {

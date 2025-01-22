@@ -18,6 +18,7 @@ import javax.mail.internet.MimeMessage;
 import net.sourceforge.stripes.action.*;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.text.StrLookup;
@@ -75,7 +76,7 @@ public class MailActionBean implements ActionBean {
         response.put("result", false);
       }
       
-      return new StreamingResolution("application/json", response.toString());
+      return SafetyctResponseUtil.ZippedJSONResponse(response.toString());
     }
 
     private JSONObject sendMail() {

@@ -13,6 +13,8 @@ import net.sourceforge.stripes.validation.Validate;
 import nl.opengeogroep.safetymaps.routing.*;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
+
 import static nl.opengeogroep.safetymaps.server.db.JsonExceptionUtils.logExceptionAndReturnJSONObject;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
@@ -218,17 +220,17 @@ public class VrhWaterwinningApiActionBean implements ActionBean {
             JSONObject r = new JSONObject();
             r.put("success", true);
             r.put("value", waterwinningInfo);
-            return new StreamingResolution("application/json", r.toString(indent));
+            return SafetyctResponseUtil.ZippedJSONResponse(r.toString(indent));
         } catch (IOException e) {
           String exceptionSimpleName = e.getCause().getClass().getSimpleName();
 
           if ("ClientAbortException".equals(exceptionSimpleName)) {
             return null;
           } else {
-            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
+            return SafetyctResponseUtil.ZippedJSONResponse(logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
           }
         } catch(Exception e) {
-            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
+          return SafetyctResponseUtil.ZippedJSONResponse(logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
         }
     }
     

@@ -23,6 +23,8 @@ import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.validation.*;
 import nl.opengeogroep.safetymaps.server.db.DB;
 import nl.opengeogroep.safetymaps.server.db.JSONUtils;
+import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
+
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 import static nl.opengeogroep.safetymaps.server.db.JsonExceptionUtils.logExceptionAndReturnJSONObject;
 import org.apache.commons.dbutils.QueryRunner;
@@ -196,10 +198,10 @@ public class VrhActionBean implements ActionBean {
           if ("ClientAbortException".equals(exceptionSimpleName)) {
             return null;
           } else {
-            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
+            return SafetyctResponseUtil.ZippedJSONResponse(logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
           }
         } catch(Exception e) {
-            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
+            return SafetyctResponseUtil.ZippedJSONResponse(logExceptionAndReturnJSONObject(log, "Error on " + getContext().getRequest().getRequestURI(), e).toString(indent));
         }
     }
 

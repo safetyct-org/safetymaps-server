@@ -6,6 +6,8 @@ import java.util.Map;
 import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.validation.Validate;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
+
 import static nl.opengeogroep.safetymaps.server.db.GeoJSONUtils.*;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
@@ -72,6 +74,6 @@ public class VrlnActionBean implements ActionBean {
         }
 
         context.getResponse().addHeader("Access-Control-Allow-Origin", "*");
-        return new StreamingResolution("application/json", o.toString());
+        return SafetyctResponseUtil.ZippedJSONResponse(o.toString());
     }
 }

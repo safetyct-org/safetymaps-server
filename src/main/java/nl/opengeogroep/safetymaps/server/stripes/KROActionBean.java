@@ -5,6 +5,7 @@ import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowsToJson;
 
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
 import nl.b3p.web.stripes.ErrorMessageResolution;
 
 import java.sql.SQLException;
@@ -189,7 +190,7 @@ public class KROActionBean implements ActionBean {
             cache_kro.put(getCacheKey(), cache);
           }
 
-          return new StreamingResolution("application/json", cache.response);
+          return SafetyctResponseUtil.ZippedJSONResponse(cache.response);
         }
     }
 
@@ -229,7 +230,7 @@ public class KROActionBean implements ActionBean {
             cache_config.put(getCacheKey(), cache);
           }
 
-          return new StreamingResolution("application/json", cache.response);
+          return SafetyctResponseUtil.ZippedJSONResponse(cache.response);
         }
     }
 
@@ -263,7 +264,7 @@ public class KROActionBean implements ActionBean {
             cache_address.put(getCacheKey(), cache);
           }
 
-          return new StreamingResolution("application/json", cache.response);
+          return SafetyctResponseUtil.ZippedJSONResponse(cache.response);
         }
     }
 
@@ -292,7 +293,7 @@ public class KROActionBean implements ActionBean {
             cache_pand.put(getCacheKey(), cache);
           }
 
-          return new StreamingResolution("application/json", cache.response);
+          return SafetyctResponseUtil.ZippedJSONResponse(cache.response);
         }
     }
 

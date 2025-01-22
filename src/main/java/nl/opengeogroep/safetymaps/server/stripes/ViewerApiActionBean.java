@@ -24,6 +24,8 @@ import net.sourceforge.stripes.validation.Validate;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import static nl.opengeogroep.safetymaps.server.db.JsonExceptionUtils.*;
 import nl.opengeogroep.safetymaps.server.db.DB;
+import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
+
 import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_ADMIN;
 import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_DRAWING_EDITOR;
 import static nl.opengeogroep.safetymaps.server.db.DB.ROLE_EIGEN_VOERTUIGNUMMER;
@@ -160,10 +162,10 @@ public class ViewerApiActionBean implements ActionBean {
           if ("ClientAbortException".equals(exceptionSimpleName)) {
             return null;
           } else {
-            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on /api/" + path, e).toString(indent));
+            return SafetyctResponseUtil.ZippedJSONResponse(logExceptionAndReturnJSONObject(log, "Error on /api/" + path, e).toString(indent));
           }
         } catch(Exception e) {
-            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error on /api/" + path, e).toString(indent));
+            return SafetyctResponseUtil.ZippedJSONResponse(logExceptionAndReturnJSONObject(log, "Error on /api/" + path, e).toString(indent));
         }
     }
 
@@ -206,7 +208,7 @@ public class ViewerApiActionBean implements ActionBean {
                 }
             };        
         } catch(Exception e) {
-            return new StreamingResolution("application/json", logExceptionAndReturnJSONObject(log, "Error getting viewer objects", e).toString(indent));
+          return SafetyctResponseUtil.ZippedJSONResponse(logExceptionAndReturnJSONObject(log, "Error getting viewer objects" + path, e).toString(indent));
         }
     }
 
@@ -493,7 +495,7 @@ public class ViewerApiActionBean implements ActionBean {
         cache = new CachedResponseString(response.toString(indent));
       }
 
-      return new StreamingResolution("application/json", cache.response);
+      return SafetyctResponseUtil.ZippedJSONResponse(cache.response);
     }
   }
 
@@ -515,12 +517,12 @@ public class ViewerApiActionBean implements ActionBean {
     }
 
     private Resolution library(Connection c) throws Exception {
-        return new StreamingResolution("application/json", getLibrary(c).toString(indent));
+      return SafetyctResponseUtil.ZippedJSONResponse(getLibrary(c).toString(indent));
     }
 
     private Resolution styles(Connection c) throws Exception {
-        JSONObject o = new ViewerDataExporter(c).getStyles();
-        return new StreamingResolution("application/json", o.toString(indent));
+      JSONObject o = new ViewerDataExporter(c).getStyles();
+      return SafetyctResponseUtil.ZippedJSONResponse(o.toString(indent));
     }
 
     private Resolution object(Connection c) throws Exception {
@@ -547,7 +549,7 @@ public class ViewerApiActionBean implements ActionBean {
         if(o == null) {
             return new ErrorResolution(HttpServletResponse.SC_NOT_FOUND, "Object id not found: " + id);
         } else {
-            return new StreamingResolution("application/json", o.toString(indent));
+          return SafetyctResponseUtil.ZippedJSONResponse(o.toString(indent));
         }
     }
 }
