@@ -56,6 +56,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
     <stripes:form beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.KroDataActionBean" class="form-horizontal">
       <c:set var="event" value="${actionBean.context.eventName}"/>
+      <c:if test="${event == 'list'}">
+        <stripes:submit name="edit" class="btn btn-primary">Nieuw</stripes:submit>
+      </c:if>
       <c:if test="${(event == 'edit' || event == 'save')}">
         <stripes:submit name="save" class="btn btn-primary">Opslaan</stripes:submit>
         <c:if test="${!empty actionBean.id}">
