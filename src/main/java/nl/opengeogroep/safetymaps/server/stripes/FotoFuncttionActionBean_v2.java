@@ -3,10 +3,6 @@ package nl.opengeogroep.safetymaps.server.stripes;
 import static nl.opengeogroep.safetymaps.server.db.JSONUtils.rowToJson;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.OutputStream;
-import java.io.StringReader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Calendar;
@@ -14,8 +10,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
-import java.util.zip.GZIPOutputStream;
 
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
@@ -27,13 +21,11 @@ import javax.mail.internet.MimeMessage.RecipientType;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.servlet.annotation.MultipartConfig;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
@@ -54,6 +46,7 @@ import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
 import net.sourceforge.stripes.validation.Validate;
 import nl.b3p.web.stripes.ErrorMessageResolution;
+import nl.opengeogroep.safetymaps.server.cache.Execution;
 import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
 import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
@@ -62,8 +55,7 @@ import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
 @MultipartConfig
 @UrlBinding("/viewer/api/foto")
 public class FotoFuncttionActionBean_v2 implements ActionBean {
-  
-  private final ExecutorService EXEC = Executors.newCachedThreadPool();
+
   private static final Log LOG = LogFactory.getLog(FotoFunctionActionBean.class);
   private static final Map<String,CachedResponseString> LOADCACHE = new HashMap<>();
   private static final String TABLE = "\"FotoFunctie\"";
@@ -163,7 +155,7 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
         return context;
     }
 
-  // #endregion
+  // #endregion 
 
   // #region RESOLUTIONS 
 
@@ -190,7 +182,7 @@ public class FotoFuncttionActionBean_v2 implements ActionBean {
 
       result.put("result", true);
 
-      EXEC.submit(() -> {
+      Execution.GetService().submit(() -> {
         try {
           File savedFile = SaveFileToDisk(path);
           ZipFileAndEmail(savedFile);

@@ -1,8 +1,6 @@
 package nl.opengeogroep.safetymaps.utils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +13,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -41,6 +38,7 @@ import nl.opengeogroep.safetymaps.server.cache.CACHE;
 import nl.opengeogroep.safetymaps.server.cache.CacheCleanJob;
 import nl.opengeogroep.safetymaps.server.cache.CacheDbkJob;
 import nl.opengeogroep.safetymaps.server.cache.CacheSaveJob;
+import nl.opengeogroep.safetymaps.server.cache.Execution;
 import nl.opengeogroep.safetymaps.server.cache.IncidentCacheItem;
 import nl.opengeogroep.safetymaps.server.cache.RoadAttentionCacheItem;
 import nl.opengeogroep.safetymaps.server.cache.UnitCacheItem;
@@ -206,16 +204,19 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_UNIT_CHANGED + ")'", e);
       }
 
-      try {
-        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_POSITION_RECEIVED, "unit_moved");
-      } catch (Exception e) {
-        LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_POSITION_RECEIVED + ")'", e);
-      }
+      // Vehicle pos and eta only for prod
+      if (vhost.toLowerCase() == "productie") {
+        try {
+          initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_POSITION_RECEIVED, "unit_moved");
+        } catch (Exception e) {
+          LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_POSITION_RECEIVED + ")'", e);
+        }
 
-      try {
-        initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_ETA_RECEIVED, "eta_received");
-      } catch (Exception e) {
-        LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_ETA_RECEIVED + ")'", e);
+        try {
+          initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_ETA_RECEIVED, "eta_received");
+        } catch (Exception e) {
+          LOG.error("Exception while exec 'initRabbitMqChannel(" + vhost + ", " + RQ_MB_ETA_RECEIVED + ")'", e);
+        }
       }
 
       try {
@@ -329,28 +330,38 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       String msgBody = new String(delivery.getBody(), "UTF-8");
 
       try {
-        switch (rqMb) {
-          case RQ_MB_INCIDENT_CHANGED:
-            handleIncidentChangedMessage(vhost, msgBody);
-            break;
-          case RQ_MB_UNIT_CHANGED:
-            handleUnitChangedMessage(vhost, msgBody);
-            break;
-          case RQ_MB_POSITION_RECEIVED:
-            handleUnitMovedMessage(vhost, msgBody);
-            break;
-          case RQ_MB_ETA_RECEIVED:
-            handleEtaReceivedMessage(vhost, msgBody);
-            break;
-          case RQ_MB_RA_CHANGED:
-            handleRoadAttentionChangeMessage(vhost, msgBody);
-          default:
-            break;
-        }
+        Execution.GetService().submit(() -> {
+          try {
+            switch (rqMb) {
+              case RQ_MB_INCIDENT_CHANGED:
+                handleIncidentChangedMessage(vhost, msgBody);
+                break;
+              case RQ_MB_UNIT_CHANGED:
+                handleUnitChangedMessage(vhost, msgBody);
+                break;
+              case RQ_MB_POSITION_RECEIVED:
+                handleUnitMovedMessage(vhost, msgBody);
+                break;
+              case RQ_MB_ETA_RECEIVED:
+                handleEtaReceivedMessage(vhost, msgBody);
+                break;
+              case RQ_MB_RA_CHANGED:
+                handleRoadAttentionChangeMessage(vhost, msgBody);
+              default:
+                break;
+            }
+          } catch(Exception e) {
+            LOG.error(e.getMessage());
+          } 
+  
+          try {
+            RQ_CHANNELS.get(channelName).basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+          } catch(Exception e) {
+            LOG.error(e.getMessage());
+          }
+        });
       } catch(Exception e) {
         LOG.error(e.getMessage());
-      } finally {
-        RQ_CHANNELS.get(channelName).basicAck(delivery.getEnvelope().getDeliveryTag(), false);
       }
     }; 
   }
@@ -402,12 +413,18 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         Integer heading = move.has("heading") && move.get("heading").toString() != "null" ? move.getInt("heading") : 0;
         Integer eta = move.has("eta") && move.get("eta").toString() != "null" ? move.getInt("eta") : null;
 
-        Optional<UnitCacheItem> oci = CACHE.FindUnit(envId);
+        List<UnitCacheItem>ocis = CACHE.FindUnitsWithId(moveId);
+        ocis.forEach((oci) -> {
+          oci.UpdateLocation(lon, lat, speed, heading, eta);
+          CACHE.UpdateUnit(oci.GetSourceEnvId(), oci);
+        });
+
+        /*Optional<UnitCacheItem> oci = CACHE.FindUnit(envId);
         if (oci.isPresent()) {
           UnitCacheItem ci = oci.get();
           ci.UpdateLocation(lon, lat, speed, heading, eta);
           CACHE.UpdateUnit(envId, ci);
-        }
+        }*/
       }
     } catch (Exception e) {
       LOG.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
@@ -421,15 +438,26 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     String etaId = eta.getString("unit");
     String envId = vhost + '-' + etaId;
 
-    if (unitIsForMyRegion(eta, Arrays.asList(RQ_REGIONS.split(",")))) {
-      Integer etaInSec = eta.has("etaInSec") && eta.get("etaInSec").toString() != "null" ? eta.getInt("etaInSec") : 0;
+    try {
+      if (unitIsForMyRegion(eta, Arrays.asList(RQ_REGIONS.split(",")))) {
+        Integer etaInSec = eta.has("etaInSec") && eta.get("etaInSec").toString() != "null" ? eta.getInt("etaInSec") : 0;
+  
+        List<UnitCacheItem>ocis = CACHE.FindUnitsWithId(etaId);
+        ocis.forEach((oci) -> {
+          oci.UpdateEta(etaInSec);
+          CACHE.UpdateUnit(oci.GetSourceEnvId(), oci);
+        });
 
-      Optional<UnitCacheItem> oci = CACHE.FindUnit(envId);
-      if (oci.isPresent()) {
-        UnitCacheItem ci = oci.get();
-        ci.UpdateEta(etaInSec);
-        CACHE.UpdateUnit(envId, ci);
+        /*Optional<UnitCacheItem> oci = CACHE.FindUnit(envId);
+        if (oci.isPresent()) {
+          UnitCacheItem ci = oci.get();
+          ci.UpdateEta(etaInSec);
+          CACHE.UpdateUnit(envId, ci);
+        }*/
       }
+    } catch (Exception e) {
+      LOG.error("Exception while updating unit-etas(" + envId + ") in database: ", e);
+      throw new RuntimeException(e);
     }
   }
 
