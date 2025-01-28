@@ -205,7 +205,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       }
 
       // Vehicle pos and eta only for prod
-      if (vhost.toLowerCase() == "productie") {
+      if (vhost.toLowerCase().equals("productie")) {
         try {
           initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_POSITION_RECEIVED, "unit_moved");
         } catch (Exception e) {
