@@ -270,9 +270,9 @@ public class WaterwinningApiActionBean implements ActionBean {
   private JSONArray findPrimaryWaterwinning(double x, double y, int srid, int distance, int count) throws Exception {
     List<Map<String,Object>> rows = DB.qr().query(
       "select st_distance(geometrie as geom, st_setsrid(st_point(?, ?),?)) as distance, st_x(geometrie) as x, st_y(geometrie) as y, soort as \"type\", 'Diameter: ' || diameter as info"
-        + "from waterwinning.waterwinning_primair"
-        + "where st_distance(geometrie, st_setsrid(st_point(?, ?),?)) < ? "
-        + "order by 1 asc limit ?"
+        + " from waterwinning.waterwinning_primair"
+        + " where st_distance(geometrie, st_setsrid(st_point(?, ?),?)) < ? "
+        + " order by 1 asc limit ?"
       , new MapListHandler(), x, y, srid, x, y, srid, distance, count);
     
     JSONArray a = new JSONArray();
