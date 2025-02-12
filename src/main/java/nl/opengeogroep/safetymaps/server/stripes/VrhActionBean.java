@@ -772,7 +772,7 @@ public class VrhActionBean implements ActionBean {
     }
 
     public static JSONArray evenementenJson(Connection c) throws Exception {
-        List<Map<String,Object>> rows = new QueryRunner().query(c, "select objectid as id, evnaam, evstatus, sbegin, st_astext(st_centroid(geom)) as centroid, box2d(geom)::varchar as extent, st_astext(geom) as selectiekader from " + VRH_SCHEMA + ".evterreinvrhobj order by evnaam", new MapListHandler());
+        List<Map<String,Object>> rows = new QueryRunner().query(c, "select objectid as id, evnaam, evstatus, sbegin, seind, st_astext(st_centroid(geom)) as centroid, box2d(geom)::varchar as extent, st_astext(geom) as selectiekader from " + VRH_SCHEMA + ".evterreinvrhobj order by evnaam", new MapListHandler());
 
         JSONArray objects = new JSONArray();
         for(Map<String,Object> row: rows) {
