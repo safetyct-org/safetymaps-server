@@ -162,8 +162,8 @@ public class SafetyConnectProxyActionBean implements ActionBean {
 
           String useRabbitMq = Cfg.getSetting("safetyconnect_rq", "false");
           String useRabbitMqProxy = Cfg.getSetting("safetyconnect_rq_proxy", useRabbitMq);
-          String rabbitMqSourceDefault = "prod".equals(defaultApi) ? "productie" : "opl".equals(defaultApi) ? "opleiding" : "test".equals(defaultApi) ? "test" : null;
-          String rabbitMqSource = useAdmin ? rabbitMqSourceDefault : useProd ?  "productie" : useOpl ? "opleiding" : useTest ? "test" : rabbitMqSourceDefault;
+          String rabbitMqSourceDefault = "prod".equals(defaultApi) ? "productie" : "opl".equals(defaultApi) ? "acceptatie" : "test".equals(defaultApi) ? "test" : null;
+          String rabbitMqSource = useAdmin ? rabbitMqSourceDefault : useProd ?  "productie" : useOpl ? "acceptatie" : useTest ? "test" : rabbitMqSourceDefault;
 
           String defaultAuth = "prod".equals(defaultApi) ? authorizationProd : "opl".equals(defaultApi) ? authorizationOpl : "test".equals(defaultApi) ? authorizationTest : null;
           String defaultUrl = "prod".equals(defaultApi) ? urlProd : "opl".equals(defaultApi) ? urlOpl : "test".equals(defaultApi) ? urlTest : null;
