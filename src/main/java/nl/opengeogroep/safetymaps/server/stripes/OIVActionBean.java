@@ -369,6 +369,10 @@ public class OIVActionBean implements ActionBean {
       "left join algemeen.vw_styles s on s.id = b.styleid) sel "
     , new MapListHandler(), id, layer, id);
 
+    List<Map<String,Object>> media = DB.oivQr().query(
+      "select 'document' as \"type\", file_name as filename from mview_scenario_ruimtelijk vsr on vsr.object_id = ? "
+    , new MapListHandler(), id);
+
     JSONObject dbkJSON = rowToJson(dbk, false, false);
 
     if (!"0".equals(bagid)) {
@@ -384,14 +388,14 @@ public class OIVActionBean implements ActionBean {
       }
     }
 
-    if (bagid.equals("0405100000551806")) {
+    /*if (bagid.equals("0405100000551806")) {
       JSONArray media = new JSONArray();
       JSONObject mediaItem = new JSONObject();
       mediaItem.put("filename", "Fictief_RBP_OIV.pdf");
       mediaItem.put("type", "document");
       media.put(mediaItem);
       dbkJSON.put("media", media);
-    }
+    }*/
 
     dbkJSON.put("id", id);
     dbkJSON.put("bid", bagid);
@@ -404,6 +408,7 @@ public class OIVActionBean implements ActionBean {
     dbkJSON.put("gevaarlijkestoffen", rowsToJson(gs, false, false));
     dbkJSON.put("symbolen", rowsToJson(symbols, false, false));
     dbkJSON.put("labels", rowsToJson(labels, false, false));
+    dbkJSON.put("media", rowsToJson(media, false, false));
 
     //return new StreamingResolution("application/json", dbkJSON.toString());
     return new Resolution() {
