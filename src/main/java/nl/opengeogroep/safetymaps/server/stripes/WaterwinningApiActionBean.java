@@ -270,7 +270,7 @@ public class WaterwinningApiActionBean implements ActionBean {
   private JSONArray findPrimaryWaterwinning(double x, double y, int srid, int distance, int count) throws Exception {
     List<Map<String,Object>> rows = DB.qr().query(
       "select st_distance(geometrie, st_setsrid(st_point(?, ?),?)) as distance, st_x(geometrie) as x, st_y(geometrie) as y, soort as \"type\", 'Diameter: ' || diameter as info"
-        + " from waterwinning.waterwinning_primair"
+        + " from waterwinning.mview_waterwinning_primair"
         + " where st_distance(geometrie, st_setsrid(st_point(?, ?),?)) < ? "
         + " order by 1 asc limit ?"
       , new MapListHandler(), x, y, srid, x, y, srid, distance, count);
@@ -312,7 +312,7 @@ public class WaterwinningApiActionBean implements ActionBean {
   private JSONArray findSecondaryWaterwinning(double x, double y, int srid, int distance, int count, int minSpacing) throws Exception {
         
     List<Map<String,Object>> rows = DB.qr().query("select st_distance(geometrie, st_setsrid(st_point(?, ?),?)) as distance, st_x(geometrie) as x, st_y(geometrie) as y, soort as \"type\", '' as info "
-            + "from waterwinning.waterwinning_secondair"
+            + "from waterwinning.mview_waterwinning_secondair"
             + " where st_distance(geometrie, st_setsrid(st_point(?, ?), ?)) < ? "
             + " order by 1 asc limit ?", new MapListHandler(), x, y, srid, x, y, srid, distance, count);
 
@@ -348,7 +348,7 @@ public class WaterwinningApiActionBean implements ActionBean {
   private JSONArray findTertiarWaterwinning(double x, double y, int srid, int distance, int count, int minSpacing) throws Exception {
         
     List<Map<String,Object>> rows = DB.qr().query("select st_distance(geometrie, st_setsrid(st_point(?, ?),?)) as distance, st_x(geometrie) as x, st_y(geometrie) as y, soort as \"type\", '' as info "
-            + "from waterwinning.waterwinning_tertiar"
+            + "from waterwinning.mview_waterwinning_tertiar"
             + " where st_distance(geometrie, st_setsrid(st_point(?, ?), ?)) < ? "
             + " order by 1 asc limit ?", new MapListHandler(), x, y, srid, x, y, srid, distance, count);
 
