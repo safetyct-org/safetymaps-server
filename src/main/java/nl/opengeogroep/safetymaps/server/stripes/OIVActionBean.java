@@ -370,7 +370,7 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id, layer, id);
 
     List<Map<String,Object>> media = DB.oivQr().query(
-      "select 'document' as \"type\", file_name as filename from mview_scenario_ruimtelijk vsr on vsr.object_id = ? "
+      "select 'document' as \"type\", file_name as filename from objecten.mview_scenario_ruimtelijk vsr where vsr.object_id = ? "
     , new MapListHandler(), id);
 
     JSONObject dbkJSON = rowToJson(dbk, false, false);
