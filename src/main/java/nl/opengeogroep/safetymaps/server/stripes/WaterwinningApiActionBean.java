@@ -300,6 +300,10 @@ public class WaterwinningApiActionBean implements ActionBean {
                     opbrengst = 1500;
                 }
                 info = "&plusmn; " + opbrengst + " &#8467;/min";
+
+                if (diameter <= 100) { o.put("type", "obk100"); }
+                if (diameter > 100 && diameter <= 150) { o.put("type", "obk150"); }
+                if (diameter > 150) { o.put("type", "obk200"); }
             } catch(NumberFormatException e) {
             }
         }
