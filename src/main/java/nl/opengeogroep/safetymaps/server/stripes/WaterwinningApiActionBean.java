@@ -255,7 +255,7 @@ public class WaterwinningApiActionBean implements ActionBean {
       ww.put("secondary", routed);
 
       // Tertiar
-      routingInput = findSecondaryWaterwinning(x, y, srid, (int)Math.ceil(secondaryDist * secondaryDistanceFactor), (int)Math.ceil(secondaryCount * secondaryCountFactor), secondaryMinimumSpacing);
+      routingInput = findTertiarWaterwinning(x, y, srid, (int)Math.ceil(secondaryDist * secondaryDistanceFactor), (int)Math.ceil(secondaryCount * secondaryCountFactor), secondaryMinimumSpacing);
       routed = calculateRoutes(routingInput);
       if(!noRouteTrim) {
           routed = sortAndTrimRouted(routed, secondaryDist, secondaryCount);
