@@ -371,16 +371,12 @@ public class OIVActionBean implements ActionBean {
 
     JSONObject dbkJSON = rowToJson(dbk, false, false);
 
-    try {
-      List<Map<String,Object>> media = DB.oivQr().query(
-        "select 'document' as \"type\", file_name as filename, geom from objecten.mview_scenario_bouwlaag vsb where vsb.object_id = ? and vsb.bouwlaag = ? " + 
-        "union select 'document' as \"type\", file_name as filename, geom from objecten.mview_scenario_ruimtelijk vsr where vsr.object_id = ? "
-      , new MapListHandler(), id, layer, id);
+    List<Map<String,Object>> media = DB.oivQr().query(
+      "select 'document' as \"type\", file_name as filename, geom from objecten.mview_scenario_bouwlaag vsb where vsb.object_id = ? and vsb.bouwlaag = ? " + 
+      "union select 'document' as \"type\", file_name as filename, geom from objecten.mview_scenario_ruimtelijk vsr where vsr.object_id = ? "
+    , new MapListHandler(), id, layer, id);
 
-      dbkJSON.put("media", rowsToJson(media, false, false));
-    } catch (Exception e) {
-
-    }
+    dbkJSON.put("media", rowsToJson(media, false, false));
 
     if (!"0".equals(bagid)) {
       /*Map<String,Object> dbkAdres = DB.bagQr().query(
