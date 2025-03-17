@@ -17,6 +17,9 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.action.ActionBeanContext;
 import net.sourceforge.stripes.action.Resolution;
@@ -51,22 +54,18 @@ public class Kavel10ActionBean implements ActionBean {
     String uri = "https://ndp.vision10.nl/v/" + path + "?" + qs;
     String responseContent = "";
 
-    final HttpUriRequest req = RequestBuilder.get()
-      .setUri(uri)
-      .build();
     final String encoding = "UTF-8";
-    final MutableObject<String> contentType = new MutableObject<>("text/plain");
+    final MutableObject<String> contentType = new MutableObject<>("text/html");
     final String content;
 
-    try(CloseableHttpClient client = HttpClients.createDefault()) {
-      responseContent = client.execute(req, new ResponseHandler<String>() {
-        @Override
-        public String handleResponse(org.apache.http.HttpResponse response) throws ClientProtocolException, IOException {
-          return IOUtils.toString(response.getEntity().getContent(), encoding);
-        }
-      });
-    } catch(IOException e) {
-      return null;
+    try(final WebClient client = new WebClient()) {
+      client.getOptions().setCssEnabled(false);
+      client.getOptions().setJavaScriptEnabled(false);
+
+      final HtmlPage page = client.getPage(uri);
+      responseContent = page.asNormalizedText();
+    } catch(Exception e) {
+        e.printStackTrace();
     }
 
     content = responseContent;
