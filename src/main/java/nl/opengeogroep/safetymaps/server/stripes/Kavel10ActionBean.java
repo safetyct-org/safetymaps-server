@@ -63,7 +63,7 @@ public class Kavel10ActionBean implements ActionBean {
       client.getOptions().setJavaScriptEnabled(false);
 
       final HtmlPage page = client.getPage(uri);
-      responseContent = page.asNormalizedText();
+      responseContent = page.toString();
     } catch(Exception e) {
         e.printStackTrace();
     }
