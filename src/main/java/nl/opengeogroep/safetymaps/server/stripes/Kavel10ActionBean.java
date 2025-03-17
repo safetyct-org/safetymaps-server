@@ -59,8 +59,8 @@ public class Kavel10ActionBean implements ActionBean {
     final String content;
 
     try(final WebClient client = new WebClient()) {
-      client.getOptions().setCssEnabled(false);
-      client.getOptions().setJavaScriptEnabled(false);
+      client.getOptions().setCssEnabled(true);
+      client.getOptions().setJavaScriptEnabled(true);
 
       final HtmlPage page = client.getPage(uri);
       responseContent = page.toString();
