@@ -102,7 +102,8 @@ public class VrhAGSProxyActionBean implements ActionBean {
                     .setUri(tokenurl)
                     .addParameter("f", context.getRequest().getParameter("f"))
                     .addParameter("username", authorization.split(":")[0])
-                    .addParameter("password", authorization.split(":")[1]);
+                    .addParameter("password", authorization.split(":")[1])
+                    .addParameter("referer", "https://vrh.safetymaps.nl");
         } else if(path != null && path.startsWith("Eenheden")) {
             path = path.substring("Eenheden".length());
             builder = buildProxyRequestBuilder(uniturl);
