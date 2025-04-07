@@ -23,6 +23,7 @@ public class DB {
     private static final String JNDI_NAME_BAG = "java:/comp/env/jdbc/nlextract-bag";
     private static final String JNDI_NAME_KRO = "java:/comp/env/jdbc/kro";
     private static final String JNDI_NAME_OIV = "java:/comp/env/jdbc/oiv";
+    private static final String JNDI_NAME_AGS = "java:/comp/env/jdbc/ags";
     private static final String JNDI_NAME_MAPTRIP = "java:/comp/env/jdbc/maptrip";
 
     public static final String USER_TABLE = "safetymaps.user_ ";
@@ -70,6 +71,10 @@ public class DB {
         return getDataSource(JNDI_NAME_OIV).getConnection();
     }
 
+    public static final Connection getAgsConnection() throws NamingException, SQLException {
+      return getDataSource(JNDI_NAME_AGS).getConnection();
+  }
+
     public static final QueryRunner qr() throws NamingException {
         return new QueryRunner(getDataSource(JNDI_NAME));
     }
@@ -85,6 +90,10 @@ public class DB {
     public static final QueryRunner oivQr() throws NamingException {
         return new QueryRunner(getDataSource(JNDI_NAME_OIV));
     }
+
+    public static final QueryRunner agsQr() throws NamingException {
+      return new QueryRunner(getDataSource(JNDI_NAME_AGS));
+  }
 
     public static final QueryRunner maptripQr() throws NamingException {
         return new QueryRunner(getDataSource(JNDI_NAME_MAPTRIP));

@@ -17,10 +17,13 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
+
+import javax.naming.NamingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.validation.*;
+import nl.opengeogroep.safetymaps.server.db.Cfg;
 import nl.opengeogroep.safetymaps.server.db.DB;
 import nl.opengeogroep.safetymaps.server.db.JSONUtils;
 import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
@@ -60,6 +63,7 @@ public class VrhActionBean implements ActionBean {
     private static final String TYPE_EVENEMENT = "evenement";
 
     private static final String VRH_SCHEMA = "vrh_new";
+    private static final String AGS_SCHEMA = "data";
 
     private static JSONArray dbksCache;
     private static Long dbksCacheLastModified;
@@ -114,6 +118,18 @@ public class VrhActionBean implements ActionBean {
     }
     // </editor-fold>
 
+    private static Boolean useAgsBroker() {
+      try {
+        return Cfg.getSetting("ags_broker", "false").equals("true");
+      } catch (Exception e) {
+        return false;
+      }
+    }
+
+    private static String useSchema() {
+      return useAgsBroker() ? AGS_SCHEMA : VRH_SCHEMA;
+    }
+
     private static JSONArray rowsToJSONArray(List<Map<String,Object>> rows) throws Exception {
         JSONArray a = new JSONArray();
         for(Map<String,Object> row: rows) {
@@ -165,7 +181,7 @@ public class VrhActionBean implements ActionBean {
     }
 
     public Resolution api() {
-        try(Connection c = DB.getConnection()) {
+        try(Connection c = useAgsBroker() ? DB.getAgsConnection() : DB.getConnection()) {
             if(path != null) {
                 Object result;
 
@@ -208,7 +224,7 @@ public class VrhActionBean implements ActionBean {
     private long getCachedLastImportTime(Connection c) throws Exception {
         long now = System.currentTimeMillis();
         if(lastImportTime == null || now - lastImportTimeCheckedAt > LAST_IMPORT_TIME_CACHE_MAX_AGE_MILLIS) {
-            lastImportTime = new QueryRunner().query(c, "select time from " + VRH_SCHEMA + ".import_metadata limit 1", new ScalarHandler<Timestamp>()).getTime() / 1000;
+            lastImportTime = new QueryRunner().query(c, "select time from " + useSchema() + ".import_metadata limit 1", new ScalarHandler<Timestamp>()).getTime() / 1000;
             lastImportTimeCheckedAt = now;
         }
         return lastImportTime;
@@ -245,20 +261,20 @@ public class VrhActionBean implements ActionBean {
         Map<String,Map<String,Object>> rowsByVrhBagId = new HashMap();
 
         List<Map<String,Object>> objectRows = qr.query(c, "select vrh_bag_id as id, naam, oms_nummer, st_astext(geom) as pand_centroid " +
-                "from " + VRH_SCHEMA + ".vrh_geo_dbk_bag_object o " +
+                "from " + useSchema() + ".vrh_geo_dbk_bag_object o " +
                 "order by naam", new MapListHandler());
         for(Map<String,Object> row: objectRows) {
             rowsByVrhBagId.put((String)row.get("id"), row);
         }
 
-        Map<String,Map<String,Object>> objectExtents = (Map<String,Map<String,Object>>)qr.query(c, "select vrh_bag_id, st_extent(geom) as extent from " + VRH_SCHEMA + ".vrh_geo_pand group by vrh_bag_id", new KeyedHandler("vrh_bag_id"));
+        Map<String,Map<String,Object>> objectExtents = (Map<String,Map<String,Object>>)qr.query(c, "select vrh_bag_id, st_extent(geom) as extent from " + useSchema() + ".vrh_geo_pand group by vrh_bag_id", new KeyedHandler("vrh_bag_id"));
 
         final Map<String,Set<String>> objectPandIds = new HashMap();
         final Set<String> allPandIds = new HashSet();
         final Set<String> vrhBagIdWithCustomBagPand = new HashSet();
 
         // Niet-numerieke "ids" zijn custom getekende panden
-        qr.query(c, "select vrh_bag_id, bagpand_id, bagpand_id ~ '^[0-9]+$' as real_bag_id from " + VRH_SCHEMA + ".vrh_geo_pand ", new ResultSetHandler() {
+        qr.query(c, "select vrh_bag_id, bagpand_id, bagpand_id ~ '^[0-9]+$' as real_bag_id from " + useSchema() + ".vrh_geo_pand ", new ResultSetHandler() {
             @Override
             public Object handle(ResultSet rs) throws SQLException {
                 while(rs.next()) {
@@ -282,7 +298,7 @@ public class VrhActionBean implements ActionBean {
 
         List<Map<String,Object>> pandAdresRows = DB.bagQr().query("select pandid, nummeraanduiding, openbareruimtenaam, huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, st_astext(st_force2d(geopunt)) as geopunt from bag_actueel.adres_full where pandid in (" + StringUtils.repeat("?", ", ", allPandIds.size()) + ")", new MapListHandler(), (Object[])allPandIds.toArray(new String[] {}));
 
-        Map<String,Map<String,Object>> pandAdresRowsNietBag = (Map<String,Map<String,Object>>)qr.query(c, "select id, straatnaam, huisnummer, huisletter, toevoeging, postcode, woonplaats, adres_loca from " + VRH_SCHEMA + ".vrh_geo_adres_niet_bag", new KeyedHandler("id"));
+        Map<String,Map<String,Object>> pandAdresRowsNietBag = (Map<String,Map<String,Object>>)qr.query(c, "select id, straatnaam, huisnummer, huisletter, toevoeging, postcode, woonplaats, adres_loca from " + useSchema() + ".vrh_geo_adres_niet_bag", new KeyedHandler("id"));
 
         Map<String,List<Map<String,Object>>> pandIdAdressen = new HashMap();
         for(Map<String,Object> r: pandAdresRows) {
@@ -488,7 +504,7 @@ public class VrhActionBean implements ActionBean {
             hoofdpandId = idParts[1];
         }
 
-        List<Map<String,Object>> bagpanden = new QueryRunner().query(c, "select *, st_astext(geom) as geometry from " + VRH_SCHEMA + ".vrh_geo_pand where vrh_bag_id = ? or bagpand_id = ? order by st_area(geom) desc", new MapListHandler(), id, hoofdpandId);
+        List<Map<String,Object>> bagpanden = new QueryRunner().query(c, "select *, st_astext(geom) as geometry from " + useSchema() + ".vrh_geo_pand where vrh_bag_id = ? or bagpand_id = ? order by st_area(geom) desc", new MapListHandler(), id, hoofdpandId);
         JSONArray subpanden = new JSONArray();
         JSONObject hoofdpand = null;
         List<String> bagpandIds = new ArrayList();
@@ -552,86 +568,86 @@ public class VrhActionBean implements ActionBean {
 
                 "    (select array_to_json(array_agg(row_to_json(r.*))) " +
                 "    from (select *, st_astext(t.geom) as geometry " +
-                "         from " + VRH_SCHEMA + ".vrh_geo_compartimentering t " +
+                "         from " + useSchema() + ".vrh_geo_compartimentering t " +
                 "         where t.bagpand_id " + bagPandIdsQuery + ") r " +
                 "    ) as compartimentering, " +
 
                 "    (select array_to_json(array_agg(row_to_json(r.*))) " +
                 "    from (select objectid, symboolcod, symboolhoe, symboolgro, omschrijvi, bijzonderh, st_astext(t.geom) as geometry " +
-                "         from " + VRH_SCHEMA + ".vrh_geo_brandweervoorziening t " +
+                "         from " + useSchema() + ".vrh_geo_brandweervoorziening t " +
                 "         where t.bagpand_id " + bagPandIdsQuery + ") r " +
                 "    ) as brandweervoorziening, " +
 
                 "    (select array_to_json(array_agg(row_to_json(r.*))) " +
                 "    from (select *, st_astext(t.geom) as geometry " +
-                "         from " + VRH_SCHEMA + ".vrh_geo_opstelplaats t " +
+                "         from " + useSchema() + ".vrh_geo_opstelplaats t " +
                 "         where t.bagpand_id " + bagPandIdsQuery + ") r " +
                 "    ) as opstelplaats, " +
 
                 "    (select array_to_json(array_agg(row_to_json(r.*))) " +
                 "    from (select objectid, symboolcod, symboolgro, omschrijvi, bijzonderh, symboolhoe, st_astext(t.geom) as geometry " +
-                "         from " + VRH_SCHEMA + ".vrh_geo_toegang_pand t " +
+                "         from " + useSchema() + ".vrh_geo_toegang_pand t " +
                 "         where t.bagpand_id " + bagPandIdsQuery + ") r " +
                 "    ) as toegang_pand, " +
 
                 "    (select array_to_json(array_agg(row_to_json(r.*))) " +
                 "    from (select *, st_astext(t.geom) as geometry " +
-                "         from " + VRH_SCHEMA + ".vrh_geo_toegang_terrein t " +
+                "         from " + useSchema() + ".vrh_geo_toegang_terrein t " +
                 "         where t.bagpand_id " + bagPandIdsQuery + ") r " +
                 "    ) as toegang_terrein, " +
 
                 "    (select array_to_json(array_agg(row_to_json(r.*))) " +
                 "    from (select objectid, symboolcod, symboolgro, bijzonderh, soort_geva, locatie, st_astext(t.geom) as geometry " +
-                "         from " + VRH_SCHEMA + ".vrh_geo_gevaren t " +
+                "         from " + useSchema() + ".vrh_geo_gevaren t " +
                 "         where t.bagpand_id " + bagPandIdsQuery + ") r " +
                 "    ) as gevaren, " +
 
                 "    (select array_to_json(array_agg(row_to_json(r.*))) " +
                 "    from (select *, st_astext(t.geom) as geometry " +
-                "         from " + VRH_SCHEMA + ".vrh_geo_gevaarlijke_stoffen t " +
+                "         from " + useSchema() + ".vrh_geo_gevaarlijke_stoffen t " +
                 "         where t.bagpand_id " + bagPandIdsQuery +
                 "         order by symboolcod) r " +
                 "    ) as gevaarlijke_stoffen, " +
 
                 "    (select array_to_json(array_agg(row_to_json(r.*))) " +
                 "    from (select objectid, symboolcod as type, bijzonderh, opmerkinge, st_astext(t.geom) as geometry " +
-                "         from " + VRH_SCHEMA + ".vrh_geo_dbk_lijn t " +
+                "         from " + useSchema() + ".vrh_geo_dbk_lijn t " +
                 "         where t.bagpand_id " + bagPandIdsQuery + ") r " +
                 "    ) as overige_lijnen, " +
 
                 "    (select array_to_json(array_agg(row_to_json(r.*))) " +
                 "    from (select objectid, tekst, symboolgro, symboolhoe, st_astext(t.geom) as geometry " +
-                "         from " + VRH_SCHEMA + ".vrh_geo_tekst t " +
+                "         from " + useSchema() + ".vrh_geo_tekst t " +
                 "         where t.bagpand_id " + bagPandIdsQuery + ") r " +
                 "    ) as teksten, " +
 
                 "    (select array_to_json(array_agg(brandinstallaties)) \n" +
                 "    from (select brandinstallaties \n" +
-                "         from " + VRH_SCHEMA + ".brandinstallaties t \n" +
+                "         from " + useSchema() + ".brandinstallaties t \n" +
                 "         where t.vrh_bag_id = o.vrh_bag_id) r \n" +
                 "    ) as brandinstallaties, " +
 
                 "    (select array_to_json(array_agg(compartimentering)) \n" +
                 "    from (select compartimentering \n" +
-                "         from " + VRH_SCHEMA + ".compartimentering_beschrijving t \n" +
+                "         from " + useSchema() + ".compartimentering_beschrijving t \n" +
                 "         where t.bagpand_id = ? order by objectid) r \n" +
                 "    ) as compartimentering_beschrijving, " +
 
                 "    (select array_to_json(array_agg(bijzonderheid)) \n" +
                 "    from (select bijzonderheid \n" +
-                "         from " + VRH_SCHEMA + ".bijzonderheden_aanwezigheid t \n" +
+                "         from " + useSchema() + ".bijzonderheden_aanwezigheid t \n" +
                 "         where t.vrh_bag_id = o.vrh_bag_id and bijzonderheid is not null \n" +
                 "         order by objectid) r \n" +
                 "    ) as bijzonderheden_aanwezigheid, " +
 
                 "    (select array_to_json(array_agg(naam_bijlage)) \n" +
                 "    from (select naam_bijlage \n" +
-                "         from " + VRH_SCHEMA + ".bijlage_voertuigviewer b \n" +
+                "         from " + useSchema() + ".bijlage_voertuigviewer b \n" +
                 "         where b.vrh_bag_id = o.vrh_bag_id" +
                 "         order by naam_bijlage) r \n" +
                 "    ) as media " +
 
-                "from " + VRH_SCHEMA + ".vrh_geo_dbk_bag_object o where o.vrh_bag_id = ?", new MapListHandler(), hoofdpandId, id);
+                "from " + useSchema() + ".vrh_geo_dbk_bag_object o where o.vrh_bag_id = ?", new MapListHandler(), hoofdpandId, id);
 
         if(rows.isEmpty()) {
             throw new IllegalArgumentException("DBK met ID " + id + " niet gevonden");
@@ -651,7 +667,7 @@ public class VrhActionBean implements ActionBean {
             row.put("plaats", bagAdres.get("woonplaatsnaam"));
             row.put("bagPunt", bagAdres.get("geopunt"));
         } else {
-            Map<String,Object> adresNietBag = new QueryRunner().query(c, "select straatnaam, huisnummer, huisletter, toevoeging, postcode, woonplaats, adres_loca from " + VRH_SCHEMA + ".vrh_geo_adres_niet_bag where id = ?", new MapHandler(), id);
+            Map<String,Object> adresNietBag = new QueryRunner().query(c, "select straatnaam, huisnummer, huisletter, toevoeging, postcode, woonplaats, adres_loca from " + useSchema() + ".vrh_geo_adres_niet_bag where id = ?", new MapHandler(), id);
 
             if(adresNietBag != null) {
                 row.put("locatie", adresNietBag.get("adres_loca"));
@@ -691,8 +707,8 @@ public class VrhActionBean implements ActionBean {
         sql = "select id,locatie,adres,plaatsnaam,st_astext(selectiekader) as selectiekader, box2d(geom)::varchar as extent, st_astext(st_centroid(geom)) as geometry "
             + "from"
             + "(select id, locatie, adres, plaatsnaam, coalesce(sk.geom,wdbk.geom) as geom, sk.geom as selectiekader "
-            + " from " + VRH_SCHEMA + ".wdbk_waterbereikbaarheidskaart wdbk "
-            + " left join " + VRH_SCHEMA + ".waterbereikbaarheidskaart_selectiekader sk on (sk.dbk_object = wdbk.id) "
+            + " from " + useSchema() + ".wdbk_waterbereikbaarheidskaart wdbk "
+            + " left join " + useSchema() + ".waterbereikbaarheidskaart_selectiekader sk on (sk.dbk_object = wdbk.id) "
             + " where locatie is not null "
             + " order by locatie) s";
         List<Map<String,Object>> rows = new QueryRunner().query(c, sql, new MapListHandler());
@@ -724,7 +740,7 @@ public class VrhActionBean implements ActionBean {
         JSONObject result = new JSONObject();
         result.put("success", true);
         QueryRunner qr = new QueryRunner();
-        List<Map<String,Object>> rows = qr.query(c, "select *, st_astext(geom) as geometry from " + VRH_SCHEMA + ".wdbk_waterbereikbaarheidskaart where id = ?", new MapListHandler(), id);
+        List<Map<String,Object>> rows = qr.query(c, "select *, st_astext(geom) as geometry from " + useSchema() + ".wdbk_waterbereikbaarheidskaart where id = ?", new MapListHandler(), id);
         if(rows.isEmpty()) {
             result.put("error", "WBBK met ID " + id + " niet gevonden");
         } else {
@@ -743,13 +759,13 @@ public class VrhActionBean implements ActionBean {
                     attributes.put(column.getKey(), column.getValue());
                 }
             }
-            rows = qr.query(c, "select id, symboolcod, symboolgro, bijzonderh, st_astext(geom) as geometry from " + VRH_SCHEMA + ".symbolen where dbk_object = ?", new MapListHandler(), id);
+            rows = qr.query(c, "select id, symboolcod, symboolgro, bijzonderh, st_astext(geom) as geometry from " + useSchema() + ".symbolen where dbk_object = ?", new MapListHandler(), id);
             result.put("symbolen", rowsToJSONArray(rows));
 
-            rows = qr.query(c, "select id, type, bijzonderh, opmerkinge, st_astext(geom) as geometry from " + VRH_SCHEMA + ".lijnen where dbk_object = ?", new MapListHandler(), id);
+            rows = qr.query(c, "select id, type, bijzonderh, opmerkinge, st_astext(geom) as geometry from " + useSchema() + ".lijnen where dbk_object = ?", new MapListHandler(), id);
             result.put("lijnen", rowsToJSONArray(rows));
 
-            rows = qr.query(c, "select id, type, bijzonderh, st_astext(geom) as geometry from " + VRH_SCHEMA + ".vlakken where dbk_object = ? order by \n" +
+            rows = qr.query(c, "select id, type, bijzonderh, st_astext(geom) as geometry from " + useSchema() + ".vlakken where dbk_object = ? order by \n" +
                 "   case type \n" +
                 "   when 'Dieptevlak 4 tot 9 meter' then -3 \n" +
                 "   when 'Dieptevlak 9 tot 15 meter' then -2\n" +
@@ -764,7 +780,7 @@ public class VrhActionBean implements ActionBean {
             }
             result.put("vlakken", vlakken);
 
-            rows = qr.query(c, "select objectid, tekst, hoek, st_astext(geom) as geometry from " + VRH_SCHEMA + ".teksten where dbk_object = ?", new MapListHandler(), id);
+            rows = qr.query(c, "select objectid, tekst, hoek, st_astext(geom) as geometry from " + useSchema() + ".teksten where dbk_object = ?", new MapListHandler(), id);
             result.put("teksten", rowsToJSONArray(rows));
         }
 
@@ -772,7 +788,7 @@ public class VrhActionBean implements ActionBean {
     }
 
     public static JSONArray evenementenJson(Connection c) throws Exception {
-        List<Map<String,Object>> rows = new QueryRunner().query(c, "select objectid as id, evnaam, evstatus, sbegin, seind, st_astext(st_centroid(geom)) as centroid, box2d(geom)::varchar as extent, st_astext(geom) as selectiekader from " + VRH_SCHEMA + ".evterreinvrhobj order by evnaam", new MapListHandler());
+        List<Map<String,Object>> rows = new QueryRunner().query(c, "select objectid as id, evnaam, evstatus, sbegin, seind, st_astext(st_centroid(geom)) as centroid, box2d(geom)::varchar as extent, st_astext(geom) as selectiekader from " + useSchema() + ".evterreinvrhobj order by evnaam", new MapListHandler());
 
         JSONArray objects = new JSONArray();
         for(Map<String,Object> row: rows) {
@@ -785,16 +801,16 @@ public class VrhActionBean implements ActionBean {
         QueryRunner qr = new QueryRunner();
         JSONObject o = new JSONObject();
 
-        JSONArray t = rowsToJSONArray(qr.query(c, "select *, st_astext(geom) as geom from " + VRH_SCHEMA + ".evterreinvrhobj where objectid = ?", new MapListHandler(), id));
+        JSONArray t = rowsToJSONArray(qr.query(c, "select *, st_astext(geom) as geom from " + useSchema() + ".evterreinvrhobj where objectid = ?", new MapListHandler(), id));
         String evnaam = t.getJSONObject(0).getString("evnaam");
         o.put("terrein", t.getJSONObject(0));
-        o.put("teksten", rowsToJSONArray(qr.query(c, "select tekstreeks, teksthoek, tekstgroot, st_x(geom) as x, st_y(geom) as y from " + VRH_SCHEMA + ".evenementen_tekst where evnaam = ?", new MapListHandler(), evnaam)));
-        o.put("locatie_punt", rowsToJSONArray(qr.query(c, "select evenemento as type, ballonteks, hoek, st_x(geom) as x, st_y(geom) as y from " + VRH_SCHEMA + ".evlocatiepuntobj where evnaam = ?", new MapListHandler(), evnaam)));
-        o.put("locatie_vlak", rowsToJSONArray(qr.query(c, "select vlaksoort, omschrijvi, st_astext(geom) as geom from " + VRH_SCHEMA + ".evlocatievlakobj where evnaam = ?", new MapListHandler(), evnaam)));
-        o.put("locatie_lijn", rowsToJSONArray(qr.query(c, "select lijnsoort, lijnbeschr, st_astext(geom) as geom from " + VRH_SCHEMA + ".evlocatielijnobj where evnaam = ?", new MapListHandler(), evnaam)));
-        o.put("route_punt", rowsToJSONArray(qr.query(c, "select routepunts as soort, ballonteks, hoek, c077e6f4 as hoek2, st_x(geom) as x, st_y(geom) as y from " + VRH_SCHEMA + ".evroutepuntobj where evnaam = ?", new MapListHandler(), evnaam)));
-        o.put("route_vlak", rowsToJSONArray(qr.query(c, "select vlaksoort, vlakomschr, st_astext(geom) as geom from " + VRH_SCHEMA + ".evroutevlakobj where evnaam = ?", new MapListHandler(), evnaam)));
-        o.put("route_lijn", rowsToJSONArray(qr.query(c, "select routetype, routebesch, st_astext(geom) as geom from " + VRH_SCHEMA + ".evroutelijnobj where evnaam = ?", new MapListHandler(), evnaam)));
+        o.put("teksten", rowsToJSONArray(qr.query(c, "select tekstreeks, teksthoek, tekstgroot, st_x(geom) as x, st_y(geom) as y from " + useSchema() + ".evenementen_tekst where evnaam = ?", new MapListHandler(), evnaam)));
+        o.put("locatie_punt", rowsToJSONArray(qr.query(c, "select evenemento as type, ballonteks, hoek, st_x(geom) as x, st_y(geom) as y from " + useSchema() + ".evlocatiepuntobj where evnaam = ?", new MapListHandler(), evnaam)));
+        o.put("locatie_vlak", rowsToJSONArray(qr.query(c, "select vlaksoort, omschrijvi, st_astext(geom) as geom from " + useSchema() + ".evlocatievlakobj where evnaam = ?", new MapListHandler(), evnaam)));
+        o.put("locatie_lijn", rowsToJSONArray(qr.query(c, "select lijnsoort, lijnbeschr, st_astext(geom) as geom from " + useSchema() + ".evlocatielijnobj where evnaam = ?", new MapListHandler(), evnaam)));
+        o.put("route_punt", rowsToJSONArray(qr.query(c, "select routepunts as soort, ballonteks, hoek, c077e6f4 as hoek2, st_x(geom) as x, st_y(geom) as y from " + useSchema() + ".evroutepuntobj where evnaam = ?", new MapListHandler(), evnaam)));
+        o.put("route_vlak", rowsToJSONArray(qr.query(c, "select vlaksoort, vlakomschr, st_astext(geom) as geom from " + useSchema() + ".evroutevlakobj where evnaam = ?", new MapListHandler(), evnaam)));
+        o.put("route_lijn", rowsToJSONArray(qr.query(c, "select routetype, routebesch, st_astext(geom) as geom from " + useSchema() + ".evroutelijnobj where evnaam = ?", new MapListHandler(), evnaam)));
 
         return o;
     }
