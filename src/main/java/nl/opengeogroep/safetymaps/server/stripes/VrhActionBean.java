@@ -809,7 +809,7 @@ public class VrhActionBean implements ActionBean {
         o.put("locatie_punt", rowsToJSONArray(qr.query(c, "select evenemento as type, ballonteks, hoek, st_x(geom) as x, st_y(geom) as y from " + useSchema() + ".evlocatiepuntobj where evnaam = ?", new MapListHandler(), evnaam)));
         o.put("locatie_vlak", rowsToJSONArray(qr.query(c, "select vlaksoort, omschrijvi, st_astext(geom) as geom from " + useSchema() + ".evlocatievlakobj where evnaam = ?", new MapListHandler(), evnaam)));
         o.put("locatie_lijn", rowsToJSONArray(qr.query(c, "select lijnsoort, lijnbeschr, st_astext(geom) as geom from " + useSchema() + ".evlocatielijnobj where evnaam = ?", new MapListHandler(), evnaam)));
-        o.put("route_punt", rowsToJSONArray(qr.query(c, "select routepunts as soort, ballonteks, hoek, c077e6f4 as hoek2, st_x(geom) as x, st_y(geom) as y from " + useSchema() + ".evroutepuntobj where evnaam = ?", new MapListHandler(), evnaam)));
+        o.put("route_punt", rowsToJSONArray(qr.query(c, "select routepunts as soort, ballonteks, hoek, st_x(geom) as x, st_y(geom) as y from " + useSchema() + ".evroutepuntobj where evnaam = ?", new MapListHandler(), evnaam)));
         o.put("route_vlak", rowsToJSONArray(qr.query(c, "select vlaksoort, vlakomschr, st_astext(geom) as geom from " + useSchema() + ".evroutevlakobj where evnaam = ?", new MapListHandler(), evnaam)));
         o.put("route_lijn", rowsToJSONArray(qr.query(c, "select routetype, routebesch, st_astext(geom) as geom from " + useSchema() + ".evroutelijnobj where evnaam = ?", new MapListHandler(), evnaam)));
 
