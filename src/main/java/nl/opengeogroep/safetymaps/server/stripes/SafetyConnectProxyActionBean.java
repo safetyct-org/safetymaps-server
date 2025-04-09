@@ -439,7 +439,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
               unit.put("incidentId", oici.get().GetId());
               unit.put("incidentRol",oici.get().GetUnitRol(unit.getString("roepnaam")));
             }*/
-            if (!dbUnit.get("incident").equals("")) {
+            if (dbUnit.get("incident") != null && !dbUnit.get("incident").equals("")) {
               unitHasActiveIncident = true;
               unit.put("incidentId", dbUnit.get("incident"));
               unit.put("incidentRol", dbUnit.get("rol"));
