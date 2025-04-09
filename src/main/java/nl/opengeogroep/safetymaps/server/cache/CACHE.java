@@ -230,7 +230,9 @@ public class CACHE {
         (String)dbItem.get("sender"), 
         (String)dbItem.get("primairevoertuigsoort"),  
         (String)dbItem.get("abbs"), 
-        (String)dbItem.get("post")
+        (String)dbItem.get("post"),
+        (String)dbItem.get("rol"),
+        (String)dbItem.get("incident")
       );
 
       if (dbItem.get("lon") != null) {

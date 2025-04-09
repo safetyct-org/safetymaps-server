@@ -19,6 +19,8 @@ public class UnitCacheItem extends CacheItem {
   private Integer eta;
   private String abbs;
   private String post;
+  private String rol;
+  private String incident;
 
   public UnitCacheItem(String source, 
     String sourceEnv, 
@@ -28,7 +30,9 @@ public class UnitCacheItem extends CacheItem {
     String sender,
     String primairevoertuigsoort,
     String abbs,
-    String post
+    String post,
+    String rol,
+    String incident
   ) {
     this.source = source;
     this.sourceEnv = sourceEnv;
@@ -39,9 +43,14 @@ public class UnitCacheItem extends CacheItem {
     this.primairevoertuigsoort = primairevoertuigsoort;
     this.abbs = abbs;
     this.post = post;
+    this.rol = rol;
+    this.incident = incident;
 
     this.Renew();
   }
+
+  public String GetInzetRol() { return rol; }
+  public String GetIncident() { return incident; }
 
   public void UpdateUnit(Integer gmsstatuscode, String primairevoertuigsoort, String sender, String post, String abbs) {
     this.gmsstatuscode = gmsstatuscode;
@@ -71,6 +80,11 @@ public class UnitCacheItem extends CacheItem {
     this.Renew();
   }
 
+  public void UpdateIncident(String rol, String incident) {
+    this.rol = rol;
+    this.incident = incident;
+  }
+
   public void UpdateEta(Integer etaInSec) {
     this.eta = etaInSec;
 
@@ -94,15 +108,17 @@ public class UnitCacheItem extends CacheItem {
     cacheObject.put("eta", this.eta);
     cacheObject.put("abbs", this.abbs);
     cacheObject.put("post", this.post);
+    cacheObject.put("rol", this.rol);
+    cacheObject.put("incident", this.incident);
 
     return cacheObject;
   }
 
   public void SaveToDb() throws SQLException, NamingException {
     DB.qr().update("INSERT INTO safetymaps.units " +
-      "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs, post, lon, lat, speed, heading, eta, geom) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326)) " +
-      "ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?, post = ?, lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326)",
-    source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs, post, lon, lat, speed, heading, eta, lon, lat, gmsstatuscode, primairevoertuigsoort, abbs, post, lon, lat, speed, heading, eta, lon, lat);
+      "(source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs, post, lon, lat, speed, heading, eta, geom, rol, incident) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ST_SetSRID(ST_MakePoint(?, ?), 4326), ?, ?) " +
+      "ON CONFLICT (sourceEnvId) DO UPDATE SET gmsstatuscode = ?, primairevoertuigsoort = ?, abbs = ?, post = ?, lon = ?, lat = ?, speed = ?, heading = ?, eta = ?, geom = ST_SetSRID(ST_MakePoint(?, ?), 4326), rol = ?, incident = ?",
+    source, sourceEnv, sourceId, sourceEnvId, gmsstatuscode, sender, primairevoertuigsoort, abbs, post, lon, lat, speed, heading, eta, lon, lat, rol, incident, gmsstatuscode, primairevoertuigsoort, abbs, post, lon, lat, speed, heading, eta, lon, lat, rol, incident);
   }
 
   public void RemoveFromDb() throws SQLException, NamingException {

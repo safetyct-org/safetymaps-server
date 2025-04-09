@@ -495,7 +495,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         ci.UpdateUnit(gmsStatusCode, primairevoertuigsoort, sender, post, abbs);
         CACHE.UpdateUnit(envId, ci);
       } else {
-        UnitCacheItem ci = new UnitCacheItem("sc", vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, post);
+        UnitCacheItem ci = new UnitCacheItem("sc", vhost, unitId, envId, gmsStatusCode, sender, primairevoertuigsoort, abbs, post, "", "");
         CACHE.AddUnit(ci);
       }
     } catch (Exception e) {
@@ -580,8 +580,17 @@ public class SafetyctMessageReceiver implements ServletContextListener {
           }
 
           // MOdify unit and attach post
+          JSONObject dbUnit = new JSONObject();
           Optional<UnitCacheItem> ouci = CACHE.FindUnit(unitEnvId);
-          JSONObject dbUnit = ouci.isPresent() ? SafetyctMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(ouci.get().ConvertToMap()) : new JSONObject();
+          if (ouci.isPresent()) {
+            String izr = unit.has("inzetrol") && !unit.has("eindeActieDtg") ? unit.getString("inzetrol") : "";
+            String inr = !unit.has("eindeActieDtg") ? envId : "";
+            UnitCacheItem uci = ouci.get();
+            uci.UpdateIncident(izr, inr);
+            CACHE.UpdateUnit(unitEnvId, uci);
+
+            dbUnit = SafetyctMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(ouci.get().ConvertToMap());
+          }
           unit.put("standPlaatsKazerneCode", dbUnit.has("post") ? dbUnit.getString("post") : "");
 
           // Add modified unit to incident, but not when incident is NOT GMS and unit is already on GMS incident

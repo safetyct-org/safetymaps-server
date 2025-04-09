@@ -414,34 +414,37 @@ public class SafetyConnectProxyActionBean implements ActionBean {
         
         if ("true".equals(useRabbitMqProxy) && requestIs(EENHEIDLOCATIE_REQUEST)) {
           HttpServletRequest request = context.getRequest();
-          JSONArray units = new JSONArray();
-          //List<Map<String, Object>> dbUnits = DB.qr().query("select * from safetymaps.units where source='sc' and sourceenv=?", new MapListHandler(), rabbitMqSource);
-          //List<Map<String, Object>> dbIncidents = DB.qr().query("select * from safetymaps.incidents where source='sc' and sourceenv=? and status='operationeel'", new MapListHandler(), rabbitMqSource);
-          
-          List<Map<String, Object>> dbUnits = CACHE.GetUnits(rabbitMqSource);
 
+          /**
+           * smvng_vehicleinfo_unasigned	Toon locaties van alle voertuigen die niet aan een incident gekoppeld zijn.
+           * smvng_vehicleinfo_maplocations	Toon locaties van alle voertuigen die aan een incident gekoppeld zijn.
+           * smvng_vehicleinfo_incidentlocations	Toon locaties van betrokken voertuigen wanner het incident is geopend.
+           * smvng_incident_ownvehiclenumber   Mag eigen voertuignummer wijzigen
+           */
+          boolean isauthfor_unasigned = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_unasigned");
+          boolean isauthfor_maplocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_maplocations");
+          boolean isauthfor_incidentlocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations");
+          boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
+
+          JSONArray units = new JSONArray();
+
+          List<Map<String, Object>> dbUnits = CACHE.GetUnits(rabbitMqSource);
           for (Map<String, Object> dbUnit : dbUnits) {
             JSONObject unit = SafetyctMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(dbUnit);
 
             Boolean unitHasActiveIncident = false;
-            Optional<IncidentCacheItem> oici = CACHE.FindActiveIncident(rabbitMqSource, unit.getString("roepnaam"));
+            /*Optional<IncidentCacheItem> oici = CACHE.FindActiveIncident(rabbitMqSource, unit.getString("roepnaam"));
             if (oici.isPresent()) {
               unitHasActiveIncident = true;
               unit.put("incidentId", oici.get().GetId());
               unit.put("incidentRol",oici.get().GetUnitRol(unit.getString("roepnaam")));
+            }*/
+            if (!dbUnit.get("incident").equals("")) {
+              unitHasActiveIncident = true;
+              unit.put("incidentId", dbUnit.get("incident"));
+              unit.put("incidentRol", dbUnit.get("rol"));
             }
            
-            /**
-             * smvng_vehicleinfo_unasigned	Toon locaties van alle voertuigen die niet aan een incident gekoppeld zijn.
-             * smvng_vehicleinfo_maplocations	Toon locaties van alle voertuigen die aan een incident gekoppeld zijn.
-             * smvng_vehicleinfo_incidentlocations	Toon locaties van betrokken voertuigen wanner het incident is geopend.
-             * smvng_incident_ownvehiclenumber   Mag eigen voertuignummer wijzigen
-             */
-            boolean isauthfor_unasigned = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_unasigned");
-            boolean isauthfor_maplocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_maplocations");
-            boolean isauthfor_incidentlocations = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations");
-            boolean isauthfor_ownvehiclenumber = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_ownvehiclenumber");
-
             if (isauthfor_unasigned && !unitHasActiveIncident) {
               units.put(unit);
             } else if (isauthfor_maplocations && unitHasActiveIncident) {
