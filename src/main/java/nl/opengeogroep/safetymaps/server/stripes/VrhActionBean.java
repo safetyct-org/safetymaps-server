@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -232,7 +233,7 @@ public class VrhActionBean implements ActionBean {
 
     private Resolution dbks(Connection c) throws Exception {
 
-        long lastModified = getCachedLastImportTime(c);
+        long lastModified = (new Date()).getTime(); // getCachedLastImportTime(c);
         long ifModifiedSince = getContext().getRequest().getDateHeader("If-Modified-Since") / 1000;
 
         if(ifModifiedSince >= lastModified) {
