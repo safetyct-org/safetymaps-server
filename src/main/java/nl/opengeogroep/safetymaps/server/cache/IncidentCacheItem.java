@@ -167,6 +167,7 @@ public class IncidentCacheItem extends CacheItem {
 
   public void RemoveFromDb() throws SQLException, NamingException {
     DB.qr().update("DELETE FROM safetymaps.incidents WHERE sourceEnvId = ?", sourceEnvId);
+    DB.qr().update("DELETE FROM safetymaps.kladblok WHERE incident = ?", sourceId);
   }
 
   public Boolean IsActive() { return this.status.equals("operationeel"); }
