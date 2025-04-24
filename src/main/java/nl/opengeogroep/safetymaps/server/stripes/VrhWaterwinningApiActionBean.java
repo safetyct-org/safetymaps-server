@@ -8,6 +8,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+
+import javax.naming.NamingException;
+
 import net.sourceforge.stripes.action.*;
 import net.sourceforge.stripes.validation.Validate;
 import nl.opengeogroep.safetymaps.routing.*;
@@ -16,6 +19,8 @@ import nl.opengeogroep.safetymaps.server.db.DB;
 import nl.opengeogroep.safetymaps.utils.SafetyctResponseUtil;
 
 import static nl.opengeogroep.safetymaps.server.db.JsonExceptionUtils.logExceptionAndReturnJSONObject;
+
+import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.apache.commons.logging.Log;
@@ -210,6 +215,10 @@ public class VrhWaterwinningApiActionBean implements ActionBean {
       return useAgsBroker() ? AGS_SCHEMA_AND_PREFIX : VRH_SCHEMA_AND_PREFIX;
     }
 
+    private static QueryRunner useQr() throws NamingException {
+      return useAgsBroker() ? DB.agsQr() : DB.qr();
+    }
+
     @DefaultHandler
     public Resolution waterwinning() {
       try(Connection c = useAgsBroker() ? DB.getAgsConnection() : DB.getConnection()) {
@@ -250,7 +259,7 @@ public class VrhWaterwinningApiActionBean implements ActionBean {
     }
     
     private JSONArray findPrimaryWaterwinning(double x, double y, int srid, int distance, int count) throws Exception {
-        List<Map<String,Object>> rows = DB.qr().query("select st_distance(b.geom, st_setsrid(st_point(?, ?),?)) as distance, st_x(geom) as x, st_y(geom) as y, * "
+        List<Map<String,Object>> rows = useQr().query("select st_distance(b.geom, st_setsrid(st_point(?, ?),?)) as distance, st_x(geom) as x, st_y(geom) as y, * "
                 + "from "
                 + " (select geom, 'brandkranen_eigen_terrein' as tabel, \"type\", 'Voordruk aanwezig: ' || coalesce(initcap(voordruk),'Niet bekend') || coalesce(', ' || bar || ' bar', '') as info from " + useSchemaAndPrefix() +"brandkranen_eigen_terrein where lower(\"type\") <> 'afsluiter omloopleiding' "
                 + "  union all "
@@ -299,7 +308,7 @@ public class VrhWaterwinningApiActionBean implements ActionBean {
     
     private JSONArray findSecondaryWaterwinning(double x, double y, int srid, int distance, int count, int minSpacing) throws Exception {
         
-        List<Map<String,Object>> rows = DB.qr().query("select st_distance(b.geom, st_setsrid(st_point(?, ?),?)) as distance, st_x(point) as x, st_y(point) as y, type, info "
+        List<Map<String,Object>> rows = useQr().query("select st_distance(b.geom, st_setsrid(st_point(?, ?),?)) as distance, st_x(point) as x, st_y(point) as y, type, info "
                 + "from "
                 + " (select geom, st_closestpoint(geom, st_setsrid(st_point(?, ?), ?)) as point, 'open_water' as \"type\", '' as info from " + useSchemaAndPrefix() +"openwater_vlakken "
                 + "  union all "
