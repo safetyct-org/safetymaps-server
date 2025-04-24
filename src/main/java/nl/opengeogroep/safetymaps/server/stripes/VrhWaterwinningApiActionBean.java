@@ -265,7 +265,7 @@ public class VrhWaterwinningApiActionBean implements ActionBean {
                 + "  union all "
                 + "  select geom, 'brandkranen_landelijk' as tabel, case when lower(ligging) = 'bovengronds' then 'bovengronds' else 'ondergronds' end as \"type\", 'Diameter: ' || diameter as info from " + useSchemaAndPrefix() +"brandkranen_landelijk "
                 + "  union all "
-                + "  select geom, 'geboorde_putten' as tabel, 'geboorde_put' as \"type\", overige_in as info from " + useSchemaAndPrefix() +"geboorde_putten) b "
+                + "  select geom, 'geboorde_putten' as tabel, 'geboorde_put' as \"type\", '' as info from " + useSchemaAndPrefix() +"geboorde_putten) b "
                 + "where st_distance(b.geom, st_setsrid(st_point(?, ?),?)) < ? "
                 + "order by 1 asc limit ?", new MapListHandler(), x, y, srid, x, y, srid, distance, count);
         
@@ -316,7 +316,7 @@ public class VrhWaterwinningApiActionBean implements ActionBean {
                 + "  union all "
                 + "  select geom, st_closestpoint(geom, st_setsrid(st_point(?, ?), ?)) as point, 'open_water' as \"type\", '' as info from " + useSchemaAndPrefix() +"openwater_hm "
                 + "  union all "
-                + "  select geom, geom as point, 'bluswaterriool' as \"type\", overige_in as info from " + useSchemaAndPrefix() +"bluswaterriool) b "
+                + "  select geom, geom as point, 'bluswaterriool' as \"type\", '' as info from " + useSchemaAndPrefix() +"bluswaterriool) b "
                 + " where st_distance(b.geom, st_setsrid(st_point(?, ?), ?)) < ? "
                 + " order by 1 asc limit ?", new MapListHandler(), x, y, srid, x, y, srid, x, y, srid, x, y, srid, x, y, srid, distance, count);
 
