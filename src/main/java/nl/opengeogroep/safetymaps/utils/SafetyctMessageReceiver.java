@@ -584,7 +584,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
           Optional<UnitCacheItem> ouci = CACHE.FindUnit(unitEnvId);
           if (ouci.isPresent()) {
             String izr = unit.has("inzetrol") && !unit.has("eindeActieDtg") ? unit.getString("inzetrol") : "";
-            String inr = !unit.has("eindeActieDtg") ? number : "";
+            String inr = !unit.has("eindeActieDtg") ? "" + number + "" : "";
             UnitCacheItem uci = ouci.get();
             uci.UpdateIncident(izr, inr);
             CACHE.UpdateUnit(unitEnvId, uci);
