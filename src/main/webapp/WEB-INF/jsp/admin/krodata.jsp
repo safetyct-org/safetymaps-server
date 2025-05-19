@@ -72,7 +72,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <div class="form-group">
           <label class="col-sm-2 control-label">Id (BAG Pand):</label>
           <div class="col-sm-10">
-            <c:out value="${actionBean.bagpandid}"/>
+            <!--<c:out value="${actionBean.bagpandid}"/>-->
+            <stripes:text class="form-control" name="bagpandid" />
           </div>
         </div>
         <div class="form-group">
