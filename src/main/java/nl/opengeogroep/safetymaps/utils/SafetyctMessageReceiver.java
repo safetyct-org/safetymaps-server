@@ -60,6 +60,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
   private static String RQ_PASS;
   private static String RQ_PARAMS;
   private static String RQ_OPTIONAL_ONLY_UNITS;
+  private static String RQ_OPTIONAL_TEST_UNITS;
   private static String RQ_OPTIONAL_ROAD_ATTENTIONS;
   private static String RQ_OPTIONAL_NAME_PREFIX;
   
@@ -205,7 +206,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       }
 
       // Vehicle pos and eta only for prod
-      if (vhost.toLowerCase().equals("productie")) {
+      if (vhost.toLowerCase().equals("productie") || (RQ_OPTIONAL_TEST_UNITS.toLowerCase().equals("true") && vhost.toLowerCase().equals("test"))) {
         try {
           initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_POSITION_RECEIVED, "unit_moved");
         } catch (Exception e) {
@@ -275,6 +276,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     RQ_REGIONS = Cfg.getSetting("safetyconnect_rq_regios", "");
     RQ_OPTIONAL_ONLY_UNITS = Cfg.getSetting("safetyconnect_rq_optional_only_units", "false");
     RQ_OPTIONAL_NAME_PREFIX = Cfg.getSetting("safetyconnect_rq_optional_name_prefix", "");
+    RQ_OPTIONAL_TEST_UNITS = Cfg.getSetting("safetyconnect_rq_optional_test_units", "false");
 
     if (RQ_HOST == null || RQ_USER == null || RQ_PASS == null) {
       throw new Exception("One or more required 'safetyconnect_rq' settings are empty.");
