@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -441,7 +442,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
             }*/
             if (dbUnit.get("incident") != null && !dbUnit.get("incident").equals("")) {
               unitHasActiveIncident = true;
-              unit.put("incidentId", Integer.parseInt((String)dbUnit.get("incident")));
+              unit.put("incidentId", Long.parseLong((String)dbUnit.get("incident")));
               unit.put("incidentRol", dbUnit.get("rol"));
             }
            
