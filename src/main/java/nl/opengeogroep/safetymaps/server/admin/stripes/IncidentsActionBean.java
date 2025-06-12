@@ -112,6 +112,16 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
       this.locs = locs;
   }
 
+  private List<String> incidentroles = new ArrayList<>();
+
+  public List<String> getIncidentroles() {
+    return incidentroles;
+  }
+
+  public void setIncidentroles(List<String> irs) {
+      this.incidentroles = irs;
+  }
+
    /**
    * Load list information handler
    * 
@@ -120,11 +130,19 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    */
   @Before
   private void loadInfo() throws NamingException, SQLException {
-    groups = DB.qr().query("select role, description from safetymaps.role where protected = false or role = 'admin' order by protected desc, role", new MapListHandler());
+    groups = DB.qr().query("select r.role, concat(count(ird.role), ' incident authorisatie(s)') description, string_agg(ird.description, ';' order by ir.role) incident_roles " +
+            "from safetymaps.role r " + 
+            "inner join (select role, trim(regexp_split_to_table(roles, ',')) incident_role from safetymaps.role) ir " +
+            "  on ir.role = r.role " +
+            "  and ir.incident_role like 'smvng_incident_%' " +
+            "inner join safetymaps.role ird " +
+            "  on ird.role = ir.incident_role " +
+            "where r.protected = false " +
+            "group by r.role", new MapListHandler());
     allLocs = DB.qr().query("select id, loc, description from safetymaps.incidentlocations", new MapListHandler());
   }
 
-    /**
+  /**
    * Edit handler
    * 
    * @return

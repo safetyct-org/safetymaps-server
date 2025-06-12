@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       <thead>
         <tr>
           <th>Groep</th>
-          <th>Omschrijving</th>
+          <th></th>
           <th class="table-actions">&nbsp;</th>
         </tr>
       </thead>
@@ -57,27 +57,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <br /><br/>
         </c:if>
 
-        <div class="form-group">
-          <label class="col-sm-2 control-label">Alleen met meldingsclassificatie:</label>
-          <div class="col-sm-10">
-            <p class="help-block text-warning">
-              Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!
-            </p>
-            <stripes:text class="form-control" name="mcs" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="col-sm-2 control-label">Alleen voor locaties:</label>
-          <div class="col-sm-10">
-            <p class="help-block text-warning">
-              Selecteerd een of meerdere locaties, of selecteer niets voor alles.
-            </p>
-            <c:forEach var="loc" items="${actionBean.allLocs}" varStatus="status">
-                <div class="custom-control custom-checkbox">
-                    <stripes:checkbox name="locs" class="custom-control-input" value="${loc.id}" id="authLoc${status.index}"/>
-                    <label class="custom-control-label" for="authLoc${status.index}"><c:out value="${loc.description}"/></label>
-                </div>
+        <div style="display: flex; width: 100%; flex-direction: row;">
+          <div style="flex: 0 1 auto; width: 300px;">
+            <c:forEach var="ir" items="${actionBean.incidentroles}">
+              <p class="help-block text-warning">Gekoppelde incideten authorisatie(s)</p>
+              <label class="custom-control-label"><c:out value="${ir}"/></label>
             </c:forEach>
+          </div>
+          <div style="flex: 0 1 auto; width: 100%;">
+            <div class="form-group">
+              <label class="col-sm-4 control-label">Alleen met meldingsclassificatie:</label>
+              <div class="col-sm-8">
+                <p class="help-block text-warning">
+                  Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!
+                </p>
+                <stripes:text class="form-control" name="mcs" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="col-sm-4 control-label">Alleen voor locaties:</label>
+              <div class="col-sm-8">
+                <p class="help-block text-warning">
+                  Selecteerd een of meerdere locaties, of selecteer niets voor alles.
+                </p>
+                <c:forEach var="loc" items="${actionBean.allLocs}" varStatus="status">
+                    <div class="custom-control custom-checkbox">
+                        <stripes:checkbox name="locs" class="custom-control-input" value="${loc.id}" id="authLoc${status.index}"/>
+                        <label class="custom-control-label" for="authLoc${status.index}"><c:out value="${loc.description}"/></label>
+                    </div>
+                </c:forEach>
+              </div>
+            </div>
           </div>
         </div>
       </c:if>
