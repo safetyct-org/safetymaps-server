@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <c:forEach var="group" items="${actionBean.groups}">
           <stripes:url var="editLink" beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.IncidentsActionBean" event="edit">
             <stripes:param name="group" value="${group.role}"/>
+            <stripes:param name="irstring" value="${group.incident_roles}"/>
           </stripes:url>
           <tr style="cursor: pointer" class="${actionBean.group == group.role ? 'info' : ''}" onclick="${'window.location.href=\''.concat(editLink).concat('\'')}">
             <td><c:out value="${group.role}"/></td>
@@ -59,8 +60,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
         <div style="display: flex; width: 100%; flex-direction: row;">
           <div style="flex: 0 1 auto; width: 300px;">
+            <p class="help-block text-warning">Gekoppelde incideten authorisatie(s)</p>
             <c:forEach var="ir" items="${actionBean.incidentroles}">
-              <p class="help-block text-warning">Gekoppelde incideten authorisatie(s)</p>
               <label class="custom-control-label"><c:out value="${ir}"/></label>
             </c:forEach>
           </div>

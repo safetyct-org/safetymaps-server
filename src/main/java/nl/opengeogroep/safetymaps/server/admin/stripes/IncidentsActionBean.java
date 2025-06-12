@@ -82,6 +82,16 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    }
 
    @Validate
+   private String irstring;
+ 
+   public String getIrstring() {
+     return irstring;
+   }
+   public void setIrstring(String irstring) {
+     this.irstring = irstring;
+   }
+
+   @Validate
    private int id;
  
    public int getId() {
@@ -157,6 +167,7 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
         id = Integer.parseInt(data.get("id").toString());
         mcs = data.get("mcs") != null ? data.get("mcs").toString() : null;
         locs = data.get("locs") != null ? Arrays.asList(data.get("locs").toString().split(",")) : null;
+        incidentroles =  irstring != null ? Arrays.asList(irstring.split(";")) : null;
       }
     }
 
