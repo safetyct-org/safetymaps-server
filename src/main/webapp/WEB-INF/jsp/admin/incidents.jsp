@@ -60,9 +60,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
         <div style="display: flex; width: 100%; flex-direction: row;">
           <div style="flex: 0 1 auto; width: 300px;">
-            <p class="help-block text-warning">Gekoppelde incideten authorisatie(s)</p>
+            <p class="custom-control-label">Gekoppelde incidenten authorisatie(s)</p>
             <c:forEach var="ir" items="${actionBean.incidentroles}">
-              <label class="custom-control-label"><c:out value="${ir}"/></label>
+              <label class="help-block text-warning">- <c:out value="${ir}"/></label>
             </c:forEach>
           </div>
           <div style="flex: 0 1 auto; width: 100%;">
@@ -79,7 +79,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
               <label class="col-sm-4 control-label">Alleen voor locaties:</label>
               <div class="col-sm-8">
                 <p class="help-block text-warning">
-                  Selecteerd een of meerdere locaties, of selecteer niets voor alles.
+                  Selecteer een of meerdere locaties, of selecteer niets voor alles.
                 </p>
                 <c:forEach var="loc" items="${actionBean.allLocs}" varStatus="status">
                     <div class="custom-control custom-checkbox">

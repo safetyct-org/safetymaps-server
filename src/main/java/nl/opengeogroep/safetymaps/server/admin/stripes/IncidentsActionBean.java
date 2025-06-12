@@ -161,13 +161,14 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    */
   public Resolution edit() throws NamingException, SQLException { 
     if (group != null && group.length() > 0) {
+      incidentroles =  irstring != null ? Arrays.asList(irstring.split(";")) : null;
+
       Map<String,Object> data = DB.qr().query("SELECT id, role, mcs, locs FROM safetymaps.incidentauthorization WHERE role=?", new MapHandler(), group);
 
       if(data != null && data.get("id") != null) {
         id = Integer.parseInt(data.get("id").toString());
         mcs = data.get("mcs") != null ? data.get("mcs").toString() : null;
         locs = data.get("locs") != null ? Arrays.asList(data.get("locs").toString().split(",")) : null;
-        incidentroles =  irstring != null ? Arrays.asList(irstring.split(";")) : null;
       }
     }
 
