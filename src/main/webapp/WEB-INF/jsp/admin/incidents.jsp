@@ -79,22 +79,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           </div>
           <div class="col-sm-4">
             <div class="form-group">
-              <label class="control-label">Alleen met functionaris(sen):</label>
+              <stripes:checkbox name="funcs" class="custom-control-input" value="funcs" id="selectfuncs"/><label class="control-label">Alleen met functionaris(sen):</label>
               <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
               <stripes:text class="form-control" name="funcs" />
             </div>
             <div class="form-group">
-              <label class="control-label">Alleen gekoppeld aan KVT-code(s):</label>
+              <stripes:checkbox name="kvts" class="custom-control-input" value="kvts" id="selectkvts"/><label class="control-label">Alleen gekoppeld aan KVT-code(s):</label>
               <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
               <stripes:text class="form-control" name="kvts" />
             </div>
             <div class="form-group">
-              <label class="control-label">Alleen met meldingsclassificatie(s):</label>
+              <stripes:checkbox name="mcs" class="custom-control-input" value="mcs" id="selectmcs"/><label class="control-label">Alleen met meldingsclassificatie(s):</label>
               <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
               <stripes:text class="form-control" name="mcs" />
             </div>
             <div class="form-group">
-              <label class="control-label">Alleen met karakteristiek(en):</label>
+              <stripes:checkbox name="chars" class="custom-control-input" value="chars" id="selectchars"/><label class="control-label">Alleen met karakteristiek(en):</label>
               <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
               <stripes:text class="form-control" name="chars" />
             </div>
@@ -102,6 +102,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         </div>
       </c:if>
     </stripes:form>
+
+    <script language="javascript" type="text/javascript">
+      function handleRestrictions(obj, module) {
+        Array.from(document.getElementsByClassName(module + "_child")).forEach(
+          function (element, index, array) {
+              element.checked = false;
+              element.disabled = (obj.checked == false);
+          }
+        );
+      }
+    </script>
 
   </stripes:layout-component>
 </stripes:layout-render>
