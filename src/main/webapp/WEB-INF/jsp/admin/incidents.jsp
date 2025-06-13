@@ -60,34 +60,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
         <div style="display: flex; width: 100%; flex-direction: row;">
           <div style="flex: 0 1 auto; width: 300px;">
-            <p class="custom-control-label">Gekoppelde incidenten authorisatie(s)</p>
+            <p class="custom-control-label">Groep authorisatie(s) voor incident</p>
             <c:forEach var="ir" items="${actionBean.incidentroles}">
-              <label class="help-block text-warning">- <c:out value="${ir}"/></label>
+              <p class="help-block text-warning">- <c:out value="${ir}"/></p>
             </c:forEach>
           </div>
-          <div style="flex: 0 1 auto; width: 100%;">
-            <div class="form-group">
-              <label class="col-sm-4 control-label">Alleen met meldingsclassificatie:</label>
-              <div class="col-sm-8">
-                <p class="help-block text-warning">
-                  Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!
-                </p>
-                <stripes:text class="form-control" name="mcs" />
-              </div>
+          <div style="flex: 0 1 auto; width: 300px;">
+            <div class="form-group">              
+              <label class="control-label">Alleen voor locaties:</label>
+              <p class="help-block text-warning">Selecteer een of meerdere locaties, of selecteer niets voor alles.</p>
+              <c:forEach var="loc" items="${actionBean.allLocs}" varStatus="status">
+                  <div class="custom-control custom-checkbox">
+                      <stripes:checkbox name="locs" class="custom-control-input" value="${loc.id}" id="authLoc${status.index}"/>
+                      <label class="custom-control-label" for="authLoc${status.index}"><c:out value="${loc.description}"/></label>
+                  </div>
+              </c:forEach>
             </div>
+          </div>
+          <div style="flex: 1 1 auto; width: 100%;">
             <div class="form-group">
-              <label class="col-sm-4 control-label">Alleen voor locaties:</label>
-              <div class="col-sm-8">
-                <p class="help-block text-warning">
-                  Selecteer een of meerdere locaties, of selecteer niets voor alles.
-                </p>
-                <c:forEach var="loc" items="${actionBean.allLocs}" varStatus="status">
-                    <div class="custom-control custom-checkbox">
-                        <stripes:checkbox name="locs" class="custom-control-input" value="${loc.id}" id="authLoc${status.index}"/>
-                        <label class="custom-control-label" for="authLoc${status.index}"><c:out value="${loc.description}"/></label>
-                    </div>
-                </c:forEach>
-              </div>
+              <label class="control-label">Alleen met meldingsclassificatie:</label>
+              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
+              <stripes:text class="form-control" name="mcs" />
             </div>
           </div>
         </div>

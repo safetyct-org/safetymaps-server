@@ -140,7 +140,7 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    */
   @Before
   private void loadInfo() throws NamingException, SQLException {
-    groups = DB.qr().query("select r.role, concat(count(ird.role), ' incident authorisatie(s)') description, string_agg(ird.description, ';' order by ir.role) incident_roles " +
+    groups = DB.qr().query("select r.role, concat(count(ird.role), ' groep authorisatie(s) voor incident') description, string_agg(ird.description, ';' order by ir.role) incident_roles " +
             "from safetymaps.role r " + 
             "inner join (select role, trim(regexp_split_to_table(roles, ',')) incident_role from safetymaps.role) ir " +
             "  on ir.role = r.role " +
