@@ -101,6 +101,36 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
      this.id = id;
    }
 
+  @Validate
+   private String funcs;
+ 
+   public String getFuncs() {
+     return funcs;
+   }
+   public void setFuncs(String funcs) {
+     this.funcs = funcs;
+   }
+
+  @Validate
+   private String kvts;
+ 
+   public String getKvts() {
+     return kvts;
+   }
+   public void setKvts(String kvts) {
+     this.kvts = kvts;
+   }
+
+  @Validate
+   private String chars;
+ 
+   public String getChars() {
+     return chars;
+   }
+   public void setChars(String chars) {
+     this.chars = chars;
+   }
+
    @Validate
    private String mcs;
  
