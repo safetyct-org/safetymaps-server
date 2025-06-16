@@ -111,7 +111,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
               element.checked = false;
               element.disabled = (obj.checked == true);
               document.getElementsByName(element.id)[0].value = "";
-              document.getElementsByName(element.id)[0].disabled = true;
+              document.getElementsByName(element.id)[0].disabled = (obj.checked == true);
             }
           }
         );

@@ -203,11 +203,14 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
     if (group != null && group.length() > 0) {
       incidentroles =  irstring != null ? Arrays.asList(irstring.split(";")) : null;
 
-      Map<String,Object> data = DB.qr().query("SELECT id, role, mcs, locs FROM safetymaps.incidentauthorization WHERE role=?", new MapHandler(), group);
+      Map<String,Object> data = DB.qr().query("SELECT id, role, mcs, locs, funcs, kvts, chars FROM safetymaps.incidentauthorization WHERE role=?", new MapHandler(), group);
 
       if(data != null && data.get("id") != null) {
         id = Integer.parseInt(data.get("id").toString());
         mcs = data.get("mcs") != null ? data.get("mcs").toString() : null;
+        funcs = data.get("funcs") != null ? data.get("funcs").toString() : null;
+        kvts = data.get("kvts") != null ? data.get("kvts").toString() : null;
+        chars = data.get("chars") != null ? data.get("chars").toString() : null;
         locs = data.get("locs") != null ? Arrays.asList(data.get("locs").toString().split(",")) : null;
       }
     }
@@ -224,18 +227,24 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
   public Resolution save() throws Exception {
     if (id > 0) {
       if (mcs == null) mcs = "";
+      if (funcs == null) funcs = "";
+      if (kvts == null) kvts = "";
+      if (chars == null) chars = "";
       if (locs == null) locs = new ArrayList<>();
       String locString = StringUtils.join(locs, ",");
       DB.qr().update("DELETE FROM safetymaps.incidentauthorization WHERE id=?", id);
       if (mcs.length() > 0 || locString.length() > 0) {
         //DB.qr().update("UPDATE safetymaps.incidentauthorization SET mcs=?, locs=? WHERE id=?", mcs, locString, id);
-        DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs) VALUES(?, ?, ?)", group, mcs, locString);
+        DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs, funcs, kvts, chars) VALUES(?, ?, ?, ?, ?, ?)", group, mcs, locString, funcs, kvts, chars);
       }
     } else {
       if (mcs == null) mcs = "";
+      if (funcs == null) funcs = "";
+      if (kvts == null) kvts = "";
+      if (chars == null) chars = "";
       if (locs == null) locs = new ArrayList<>();
       String locString = StringUtils.join(locs, ",");
-      DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs) VALUES(?, ?, ?)", group, mcs, locString);
+      DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs, funcs, kvts, chars) VALUES(?, ?, ?, ?, ?, ?)", group, mcs, locString, funcs, kvts, chars);
     }
 
     CACHE.ReInitializeAuthCache();
