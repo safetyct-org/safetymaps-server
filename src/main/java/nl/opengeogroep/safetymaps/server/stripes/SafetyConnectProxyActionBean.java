@@ -25,6 +25,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
+import javax.json.JsonArray;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -298,22 +299,58 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                       isPutWithDefaultAuth = true;
                     }
 
+                    // Incident filtering for groups/roles
                     if (isPutWithDefaultAuth) {
                       Boolean userIsAuth = null;
                       List<AuthCacheItem> auths = CACHE.GetAllAuths();
                       for(AuthCacheItem auth: auths) {
                         String[] restrictedGroups = auth.GetRolesArray();
                         for(int i1 = 0; i1< restrictedGroups.length; i1++) {
-                          // Userrole requires xtra auth on incident
+                          // FILTER B
                           if (request.isUserInRole(restrictedGroups[i1])) {
-                            // Xtra auth on mc
+                            // Option with mc
                             if (auth.HasMcs()) {
                               userIsAuth = false;
                               if (auth.ContainsMc(mc1.toLowerCase())) {                            
                                 userIsAuth = true;
                               }
                             }
-                            // Xtra auth on location
+                            // Option with func
+                            else if (auth.HasFuncs() && incident.has("funcs")) {
+                              JSONArray funcs = (JSONArray)incident.get("funcs");
+                              userIsAuth = false;
+                              for(int i2 = 0; i2 < funcs.length(); i2++) {
+                                if (auth.ContainsFunc(funcs.getString(i2))) {                            
+                                  userIsAuth = true;
+                                } 
+                              }
+                            }
+                            // Option with characteristic
+                            else if (auth.HasChars()) {
+                              JSONArray characts = (JSONArray)incident.get("karakteristieken");
+                              userIsAuth = false;
+                              for(int i2 = 0; i2 < characts.length(); i2++) {
+                                JSONObject charac = characts.getJSONObject((i2));
+                                JSONArray values = charac.has("waarden") ? charac.getJSONArray("waarden") : new JSONArray();
+                                for (int i3 = 0; i3 < values.length(); i3++) {
+                                  if (auth.ContainsChar(charac.getString("naam"), values.getString(i3))) {                                                              
+                                    userIsAuth = true;
+                                  }
+                                }
+                              }
+                            }
+                            // Option for kvt
+                            else if (auth.HasKvts()) {
+                              JSONArray units = (JSONArray)incident.get("betrokkenEenheden");
+                              userIsAuth = false;
+                              for(int i2 = 0; i2 < units.length(); i2++) {
+                                JSONObject unit = units.getJSONObject((i2));
+                                if (unit.has("standPlaatsKazerneCode") && auth.ContainsKvt(unit.getString("standPlaatsKazerneCode"))) {                            
+                                  userIsAuth = true;
+                                }
+                              } 
+                            }
+                            // FILTER A
                             if ((userIsAuth == null || userIsAuth) && auth.HasLocs()) {
                               userIsAuth = false;
                               List<AuthIncLocCacheItem> locs = auth.GetIncLocs();

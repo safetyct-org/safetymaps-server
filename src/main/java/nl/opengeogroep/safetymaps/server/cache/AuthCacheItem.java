@@ -18,12 +18,18 @@ import nl.opengeogroep.safetymaps.server.db.DB;
 public class AuthCacheItem extends CacheItem {
   private String roles;
   private String mcs;
+  private String funcs;
+  private String chars;
+  private String kvts;
   private String locs;
   private List<AuthIncLocCacheItem> incLocs;
 
-  public AuthCacheItem(String roles, String mcs, String locs, List<AuthIncLocCacheItem> allIncLocs) {
+  public AuthCacheItem(String roles, String mcs, String funcs, String chars, String kvts, String locs, List<AuthIncLocCacheItem> allIncLocs) {
     this.roles = roles;
     this.mcs = mcs.toLowerCase();
+    this.funcs = funcs.toLowerCase();
+    this.chars = chars.toLowerCase();
+    this.kvts = kvts.toLowerCase();
     this.locs = locs;
 
     this.incLocs = allIncLocs.stream().filter(il -> Arrays.stream(locs.split(",")).filter(l -> l.equals(il.GetIdString())).count() > 0).collect(Collectors.toList());
@@ -45,6 +51,9 @@ public class AuthCacheItem extends CacheItem {
 
     cacheObject.put("role", this.roles);
     cacheObject.put("mcs", this.mcs);
+    cacheObject.put("funcs", this.funcs);
+    cacheObject.put("chars", this.chars);
+    cacheObject.put("kvts", this.kvts);
     cacheObject.put("locs", this.locs);
 
     return cacheObject;
@@ -53,6 +62,19 @@ public class AuthCacheItem extends CacheItem {
   public Boolean HasMcs() { return this.mcs != null && this.mcs.length() > 0; }
   public Boolean ContainsMc(String mc) {
     return this.mcs.contains(mc.toLowerCase());
+  }
+  public Boolean HasFuncs() { return this.funcs != null && this.funcs.length() > 0; }
+  public Boolean ContainsFunc(String fn) {
+    return this.funcs.contains(fn.toLowerCase());
+  }
+  public Boolean HasChars() { return this.chars != null && this.chars.length() > 0; }
+    public Boolean ContainsChar(String name, String value) {
+    return this.chars.contains("[" + name.toLowerCase() + ":" + value.toLowerCase() + "]") || this.chars.contains("[" + name.toLowerCase() + "]");
+  }
+
+  public Boolean HasKvts() { return this.kvts != null && this.kvts.length() > 0; }
+  public Boolean ContainsKvt(String kvt) {
+    return this.kvts.contains(kvt.toLowerCase());
   }
 
   public String[] GetRolesArray() {
@@ -63,12 +85,15 @@ public class AuthCacheItem extends CacheItem {
     }
   }
 
-  public void UpdateAuth(String mcs, String locs) {
-    this.mcs = mcs;
+  public void UpdateAuth(String mcs, String funcs, String chars, String kvts, String locs) {
+    this.mcs = mcs.toLowerCase();
+    this.funcs = funcs.toLowerCase();
+    this.chars = chars.toLowerCase();
+    this.kvts = kvts.toLowerCase();
     this.locs = locs;
   }
 
   public void SaveToDb() throws SQLException, NamingException {
-    DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs) VALUES(?, ?, ?) ON CONFLICT (role) SET mcs = ?, locs = ?", this.roles, this.mcs, this.locs, this.mcs, this.locs);
+    DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, funcs, chars, kvts, locs) VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT (role) SET mcs = ?, funcs = ?, chars = ?, kvts = ?, locs = ?", this.roles, this.mcs, this.funcs, this.chars, this.kvts, this.locs, this.mcs, this.funcs, this.chars, this.kvts, this.locs);
   }
 }

@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.Date;
 
 import javax.naming.NamingException;
@@ -23,6 +24,7 @@ public class IncidentCacheItem extends CacheItem {
   private String characts;
   private String tenantid;
   private String talkinggroups;
+  private String funcs;
   private Integer number;
 
   public IncidentCacheItem(String source,
@@ -38,7 +40,8 @@ public class IncidentCacheItem extends CacheItem {
     String characts,
     String tenantid,
     String talkinggroups,
-    Integer number
+    Integer number,
+    String funcs
   ) {
     this.source = source;
     this.sourceEnv = sourceEnv;
@@ -53,6 +56,7 @@ public class IncidentCacheItem extends CacheItem {
     this.characts = characts;
     this.tenantid = tenantid;
     this.talkinggroups = talkinggroups;
+    this.funcs = funcs;
     this.number = number;
 
     JSONObject disciplineJSON = new JSONObject(discipline);
@@ -74,7 +78,8 @@ public class IncidentCacheItem extends CacheItem {
     String discipline,
     String status,
     String characts,
-    String talkinggroups
+    String talkinggroups,
+    String funcs
   ) {
     if (notes != null) this.notes = notes;
     if (units != null) this.units = units;
@@ -83,6 +88,7 @@ public class IncidentCacheItem extends CacheItem {
     if (status != null) this.status = status;
     if (characts != null) this.characts = characts;
     if (talkinggroups != null) this.talkinggroups = talkinggroups;
+    if (funcs != null) this.funcs = funcs;
 
     this.Renew();
   }
@@ -119,6 +125,18 @@ public class IncidentCacheItem extends CacheItem {
     return isForUnit;
   }
 
+  public ArrayList<String> GetKvts() {
+    ArrayList<String> kvts = new ArrayList<String>();
+    JSONArray units = this.units != null ? new JSONArray(this.units) : new JSONArray();
+    for(int i=0; i<units.length(); i++) {
+      JSONObject unit = (JSONObject)units.get(i);
+      if (unit.has("standPlaatsKazerneCode")) {
+        kvts.add(unit.getString("standPlaatsKazerneCode"));
+      }
+    }
+    return kvts;
+  }
+
   public void RemoveUnit(String unitSourceId) {
     JSONArray units = this.units != null ? new JSONArray(this.units) : new JSONArray();
     JSONArray updatedUnits = new JSONArray();
@@ -153,6 +171,7 @@ public class IncidentCacheItem extends CacheItem {
     cacheObject.put("characts", this.characts);
     cacheObject.put("tenantid", this.tenantid);
     cacheObject.put("talkinggroups", this.talkinggroups);
+    cacheObject.put("funcs", this.funcs);
     cacheObject.put("number", this.number);
 
     return cacheObject;
@@ -160,9 +179,9 @@ public class IncidentCacheItem extends CacheItem {
 
   public void SaveToDb() throws SQLException, NamingException {
     DB.qr().update("INSERT INTO safetymaps.incidents " +
-      "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid, talkinggroups) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
-      " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?, tenantId = ?, talkinggroups = ?", 
-    source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid, talkinggroups, status, notes, units, characts, location, discipline, tenantid, talkinggroups);
+      "(source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid, talkinggroups, funcs) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+      " ON CONFLICT (sourceEnvId) DO UPDATE SET status = ?, notes = ?, units = ?, characts = ?, location = ?, discipline = ?, tenantId = ?, talkinggroups = ?, funcs = ?", 
+    source, sourceEnv, sourceId, sourceEnvId, status, sender, number, notes, units, characts, location, discipline, tenantid, talkinggroups, funcs, status, notes, units, characts, location, discipline, tenantid, talkinggroups, funcs);
   }
 
   public void RemoveFromDb() throws SQLException, NamingException {

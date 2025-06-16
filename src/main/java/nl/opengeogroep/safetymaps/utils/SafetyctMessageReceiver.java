@@ -567,6 +567,11 @@ public class SafetyctMessageReceiver implements ServletContextListener {
           : dbIncident.has("talkinggroups") 
             ? dbIncident.getJSONArray("talkinggroups") 
             : new JSONArray();
+        JSONArray funcs = incident.has("betrokkenFunctionarissen") 
+          ? incident.getJSONArray("betrokkenFunctionarissen") 
+          : dbIncident.has("funcs") 
+            ? dbIncident.getJSONArray("funcs") 
+            : new JSONArray();
 
         JSONArray modifiedUnits = new JSONArray();
         for(int i=0; i<units.length(); i++) {
@@ -593,7 +598,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
             dbUnit = SafetyctMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(ouci.get().ConvertToMap());
           }
-          unit.put("standPlaatsKazerneCode", dbUnit.has("post") ? dbUnit.getString("post") : "");
+          unit.put("standPlaatsKazerne", dbUnit.has("post") ? dbUnit.getString("post") : "");
 
           // Add modified unit to incident, but not when incident is NOT GMS and unit is already on GMS incident
           Boolean isGMSIncident = !incidentId.startsWith("FLK") && !incidentId.startsWith("DCU");
@@ -605,10 +610,10 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
         if (oci.isPresent()) {
           IncidentCacheItem ci = oci.get();
-          ci.UpdateIncident(notes.toString(), modifiedUnits.toString(), location.toString(), discipline.toString(), status, characts.toString(), talkinggroups.toString());
+          ci.UpdateIncident(notes.toString(), modifiedUnits.toString(), location.toString(), discipline.toString(), status, characts.toString(), talkinggroups.toString(), funcs.toString());
           CACHE.UpdateIncident(envId, ci);
         } else {
-          IncidentCacheItem ci = new IncidentCacheItem("sc", vhost, incidentId, envId, notes.toString(), modifiedUnits.toString(), location.toString(), discipline.toString(), status, sender, characts.toString(), tenantId, talkinggroups.toString(), number);
+          IncidentCacheItem ci = new IncidentCacheItem("sc", vhost, incidentId, envId, notes.toString(), modifiedUnits.toString(), location.toString(), discipline.toString(), status, sender, characts.toString(), tenantId, talkinggroups.toString(), number, funcs.toString());
           CACHE.AddIncident(ci);
         }
       } catch (Exception e) {

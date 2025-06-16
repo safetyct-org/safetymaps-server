@@ -81,7 +81,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           <div class="col-sm-4">
             <div class="form-group">
               <label class="control-label">Filter B (voor meldingsclassificatie OF functionaris OF kvt-code OF karakteristiek):</label><br/>
-              <p class="help-block text-warning">Geef voor al deze filteropties altijd de waarden op zoals deze in GMS zijn ingevoerd.</p>
+              <p class="help-block text-warning">Selecteer een optie en geef voor deze optie een waarde op zoals deze in GMS is ingevoerd, of selecteer niets voor voor alles.</p>
               <stripes:checkbox name="restrictions" class="custom-control-input restriction mcs" value="mcs" id="mcs" onclick="javascript:handleRestrictions(this.checked, 'mcs');"/>&nbsp;<label class="control-label">Met meldingsclassificatie(s):</label>
               <p class="help-block text-warning">Geef een meldingsclassificatie op en gebruik een komma voor meerdere mogelijkheden.
                 <br/>- Bijvoorbeeld alle dienstverlening: Dienstverlening

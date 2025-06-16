@@ -61,10 +61,12 @@ public class SafetyctMessageUtil {
     String locationString = (String)incidentDbRow.get("location");
     String discString = (String)incidentDbRow.get("discipline");
     String talkingString = (String)incidentDbRow.get("talkinggroups");
+    String funcString = (String)incidentDbRow.get("funcs");
     JSONArray notes = incidentDbRow.get("notes") != null ? new JSONArray(notesString) : new JSONArray();
     JSONArray units = incidentDbRow.get("units") != null ? new JSONArray(unitsString) : new JSONArray();
     JSONArray characts = incidentDbRow.get("characts") != null ? new JSONArray(charactsString): new JSONArray();
     JSONArray talkinggroups = incidentDbRow.get("talkinggroups") != null ? new JSONArray(talkingString): new JSONArray();
+    JSONArray funcs = incidentDbRow.get("funcs") != null ? new JSONArray(funcString): new JSONArray();
 
     incident.put("incidentNummer", (Integer)incidentDbRow.get("number"));
     incident.put("incidentId", (String)incidentDbRow.get("sourceid"));
@@ -76,6 +78,7 @@ public class SafetyctMessageUtil {
     incident.put("incidentLocatie", new JSONObject(locationString));
     incident.put("brwDisciplineGegevens", new JSONObject(discString));
     incident.put("gespreksGroepen", talkinggroups);
+    incident.put("funcs", funcs);
 
     return incident;
   }

@@ -172,6 +172,9 @@ public class CACHE {
       AuthCacheItem ci = new AuthCacheItem(
         (String)dbItem.get("role"), 
         (String)dbItem.get("mcs"), 
+        (String)dbItem.get("funcs"), 
+        (String)dbItem.get("chars"), 
+        (String)dbItem.get("kvts"), 
         (String)dbItem.get("locs"),
         authIncLocs
       );
@@ -207,7 +210,8 @@ public class CACHE {
         (String)dbItem.get("characts"), 
         (String)dbItem.get("tenantid"), 
         (String)dbItem.get("talkinggroups"), 
-        (Integer)dbItem.get("number")
+        (Integer)dbItem.get("number"),
+        (String)dbItem.get("funcs")
       );
 
       ci.Save();
