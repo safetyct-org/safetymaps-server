@@ -79,23 +79,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           </div>
           <div class="col-sm-4">
             <div class="form-group">
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction mcs" value="mcs" id="mcs" onclick="javascript:handleRestrictions(this.checked, 'mcs');"/>&nbsp;<label class="control-label">Alleen met meldingsclassificatie(s):</label>
+              <p class="help-block text-warning">Geef een meldingsclassificatie op en gebruik een komma voor meerdere mogelijkheden.
+                <br/>Bijvoorbeeld alle dienstverlening: Dienstverlening
+                <br/>of alle dienstverlening en brand: Dienstverlening,Brand
+              </p>
+              <stripes:text class="form-control" name="mcs" />
+            </div>
+            <div class="form-group">
               <stripes:checkbox name="restrictions" class="custom-control-input restriction funcs" value="funcs" id="funcs" onclick="javascript:handleRestrictions(this.checked, 'funcs');"/>&nbsp;<label class="control-label">Alleen met functionaris(sen):</label>
-              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle.</p>
+              <p class="help-block text-warning">Geef een functionaris op en gebruik een komma voor meerdere mogelijkheden.</p>
               <stripes:text class="form-control" name="funcs" />
             </div>
             <div class="form-group">
               <stripes:checkbox name="restrictions" class="custom-control-input restriction kvts" value="kvts" id="kvts" onclick="javascript:handleRestrictions(this.checked, 'kvts');"/>&nbsp;<label class="control-label">Alleen gekoppeld aan KVT-code(s):</label>
-              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle.</p>
+              <p class="help-block text-warning">Geef een kvt-code op en gebruik een komma voor meerdere mogelijkheden.</p>
               <stripes:text class="form-control" name="kvts" />
             </div>
             <div class="form-group">
-              <stripes:checkbox name="restrictions" class="custom-control-input restriction mcs" value="mcs" id="mcs" onclick="javascript:handleRestrictions(this.checked, 'mcs');"/>&nbsp;<label class="control-label">Alleen met meldingsclassificatie(s):</label>
-              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle.</p>
-              <stripes:text class="form-control" name="mcs" />
-            </div>
-            <div class="form-group">
               <stripes:checkbox name="restrictions" class="custom-control-input restriction chars" value="chars" id="chars" onclick="javascript:handleRestrictions(this.checked, 'chars');"/>&nbsp;<label class="control-label">Alleen met karakteristiek(en):</label>
-              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle.</p>
+              <p class="help-block text-warning">Geef een karakteristiek en optioneel een waarde op. Zit dit tussen [] met een : als scheidingsteken. Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. 
+                <br/>Bijvoorbeeld alle grip 1 incidenten: [GRIP:1]
+                <br/>of alle weer alarm incidenten: [Soort weeralarm] 
+                <br/>of beide: [GRIP:1], [Soort weeralarm]</p>
               <stripes:text class="form-control" name="chars" />
             </div>
           </div>
@@ -112,7 +118,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             }
           }
         )
-      }, 1000);
+      }, 300);
       
 
       function handleRestrictions(isChecked, restriction) {
