@@ -95,8 +95,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
               <stripes:text class="form-control" name="funcs" />
             </div>
             <div class="form-group">
-              <stripes:checkbox name="restrictions" class="custom-control-input restriction kvts" value="kvts" id="kvts" onclick="javascript:handleRestrictions(this.checked, 'kvts');"/>&nbsp;<label class="control-label">Gekoppeld aan kazernenaam:</label>
-              <p class="help-block text-warning">Geef een kazernenaam op en gebruik een komma voor meerdere mogelijkheden.</p>
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction kvts" value="kvts" id="kvts" onclick="javascript:handleRestrictions(this.checked, 'kvts');"/>&nbsp;<label class="control-label">Gekoppeld aan kvt-code:</label>
+              <p class="help-block text-warning">Geef een kvt-code op en gebruik een komma voor meerdere mogelijkheden.</p>
               <stripes:text class="form-control" name="kvts" />
             </div>
             <div class="form-group">

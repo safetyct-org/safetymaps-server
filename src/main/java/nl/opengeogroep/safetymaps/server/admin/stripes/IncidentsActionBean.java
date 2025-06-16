@@ -213,10 +213,10 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
         chars = data.get("chars") != null ? data.get("chars").toString() : null;
         locs = data.get("locs") != null ? Arrays.asList(data.get("locs").toString().split(",")) : null;
 
-        String myrestrictions = data.get("mcs") != null ? "mcs"
-          : data.get("funcs") != null ? "funcs"
-          : data.get("kvts") != null ? "kvts"
-          : data.get("chars") != null ? "chars"
+        String myrestrictions = mcs != null && mcs.length() > 0 ? "mcs"
+          : funcs != null && funcs.length() > 0 ? "funcs"
+          : kvts != null && kvts.length() > 0 ? "kvts"
+          : chars != null && chars.length() > 0 ? "chars"
           : "";
 
         restrictions = Arrays.asList(myrestrictions.split(", "));
