@@ -132,6 +132,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
               element.disabled = isChecked;
               document.getElementsByName(element.id)[0].value = '';
               document.getElementsByName(element.id)[0].disabled = isChecked;
+            } else {
+              if (!isChecked) {
+                document.getElementsByName(element.id)[0].value = '';
+              }
             }
           }
         );
