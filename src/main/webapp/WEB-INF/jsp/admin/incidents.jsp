@@ -72,15 +72,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
               <p class="help-block text-warning">Selecteer een of meerdere locaties, of selecteer niets voor alles.</p>
               <c:forEach var="loc" items="${actionBean.allLocs}" varStatus="status">
                   <div class="custom-control custom-checkbox">
-                      <stripes:checkbox name="locs" class="custom-control-input" value="${loc.id}" id="authLoc${status.index}"/>
-                      <label class="custom-control-label" for="authLoc${status.index}"><c:out value="${loc.description}"/></label>
+                    <stripes:checkbox name="locs" class="custom-control-input" value="${loc.id}" id="authLoc${status.index}"/>
+                    <label class="custom-control-label" for="authLoc${status.index}"><c:out value="${loc.description}"/></label>
                   </div>
               </c:forEach>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
-              <label class="control-label">Filter B (voor meldingsclassificatie OF functionaris OF kvt-code OF karakteristiek):</label>
+              <label class="control-label">Filter B (voor meldingsclassificatie OF functionaris OF kvt-code OF karakteristiek):</label><br/>
+              <p class="help-block text-warning">Geef voor al deze filteropties altijd de waarden op zoals deze in GMS zijn ingevoerd.</p>
               <stripes:checkbox name="restrictions" class="custom-control-input restriction mcs" value="mcs" id="mcs" onclick="javascript:handleRestrictions(this.checked, 'mcs');"/>&nbsp;<label class="control-label">Met meldingsclassificatie(s):</label>
               <p class="help-block text-warning">Geef een meldingsclassificatie op en gebruik een komma voor meerdere mogelijkheden.
                 <br/>- Bijvoorbeeld alle dienstverlening: Dienstverlening
@@ -94,8 +95,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
               <stripes:text class="form-control" name="funcs" />
             </div>
             <div class="form-group">
-              <stripes:checkbox name="restrictions" class="custom-control-input restriction kvts" value="kvts" id="kvts" onclick="javascript:handleRestrictions(this.checked, 'kvts');"/>&nbsp;<label class="control-label">Gekoppeld aan KVT-code(s):</label>
-              <p class="help-block text-warning">Geef een kvt-code op en gebruik een komma voor meerdere mogelijkheden.</p>
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction kvts" value="kvts" id="kvts" onclick="javascript:handleRestrictions(this.checked, 'kvts');"/>&nbsp;<label class="control-label">Gekoppeld aan kazernenaam:</label>
+              <p class="help-block text-warning">Geef een kazernenaam op en gebruik een komma voor meerdere mogelijkheden.</p>
               <stripes:text class="form-control" name="kvts" />
             </div>
             <div class="form-group">
