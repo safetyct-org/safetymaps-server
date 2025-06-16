@@ -79,22 +79,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           </div>
           <div class="col-sm-4">
             <div class="form-group">
-              <stripes:checkbox name="funcs" class="custom-control-input" value="funcs" id="selectfuncs"/><label class="control-label">Alleen met functionaris(sen):</label>
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction funcs" value="funcs" id="funcs" onclick="javascript:handleRestrictions(this, 'funcs');"/>&nbsp;<label class="control-label">Alleen met functionaris(sen):</label>
               <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
               <stripes:text class="form-control" name="funcs" />
             </div>
             <div class="form-group">
-              <stripes:checkbox name="kvts" class="custom-control-input" value="kvts" id="selectkvts"/><label class="control-label">Alleen gekoppeld aan KVT-code(s):</label>
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction kvts" value="kvts" id="kvts" onclick="javascript:handleRestrictions(this, 'kvts');"/>&nbsp;<label class="control-label">Alleen gekoppeld aan KVT-code(s):</label>
               <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
               <stripes:text class="form-control" name="kvts" />
             </div>
             <div class="form-group">
-              <stripes:checkbox name="mcs" class="custom-control-input" value="mcs" id="selectmcs"/><label class="control-label">Alleen met meldingsclassificatie(s):</label>
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction mcs" value="mcs" id="mcs" onclick="javascript:handleRestrictions(this, 'mcs');"/>&nbsp;<label class="control-label">Alleen met meldingsclassificatie(s):</label>
               <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
               <stripes:text class="form-control" name="mcs" />
             </div>
             <div class="form-group">
-              <stripes:checkbox name="chars" class="custom-control-input" value="chars" id="selectchars"/><label class="control-label">Alleen met karakteristiek(en):</label>
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction chars" value="chars" id="chars" onclick="javascript:handleRestrictions(this, 'chars');"/>&nbsp;<label class="control-label">Alleen met karakteristiek(en):</label>
               <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
               <stripes:text class="form-control" name="chars" />
             </div>
@@ -104,11 +104,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </stripes:form>
 
     <script language="javascript" type="text/javascript">
-      function handleRestrictions(obj, module) {
-        Array.from(document.getElementsByClassName(module + "_child")).forEach(
+      function handleRestrictions(obj, restriction) {
+        Array.from(document.getElementsByClassName("restriction")).forEach(
           function (element, index, array) {
+            if (!element.classList.contains(restriction)) {
               element.checked = false;
-              element.disabled = (obj.checked == false);
+              element.disabled = (obj.checked == true);
+              document.getElementsByName(element.id)[0].value = "";
+              document.getElementsByName(element.id)[0].disabled = true;
+            }
           }
         );
       }

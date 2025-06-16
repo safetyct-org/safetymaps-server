@@ -142,6 +142,16 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    }
 
   @Validate
+  private String restrictions;
+ 
+  public String getRestrictions() {
+    return restrictions;
+  }
+  public void setRestrictions(String restrictions) {
+    this.restrictions = restrictions;
+  }
+
+  @Validate
   private List<String> locs = new ArrayList<>();
 
   public List<String> getLocs() {
