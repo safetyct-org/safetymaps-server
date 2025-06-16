@@ -142,12 +142,12 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
    }
 
   @Validate
-  private String restrictions;
+  private List<String> restrictions = new ArrayList<>();
  
-  public String getRestrictions() {
+  public List<String> getRestrictions() {
     return restrictions;
   }
-  public void setRestrictions(String restrictions) {
+  public void setRestrictions(List<String> restrictions) {
     this.restrictions = restrictions;
   }
 
@@ -212,6 +212,14 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
         kvts = data.get("kvts") != null ? data.get("kvts").toString() : null;
         chars = data.get("chars") != null ? data.get("chars").toString() : null;
         locs = data.get("locs") != null ? Arrays.asList(data.get("locs").toString().split(",")) : null;
+
+        String myrestrictions = data.get("mcs") != null ? "mcs"
+          : data.get("funcs") != null ? "funcs"
+          : data.get("kvts") != null ? "kvts"
+          : data.get("chars") != null ? "chars"
+          : "";
+
+        restrictions = Arrays.asList(myrestrictions.split(", "));
       }
     }
 
@@ -235,7 +243,7 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
       DB.qr().update("DELETE FROM safetymaps.incidentauthorization WHERE id=?", id);
       if (mcs.length() > 0 || locString.length() > 0) {
         //DB.qr().update("UPDATE safetymaps.incidentauthorization SET mcs=?, locs=? WHERE id=?", mcs, locString, id);
-        DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs, funcs, kvts, chars) VALUES(?, ?, ?, ?, ?, ?)", group, mcs, locString, funcs, kvts, chars);
+        DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs, funcs, kvts, chars) VALUES(?, ?, ?, ?, ?, ?)", group, mcs.toLowerCase(), locString, funcs.toLowerCase(), kvts.toLowerCase(), chars.toLowerCase());
       }
     } else {
       if (mcs == null) mcs = "";
@@ -244,7 +252,7 @@ public class IncidentsActionBean implements ActionBean, ValidationErrorHandler {
       if (chars == null) chars = "";
       if (locs == null) locs = new ArrayList<>();
       String locString = StringUtils.join(locs, ",");
-      DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs, funcs, kvts, chars) VALUES(?, ?, ?, ?, ?, ?)", group, mcs, locString, funcs, kvts, chars);
+      DB.qr().update("INSERT INTO safetymaps.incidentauthorization(role, mcs, locs, funcs, kvts, chars) VALUES(?, ?, ?, ?, ?, ?)", group, mcs.toLowerCase(), locString, funcs.toLowerCase(), kvts.toLowerCase(), chars.toLowerCase());
     }
 
     CACHE.ReInitializeAuthCache();

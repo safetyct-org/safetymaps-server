@@ -60,7 +60,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
         <div>
           <div class="col-sm-4">
-            <label class="control-label">Groep authorisatie(s) voor incident</label>
+            <label class="control-label">Geselecteerde groep authorisatie(s) voor incidenten</label>
             <c:forEach var="ir" items="${actionBean.incidentroles}">
               <p class="help-block text-warning">- <c:out value="${ir}"/></p>
             </c:forEach>
@@ -79,23 +79,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
           </div>
           <div class="col-sm-4">
             <div class="form-group">
-              <stripes:checkbox name="restrictions" class="custom-control-input restriction funcs" value="funcs" id="funcs" onclick="javascript:handleRestrictions(this, 'funcs');"/>&nbsp;<label class="control-label">Alleen met functionaris(sen):</label>
-              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction funcs" value="funcs" id="funcs" onclick="javascript:handleRestrictions(this.checked, 'funcs');"/>&nbsp;<label class="control-label">Alleen met functionaris(sen):</label>
+              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle.</p>
               <stripes:text class="form-control" name="funcs" />
             </div>
             <div class="form-group">
-              <stripes:checkbox name="restrictions" class="custom-control-input restriction kvts" value="kvts" id="kvts" onclick="javascript:handleRestrictions(this, 'kvts');"/>&nbsp;<label class="control-label">Alleen gekoppeld aan KVT-code(s):</label>
-              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction kvts" value="kvts" id="kvts" onclick="javascript:handleRestrictions(this.checked, 'kvts');"/>&nbsp;<label class="control-label">Alleen gekoppeld aan KVT-code(s):</label>
+              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle.</p>
               <stripes:text class="form-control" name="kvts" />
             </div>
             <div class="form-group">
-              <stripes:checkbox name="restrictions" class="custom-control-input restriction mcs" value="mcs" id="mcs" onclick="javascript:handleRestrictions(this, 'mcs');"/>&nbsp;<label class="control-label">Alleen met meldingsclassificatie(s):</label>
-              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction mcs" value="mcs" id="mcs" onclick="javascript:handleRestrictions(this.checked, 'mcs');"/>&nbsp;<label class="control-label">Alleen met meldingsclassificatie(s):</label>
+              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle.</p>
               <stripes:text class="form-control" name="mcs" />
             </div>
             <div class="form-group">
-              <stripes:checkbox name="restrictions" class="custom-control-input restriction chars" value="chars" id="chars" onclick="javascript:handleRestrictions(this, 'chars');"/>&nbsp;<label class="control-label">Alleen met karakteristiek(en):</label>
-              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. Gebruik alleen kleine letters!</p>
+              <stripes:checkbox name="restrictions" class="custom-control-input restriction chars" value="chars" id="chars" onclick="javascript:handleRestrictions(this.checked, 'chars');"/>&nbsp;<label class="control-label">Alleen met karakteristiek(en):</label>
+              <p class="help-block text-warning">Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle.</p>
               <stripes:text class="form-control" name="chars" />
             </div>
           </div>
@@ -104,14 +104,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </stripes:form>
 
     <script language="javascript" type="text/javascript">
-      function handleRestrictions(obj, restriction) {
+      window.setTimeout(function () {
+        Array.from(document.getElementsByClassName("restriction")).forEach(
+          function (element, index, array) {
+            if (element.checked) {
+              handleRestrictions(true, element.value);
+            }
+          }
+        )
+      }, 1000);
+      
+
+      function handleRestrictions(isChecked, restriction) {
         Array.from(document.getElementsByClassName("restriction")).forEach(
           function (element, index, array) {
             if (!element.classList.contains(restriction)) {
               element.checked = false;
-              element.disabled = (obj.checked == true);
-              document.getElementsByName(element.id)[0].value = "";
-              document.getElementsByName(element.id)[0].disabled = (obj.checked == true);
+              element.disabled = isChecked;
+              document.getElementsByName(element.id)[0].value = '';
+              document.getElementsByName(element.id)[0].disabled = isChecked;
             }
           }
         );
