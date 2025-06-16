@@ -52,7 +52,7 @@
         <ul class="dropdown-menu">
             <li${menuitem == 'users' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.EditUsersActionBean">Gebruikers</stripes:link></li>
             <li${menuitem == 'groups' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.EditGroupsActionBean">Groepen</stripes:link></li>
-            <li${menuitem == 'incidents' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.IncidentsActionBean">Incidenten</stripes:link></li>
+            <li${menuitem == 'incidents' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.IncidentsActionBean">Incident filters</stripes:link></li>
             <li${menuitem == 'authorization' ? ' class="active"' : ''}><stripes:link beanclass="nl.opengeogroep.safetymaps.server.admin.stripes.AuthorizationActionBean">Authorisatie overzicht </stripes:link></li>
         </ul>
     </li>

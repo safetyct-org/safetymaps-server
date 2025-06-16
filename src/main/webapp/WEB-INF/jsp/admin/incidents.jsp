@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 <stripes:layout-render name="/WEB-INF/jsp/templates/admin.jsp" pageTitle="Incident authorisatie beheer" menuitem="incidents">
   <stripes:layout-component name="content">
 
-    <h1>Incident authorisatie</h1>
+    <h1>Incident filters</h1>
     <table class="table table-bordered table-striped table-fixed-header table-condensed table-hover" id="usergroups-table">
       <thead>
         <tr>
@@ -60,14 +60,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
         <div>
           <div class="col-sm-4">
-            <label class="control-label">Geselecteerde groep authorisatie(s) voor incidenten</label>
+            <label class="control-label">Authorisatie(s)</label>
+            <p class="help-block text-warning">Alle geselecteerde authorisaties voor de incident-module.</p>
             <c:forEach var="ir" items="${actionBean.incidentroles}">
               <p class="help-block text-warning">- <c:out value="${ir}"/></p>
             </c:forEach>
           </div>
           <div class="col-sm-4">
             <div class="form-group">              
-              <label class="control-label">Alleen voor locaties:</label>
+              <label class="control-label">Filter A (voor locatie):</label>
               <p class="help-block text-warning">Selecteer een of meerdere locaties, of selecteer niets voor alles.</p>
               <c:forEach var="loc" items="${actionBean.allLocs}" varStatus="status">
                   <div class="custom-control custom-checkbox">
@@ -78,11 +79,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             </div>
           </div>
           <div class="col-sm-4">
+            <label class="control-label">Filter B (voor meldingsclassificatie OF functionaris OF kvt-code OF karakteristiek):</label>
             <div class="form-group">
               <stripes:checkbox name="restrictions" class="custom-control-input restriction mcs" value="mcs" id="mcs" onclick="javascript:handleRestrictions(this.checked, 'mcs');"/>&nbsp;<label class="control-label">Alleen met meldingsclassificatie(s):</label>
               <p class="help-block text-warning">Geef een meldingsclassificatie op en gebruik een komma voor meerdere mogelijkheden.
-                <br/>Bijvoorbeeld alle dienstverlening: Dienstverlening
-                <br/>of alle dienstverlening en brand: Dienstverlening,Brand
+                <br/>- Bijvoorbeeld alle dienstverlening: Dienstverlening
+                <br/>- of alle dienstverlening en brand: Dienstverlening,Brand
               </p>
               <stripes:text class="form-control" name="mcs" />
             </div>
@@ -99,9 +101,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <div class="form-group">
               <stripes:checkbox name="restrictions" class="custom-control-input restriction chars" value="chars" id="chars" onclick="javascript:handleRestrictions(this.checked, 'chars');"/>&nbsp;<label class="control-label">Alleen met karakteristiek(en):</label>
               <p class="help-block text-warning">Geef een karakteristiek en optioneel een waarde op. Zit dit tussen [] met een : als scheidingsteken. Gebruik een komma voor meerdere mogelijkheden en laat leeg voor alle. 
-                <br/>Bijvoorbeeld alle grip 1 incidenten: [GRIP:1]
-                <br/>of alle weer alarm incidenten: [Soort weeralarm] 
-                <br/>of beide: [GRIP:1], [Soort weeralarm]</p>
+                <br/>- Bijvoorbeeld alle grip 1 incidenten: [GRIP:1]
+                <br/>- of alle weer alarm incidenten: [Soort weeralarm] 
+                <br/>- of beide: [GRIP:1], [Soort weeralarm]</p>
               <stripes:text class="form-control" name="chars" />
             </div>
           </div>
