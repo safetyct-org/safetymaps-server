@@ -26,10 +26,10 @@ public class AuthCacheItem extends CacheItem {
 
   public AuthCacheItem(String roles, String mcs, String funcs, String chars, String kvts, String locs, List<AuthIncLocCacheItem> allIncLocs) {
     this.roles = roles;
-    this.mcs = mcs.toLowerCase();
-    this.funcs = funcs.toLowerCase();
-    this.chars = chars.toLowerCase();
-    this.kvts = kvts.toLowerCase();
+    this.mcs = mcs;
+    this.funcs = funcs;
+    this.chars = chars;
+    this.kvts = kvts;
     this.locs = locs;
 
     this.incLocs = allIncLocs.stream().filter(il -> Arrays.stream(locs.split(",")).filter(l -> l.equals(il.GetIdString())).count() > 0).collect(Collectors.toList());
