@@ -168,7 +168,7 @@ public class OIVActionBean implements ActionBean {
     dbks = dbkWithAddresList(id);
 
     Map<String,Object> dbk = DB.oivQr().query(
-      "select vo.formelenaam, bl.min_bouwlaag, bl.max_bouwlaag, vo.typeobject " +
+      "select vo.formelenaam, bl.min_bouwlaag, bl.max_bouwlaag, vo.typeobject, vo.bijzonderheden " +
       "from objecten.mview_objectgegevens vo " +
       "left join ( " +
       "  select min(bouwlaag) min_bouwlaag, max(bouwlaag) max_bouwlaag, object_id " +
@@ -377,6 +377,12 @@ public class OIVActionBean implements ActionBean {
     , new MapListHandler(), id, layer, id);
 
     dbkJSON.put("media", rowsToJson(media, false, false));
+
+    List<Map<String,Object>> bhv = DB.oivQr().query(
+      "select dagen, tijdvakbegin, tijdvakeind, ademluchtdragend where object_id = ? "
+    , new MapListHandler(), id);
+
+    dbkJSON.put("bhv", rowsToJson(bhv, false, false));
 
     if (!"0".equals(bagid)) {
       /*Map<String,Object> dbkAdres = DB.bagQr().query(
