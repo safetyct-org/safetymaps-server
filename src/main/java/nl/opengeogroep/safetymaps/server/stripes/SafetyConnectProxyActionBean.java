@@ -218,6 +218,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                 */
                 String hideNotepadOnTerm = Cfg.getSetting("kladblok_hidden_on_term", "#&*^@&^#&*&HGDGJFGS8F778ASDxcvsdfdfsdfsd");
   
+                boolean isauthfor_hidearchive = request.isUserInRole("smvng_incidentmonitor_cantviewarchivedincidents");
                 boolean isauthfor_hidenotepad = request.isUserInRole("smvng_incident_hidenotepad");
                 boolean isauthfor_alldiscnotepad = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_alldiscnotepad");
                 boolean isauthfor_alldiscunits = request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incident_alldiscunits");
@@ -286,7 +287,7 @@ public class SafetyConnectProxyActionBean implements ActionBean {
                     incident.put("kladblokregels", discnotepad);
                   }
   
-                  if (checkDate.before(startDtg) || incident.getString("status").equals("operationeel"))
+                  if (incident.getString("status").equals("operationeel") || (checkDate.before(startDtg) && !isauthfor_hidearchive))
                   {
                     Boolean isPutWithDefaultAuth = false;
                     if (isauthfor_incident && incIsNotConcattedOrIsUserisAuthForConcatted && isauthfor_trainingincident && incident.getString("incidentId").startsWith(("FLK")) && isauthfor_prio45 && discipline != null && discipline.has("prioriteit") && (Integer)discipline.get("prioriteit") > 3) {
