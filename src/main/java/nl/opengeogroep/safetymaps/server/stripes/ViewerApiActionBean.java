@@ -399,6 +399,7 @@ public class ViewerApiActionBean implements ActionBean {
             
         } else if (isSmvng && "IncidentMonitor".equals(name)) {
             options.put(prefixSmvng + "LeavingIncidentForLocalVehcile", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incidentmonitor_leaveincident")); 
+            options.put(prefixSmvng + "HideArchive", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_incidentmonitor_cantviewarchivedincidents")); 
         } else if (isSmvng && "VehicleInfo".equals(name)) {
             options.put(prefixSmvng + "showVehicleLocationsOnIncident", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_incidentlocations")); 
             options.put(prefixSmvng + "showVehicleLocationsOnMap", request.isUserInRole(ROLE_ADMIN) || request.isUserInRole("smvng_vehicleinfo_maplocations")); 
