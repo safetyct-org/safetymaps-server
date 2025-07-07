@@ -408,7 +408,9 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
     try {
       // Is message for me
-      if (unitIsForMyRegion(move, Arrays.asList(RQ_REGIONS.split(",")))) {
+      int isForMe = unitIsForMyRegion(move, Arrays.asList(RQ_REGIONS.split(",")));
+
+      if (isForMe > 0) {
         Double lon = (Double)move.getDouble("lon");
         Double lat = (Double)move.getDouble("lat");
         Integer speed = move.has("speed") && move.get("speed").toString() != "null" ? move.getInt("speed") : 0;
@@ -417,16 +419,14 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
         List<UnitCacheItem>ocis = CACHE.FindUnitsWithId(moveId);
         ocis.forEach((oci) -> {
-          oci.UpdateLocation(lon, lat, speed, heading, eta);
-          CACHE.UpdateUnit(oci.GetSourceEnvId(), oci);
+          if (isForMe == 1 || (isForMe == 2 && oci.GetIncident() != "")) {
+            oci.UpdateLocation(lon, lat, speed, heading, eta);
+            CACHE.UpdateUnit(oci.GetSourceEnvId(), oci);
+          } else if (isForMe == 2 && oci.GetIncident() == "") {
+            oci.UpdateLocation(0.0, 0.0, 0, 0, 0);
+            CACHE.UpdateUnit(oci.GetSourceEnvId(), oci);
+          }
         });
-
-        /*Optional<UnitCacheItem> oci = CACHE.FindUnit(envId);
-        if (oci.isPresent()) {
-          UnitCacheItem ci = oci.get();
-          ci.UpdateLocation(lon, lat, speed, heading, eta);
-          CACHE.UpdateUnit(envId, ci);
-        }*/
       }
     } catch (Exception e) {
       LOG.error("Exception while updating unit-positions(" + envId + ") in database: ", e);
@@ -441,7 +441,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     String envId = vhost + '-' + etaId;
 
     try {
-      if (unitIsForMyRegion(eta, Arrays.asList(RQ_REGIONS.split(",")))) {
+      if (unitIsForMyRegion(eta, Arrays.asList(RQ_REGIONS.split(","))) > 0) {
         Integer etaInSec = eta.has("etaInSec") && eta.get("etaInSec").toString() != "null" ? eta.getInt("etaInSec") : 0;
   
         List<UnitCacheItem>ocis = CACHE.FindUnitsWithId(etaId);
@@ -467,11 +467,12 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     JSONObject unit = extractObjectFromMessage(msgBody);
 
     String unitId = unit.getString("roepnaam");
-    String envId = vhost + '-' + unitId;
+    String envId = vhost + '-' + unitId; 
 
     try {
       // Is message for me
       if (
+        unitIsForMyRegion(unitId, Arrays.asList(RQ_REGIONS.split(","))) > 0 ||
         unitIsForMe(unit, "afzender", Arrays.asList(RQ_SENDERS.split(",")), true) == true ||
         unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(",")), false) == true
       ) {
@@ -734,14 +735,17 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     return matched;
   }
 
-  private static boolean unitIsForMyRegion(JSONObject unit, List<String> regionCodes) {
+  private static int unitIsForMyRegion(JSONObject unit, List<String> regionCodes) {
     String unitName = unit.has("unit") ? unit.getString("unit") : "aaaaaaaaaa";
     String unitRegion = unitName.length() > 2 ? unitName.substring(0, 2) : "notfound";
 
-    boolean matched = false;
-    boolean found = regionCodes.contains(unitRegion) || regionCodes.contains("(EM)" + unitRegion);
-    if (found) { 
-      matched = true;
+    int matched = 0;
+    boolean found1 = regionCodes.contains(unitRegion);
+    boolean found2 = regionCodes.contains("(EM)" + unitRegion);
+    if (found1) { 
+      matched = 1;
+    } else if (found2) {
+      matched = 2;
     }
 
     return matched;
