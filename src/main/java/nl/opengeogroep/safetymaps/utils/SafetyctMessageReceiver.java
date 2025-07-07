@@ -472,7 +472,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     try {
       // Is message for me
       if (
-        unitIsForMyRegion(unitId, Arrays.asList(RQ_REGIONS.split(","))) > 0 ||
+        unitIsForMyRegion(unit, Arrays.asList(RQ_REGIONS.split(","))) > 0 ||
         unitIsForMe(unit, "afzender", Arrays.asList(RQ_SENDERS.split(",")), true) == true ||
         unitIsForMe(unit, "meldkamerStatusAbonnementen", Arrays.asList(RQ_SENDERS.split(",")), false) == true
       ) {
@@ -736,7 +736,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
   }
 
   private static int unitIsForMyRegion(JSONObject unit, List<String> regionCodes) {
-    String unitName = unit.has("unit") ? unit.getString("unit") : "aaaaaaaaaa";
+    String unitName = unit.has("unit") ? unit.getString("unit") : unit.has("roepnaam") ? unit.getString("roepnaam"); : "aaaaaaaaaa";
     String unitRegion = unitName.length() > 2 ? unitName.substring(0, 2) : "notfound";
 
     int matched = 0;
