@@ -736,7 +736,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
   }
 
   private static int unitIsForMyRegion(JSONObject unit, List<String> regionCodes) {
-    String unitName = unit.has("unit") ? unit.getString("unit") : unit.has("roepnaam") ? unit.getString("roepnaam"); : "aaaaaaaaaa";
+    String unitName = unit.has("unit") ? unit.getString("unit") : unit.has("roepnaam") ? unit.getString("roepnaam") : "aaaaaaaaaa";
     String unitRegion = unitName.length() > 2 ? unitName.substring(0, 2) : "notfound";
 
     int matched = 0;
