@@ -380,7 +380,7 @@ public class OIVActionBean implements ActionBean {
       dbkJSON.put("media", rowsToJson(media, false, false));
 
       List<Map<String,Object>> bhv = DB.oivQr().query(
-        "select dagen, tijdvakbegin, tijdvakeind, ademluchtdragend where object_id = ? "
+        "select dagen, tijdvakbegin, tijdvakeind, ademluchtdragend from mview_bedrijfshulpverlening where object_id = ? "
       , new MapListHandler(), id);
 
       dbkJSON.put("bhv", rowsToJson(bhv, false, false));
