@@ -182,6 +182,7 @@ public class PersistentAuthenticationFilter implements Filter {
                 response.addCookie(cookie);
                 PersistentSessionManager.deleteSession(sessionId);
             }
+            request.logout();
             session.invalidate();
             chain.doFilter(request, response);
             return;
