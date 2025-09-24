@@ -91,7 +91,7 @@ public class OIVActionBean implements ActionBean {
   }
 
   private Resolution styles() throws Exception {
-    String imgPrefix = getVersion() > 30612 ? "base64_prefix" : "'data:image/png;base64,'";
+    String imgPrefix = getVersion() > 30611 ? "base64_prefix" : "'data:image/png;base64,'";
 
     List<Map<String,Object>> symbols = DB.oivQr().query(
       "select symbol_name, concat(" + imgPrefix  + ", encode(symbol, 'base64')) as symbol from algemeen.symbols"
@@ -185,7 +185,7 @@ public class OIVActionBean implements ActionBean {
       "where vo.id = ?"
     , new MapHandler(), id);
 
-    String imgPrefix = getVersion() > 30612 ? "s.base64_prefix" : "'data:image/png;base64,'";
+    String imgPrefix = getVersion() > 30611 ? "s.base64_prefix" : "'data:image/png;base64,'";
 
     List<Map<String,Object>> gs = DB.oivQr().query(
         "select vn_nr, gevi_nr, eric_kaart, hoeveelheid, eenheid, toestand, omschrijving, st_astext(geom) geom, coalesce(rotatie, 0) rotatie, size, " +
