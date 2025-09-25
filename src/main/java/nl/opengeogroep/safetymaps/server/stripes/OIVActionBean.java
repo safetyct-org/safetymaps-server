@@ -309,7 +309,7 @@ public class OIVActionBean implements ActionBean {
       "where vc.object_id = ? "
     , new MapListHandler(), id);
 
-    String labelpos = getVersion() > 30612 ? "label_positie" : "'midden - rechts' as label_positie";
+    String labelpos = getVersion() > 30612 ? "label_positie" : "'onder - midden' as label_positie";
 
     List<Map<String,Object>> symbols = DB.oivQr().query(
       "select rotatie, label, size, st_astext(geom) geom, soort, vab.symbol_name, " + labelpos + " " +
