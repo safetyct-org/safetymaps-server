@@ -69,7 +69,7 @@ public class CACHE {
       "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
       "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id and vb.pand_id = basisreg_identifier " + 
       "left join objecten.mview_terrein t on vo.id = t.object_id " +
-      " group by vo.typeobject, ot.symbol_name, vo.id, vo.formelenaam, vo.geom, basisreg_identifier, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag"
+      " group by vo.typeobject, ot.symbol_name, ot.symbol_type, vo.id, vo.formelenaam, vo.geom, basisreg_identifier, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag"
     , new MapListHandler());
     
     for(Map<String, Object> dbk: dbks) {
