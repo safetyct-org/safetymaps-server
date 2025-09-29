@@ -591,11 +591,17 @@ public class SafetyctMessageReceiver implements ServletContextListener {
           JSONObject dbUnit = new JSONObject();
           Optional<UnitCacheItem> ouci = CACHE.FindUnit(unitEnvId);
           if (ouci.isPresent()) {
-            String izr = unit.has("inzetrol") && !unit.has("eindeActieDtg") ? unit.getString("inzetrol") : "";
-            String inr = !unit.has("eindeActieDtg") ? "" + number + "" : "";
             UnitCacheItem uci = ouci.get();
-            uci.UpdateIncident(izr, inr);
-            CACHE.UpdateUnit(unitEnvId, uci);
+            String uci_incident = "" + number + "";
+            // Make sure to only update the unit if the current incidentnumber is still the this incidentnumber.
+            // This make sure a unit is not disconnected from an other incident.
+            // This could happen when a new incident-messegae for a unit is receveid before the messeage that disconnects the unit from an older incident.
+            if (uci.GetIncident() == uci_incident) {
+              String izr = unit.has("inzetrol") && !unit.has("eindeActieDtg") ? unit.getString("inzetrol") : "";
+              String inr = !unit.has("eindeActieDtg") ? uci_incident : "";            
+              uci.UpdateIncident(izr, inr);
+              CACHE.UpdateUnit(unitEnvId, uci);
+            }
 
             dbUnit = SafetyctMessageUtil.MapUnitDbRowAllColumnsAsJSONObject(ouci.get().ConvertToMap());
           }
