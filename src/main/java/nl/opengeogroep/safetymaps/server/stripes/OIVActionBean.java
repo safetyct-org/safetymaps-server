@@ -312,51 +312,51 @@ public class OIVActionBean implements ActionBean {
     String labelpos = getVersion() > 30612 ? "label_positie" : "'onder - midden' as label_positie";
 
     List<Map<String,Object>> symbols = DB.oivQr().query(
-      "select rotatie, label, size, st_astext(geom) geom, soort, vab.symbol_name, " + labelpos + " " +
+      "select rotatie, label, size, st_astext(geom) geom, soort, vab.symbol_name, vab.opmerking, " + labelpos + " " +
       "from objecten.mview_afw_binnendekking vab " +
       "inner join algemeen.symbols s on s.symbol_name = vab.symbol_name " +
       "where object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, soort, vo.symbol_name, " + labelpos + " " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vo.symbol_name, vo.opmerking, " + labelpos + " " +
       "from objecten.mview_opstelplaats vo " +
       "inner join algemeen.symbols s on s.symbol_name = vo.symbol_name " +
       "where vo.object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, soort, vib.symbol_name, " + labelpos + " " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vib.symbol_name, vib.opmerking, " + labelpos + " " +
       "from objecten.mview_ingang_bouwlaag vib " +
       "inner join algemeen.symbols s on s.symbol_name = vib.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, soort, vir.symbol_name, " + labelpos + " " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vir.symbol_name, vir.opmerking, " + labelpos + " " +
       "from objecten.mview_ingang_ruimtelijk vir " +
       "inner join algemeen.symbols s on s.symbol_name = vir.symbol_name " +
       "where object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, soort, vdb.symbol_name, " + labelpos + " " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vdb.symbol_name, vdb.opmerking, " + labelpos + " " +
       "from objecten.mview_dreiging_bouwlaag vdb " +
       "inner join algemeen.symbols s on s.symbol_name = vdb.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, soort, vdr.symbol_name, " + labelpos + " " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vdr.symbol_name, vdr.opmerking, " + labelpos + " " +
       "from objecten.mview_dreiging_ruimtelijk vdr " +
       "inner join algemeen.symbols s on s.symbol_name = vdr.symbol_name " +
       "where object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, soort, vpoi.symbol_name, " + labelpos + " " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vpoi.symbol_name, vpoi.opmerking, " + labelpos + " " +
       "from objecten.mview_points_of_interest vpoi " +
       "inner join algemeen.symbols s on s.symbol_name = vpoi.symbol_name " +
       "where vpoi.object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, soort, vsb.symbol_name, " + labelpos + " " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vsb.symbol_name, vsb.opmerking, " + labelpos + " " +
       "from objecten.mview_sleutelkluis_bouwlaag vsb " +
       "inner join algemeen.symbols s on s.symbol_name = vsb.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, soort, vsr.symbol_name, " + labelpos + " " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vsr.symbol_name, vsr.opmerking, " + labelpos + " " +
       "from objecten.mview_sleutelkluis_ruimtelijk vsr " +
       "inner join algemeen.symbols s on s.symbol_name = vsr.symbol_name " +
       "where object_id = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, soort, vvi.symbol_name, " + labelpos + " " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vvi.symbol_name, vvi.opmerking, " + labelpos + " " +
       "from objecten.mview_veiligh_install vvi " +
       "inner join algemeen.symbols s on s.symbol_name = vvi.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
-      "union select rotatie, label, size, st_astext(geom) geom, soort, vvr.symbol_name, " + labelpos + " " +
+      "union select rotatie, label, size, st_astext(geom) geom, soort, vvr.symbol_name, vvr.opmerking, " + labelpos + " " +
       "from objecten.mview_veiligh_ruimtelijk vvr " +
       "inner join algemeen.symbols s on s.symbol_name = vvr.symbol_name " +
       "where object_id = ?"
