@@ -595,13 +595,13 @@ public class SafetyctMessageReceiver implements ServletContextListener {
             // Make sure to only update the unit if the current incidentnumber is still this incidentnumber.
             // This make sure a unit is not disconnected from an other incident.
             // This could happen when a new incident-messegae for a unit is receveid before the messeage that disconnects the unit from an older incident.
-            if (!unit.has("eindeActieDtg")) {
+            if (status.toLowerCase().equals("gearchiveerd") && uci.GetIncident().equals(number.toString())) {
+              uci.UpdateIncident("", "");
+            } else if (unit.has("eindeActieDtg") && uci.GetIncident().equals(number.toString())) {
+              uci.UpdateIncident("", "");
+            } else if (!unit.has("eindeActieDtg")) {
               String izr = unit.has("inzetrol") ? unit.getString("inzetrol") : "";
               uci.UpdateIncident(izr, number.toString());
-            } else if (status.toLowerCase().equals("gearchiveerd") && uci.GetIncident().equals(number.toString())) {
-              uci.UpdateIncident("", "");
-            } else if (uci.GetIncident().equals(number.toString())) {
-              uci.UpdateIncident("", "");
             }
             
             CACHE.UpdateUnit(unitEnvId, uci);
