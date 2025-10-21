@@ -419,10 +419,10 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
         List<UnitCacheItem>ocis = CACHE.FindUnitsWithId(moveId);
         ocis.forEach((oci) -> {
-          if (isForMe == 1 || (isForMe == 2 && oci.GetIncident() != "")) {
+          if (isForMe == 1 || (isForMe == 2 && oci.GetIncident() != null && !oci.GetIncident().equals(""))) {
             oci.UpdateLocation(lon, lat, speed, heading, eta);
             CACHE.UpdateUnit(oci.GetSourceEnvId(), oci);
-          } else if (isForMe == 2 && oci.GetIncident() == "") {
+          } else if (isForMe == 2 && (oci.GetIncident() == null || oci.GetIncident().equals(""))) {
             oci.UpdateLocation(0.0, 0.0, 0, 0, 0);
             CACHE.UpdateUnit(oci.GetSourceEnvId(), oci);
           }
