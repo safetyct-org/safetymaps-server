@@ -90,6 +90,10 @@ public class OIVActionBean implements ActionBean {
     return Integer.parseInt(Cfg.getSetting("oivVersion", "30611"));
   }
 
+  private String getViewPrefix() throws Exception {
+    return Cfg.getSetting("oivUseMatViews", "true").equals("true") ? "mview" : "view";
+  }
+
   private Resolution styles() throws Exception {
     String imgPrefix = getVersion() > 30611 ? "base64_prefix" : "'data:image/png;base64,'";
 
@@ -176,10 +180,10 @@ public class OIVActionBean implements ActionBean {
 
     Map<String,Object> dbk = DB.oivQr().query(
       "select vo.formelenaam, bl.min_bouwlaag, bl.max_bouwlaag, vo.typeobject, vo.bijzonderheden " +
-      "from objecten.mview_objectgegevens vo " +
+      "from objecten." + getViewPrefix() + "_objectgegevens vo " +
       "left join ( " +
       "  select min(bouwlaag) min_bouwlaag, max(bouwlaag) max_bouwlaag, object_id " +
-      "  from objecten.mview_bouwlagen vb  " +
+      "  from objecten." + getViewPrefix() + "_bouwlagen vb  " +
       "  group by object_id " +
       ") bl on bl.object_id = vo.id " +
       "where vo.id = ?"
@@ -190,12 +194,12 @@ public class OIVActionBean implements ActionBean {
     List<Map<String,Object>> gs = DB.oivQr().query(
         "select vn_nr, gevi_nr, eric_kaart, hoeveelheid, eenheid, toestand, omschrijving, st_astext(geom) geom, coalesce(rotatie, 0) rotatie, size, " +
         "vgb.symbol_name, concat(" + imgPrefix + ", encode(s.symbol, 'base64')) as symbol " +
-        "from objecten.mview_gevaarlijkestof_bouwlaag vgb " +
+        "from objecten." + getViewPrefix() + "_gevaarlijkestof_bouwlaag vgb " +
         "inner join algemeen.symbols s on s.symbol_name = vgb.symbol_name " +
         "where object_id = ? and bouwlaag = ? " +
         "union select vn_nr, gevi_nr, eric_kaart, hoeveelheid, eenheid, toestand, omschrijving, st_astext(geom) geom, coalesce(rotatie, 0) rotatie, size, " +
         "vgr.symbol_name, concat(" + imgPrefix + ", encode(s.symbol, 'base64')) as symbol " +
-        "from objecten.mview_gevaarlijkestof_ruimtelijk vgr " +
+        "from objecten." + getViewPrefix() + "_gevaarlijkestof_ruimtelijk vgr " +
         "inner join algemeen.symbols s on s.symbol_name = vgr.symbol_name " +
         "where object_id = ?"
       , new MapListHandler(), id, layer, id);
@@ -204,7 +208,7 @@ public class OIVActionBean implements ActionBean {
       "select * from (select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-        "from objecten.mview_bereikbaarheid vb " +
+        "from objecten." + getViewPrefix() + "_bereikbaarheid vb " +
         "where vb.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid " +
@@ -232,13 +236,13 @@ public class OIVActionBean implements ActionBean {
       "select * " +
       "from (select label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "      from (select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-      "            from objecten.mview_bereikbaarheid vb " +
+      "            from objecten." + getViewPrefix() + "_bereikbaarheid vb " +
       "            where vb.object_id = ?) b " +
       "      left join algemeen.vw_styles s on s.id = b.styleid " +
       "      union " +
       "      select hoogte::varchar(255) as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "      from (select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-      "            from (SELECT * FROM objecten.mview_isolijnen) vb where vb.object_id = ? ) b " +
+      "            from (SELECT * FROM objecten." + getViewPrefix() + "_isolijnen) vb where vb.object_id = ? ) b " +
       "      left join algemeen.vw_styles s on s.id = b.styleid) a " +
       "order by a.soortnaam asc "
     , new MapListHandler(), id, id);
@@ -248,7 +252,7 @@ public class OIVActionBean implements ActionBean {
       "select * from (select '' as soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl, 1 as order " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-        "from objecten.mview_bouwlagen bl " +
+        "from objecten." + getViewPrefix() + "_bouwlagen bl " +
         "where bl.object_id = ? " +
         " and bl.bouwlaag = ?" + 
       ") b " +
@@ -256,7 +260,7 @@ public class OIVActionBean implements ActionBean {
       "union select soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl, 2 as order " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-        "from objecten.mview_ruimten vr " +
+        "from objecten." + getViewPrefix() + "_ruimten vr " +
         "where vr.object_id = ? " +
         " and vr.bouwlaag = ? " + 
       ") b " +
@@ -264,21 +268,21 @@ public class OIVActionBean implements ActionBean {
       "union select soortnaam, label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl, 3 as order " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-        "from objecten.mview_sectoren vs " +
+        "from objecten." + getViewPrefix() + "_sectoren vs " +
         "where vs.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid " +
       "union select soortnaam, label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl, 4 as order " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-        "from objecten.mview_gebiedsgerichte_aanpak vs " +
+        "from objecten." + getViewPrefix() + "_gebiedsgerichte_aanpak vs " +
         "where vs.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid " +
       "union select soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl, 5 as order " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-        "from objecten.mview_schade_cirkel_bouwlaag vs " +
+        "from objecten." + getViewPrefix() + "_schade_cirkel_bouwlaag vs " +
         "where vs.object_id = ? " +
         " and vs.bouwlaag = ? " +
       ") b " +
@@ -286,7 +290,7 @@ public class OIVActionBean implements ActionBean {
       "union select soortnaam, '' as label, st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl, 6 as order " +
       "from ( " +
         "select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-        "from objecten.mview_schade_cirkel_ruimtelijk vs " +
+        "from objecten." + getViewPrefix() + "_schade_cirkel_ruimtelijk vs " +
         "where vs.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid) sel order by sel.order asc, sel.soortnaam asc "
@@ -296,7 +300,7 @@ public class OIVActionBean implements ActionBean {
       "select * from (select st_astext(b.geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, soortnaam, lijnstijl " +
       "from ( " +
       "  select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-      "  from objecten.mview_veiligh_bouwk vvb " +
+      "  from objecten." + getViewPrefix() + "_veiligh_bouwk vvb " +
       "  where vvb.object_id = ? " +
       "    and vvb.bouwlaag = ? " +
       ") b " +
@@ -305,7 +309,7 @@ public class OIVActionBean implements ActionBean {
 
     List<Map<String,Object>> cont = DB.oivQr().query(
       "select telefoonnummer, soort, 'onbekend' as naam " +
-      "from objecten.mview_contactpersoon vc " +
+      "from objecten." + getViewPrefix() + "_contactpersoon vc " +
       "where vc.object_id = ? "
     , new MapListHandler(), id);
 
@@ -314,51 +318,51 @@ public class OIVActionBean implements ActionBean {
 
     List<Map<String,Object>> symbols = DB.oivQr().query(
       "select rotatie, label, size, st_astext(geom) geom, soort, vab.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_afw_binnendekking vab " +
+      "from objecten." + getViewPrefix() + "_afw_binnendekking vab " +
       "inner join algemeen.symbols s on s.symbol_name = vab.symbol_name " +
       "where object_id = ? " +
       "union select rotatie, label, size, st_astext(geom) geom, soort, vo.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_opstelplaats vo " +
+      "from objecten." + getViewPrefix() + "_opstelplaats vo " +
       "inner join algemeen.symbols s on s.symbol_name = vo.symbol_name " +
       "where vo.object_id = ? " +
       "union select rotatie, label, size, st_astext(geom) geom, soort, vib.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_ingang_bouwlaag vib " +
+      "from objecten." + getViewPrefix() + "_ingang_bouwlaag vib " +
       "inner join algemeen.symbols s on s.symbol_name = vib.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
       "union select rotatie, label, size, st_astext(geom) geom, soort, vir.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_ingang_ruimtelijk vir " +
+      "from objecten." + getViewPrefix() + "_ingang_ruimtelijk vir " +
       "inner join algemeen.symbols s on s.symbol_name = vir.symbol_name " +
       "where object_id = ? " +
       "union select rotatie, label, size, st_astext(geom) geom, soort, vdb.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_dreiging_bouwlaag vdb " +
+      "from objecten." + getViewPrefix() + "_dreiging_bouwlaag vdb " +
       "inner join algemeen.symbols s on s.symbol_name = vdb.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
       "union select rotatie, label, size, st_astext(geom) geom, soort, vdr.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_dreiging_ruimtelijk vdr " +
+      "from objecten." + getViewPrefix() + "_dreiging_ruimtelijk vdr " +
       "inner join algemeen.symbols s on s.symbol_name = vdr.symbol_name " +
       "where object_id = ? " +
       "union select rotatie, label, size, st_astext(geom) geom, soort, vpoi.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_points_of_interest vpoi " +
+      "from objecten." + getViewPrefix() + "_points_of_interest vpoi " +
       "inner join algemeen.symbols s on s.symbol_name = vpoi.symbol_name " +
       "where vpoi.object_id = ? " +
       "union select rotatie, label, size, st_astext(geom) geom, soort, vsb.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_sleutelkluis_bouwlaag vsb " +
+      "from objecten." + getViewPrefix() + "_sleutelkluis_bouwlaag vsb " +
       "inner join algemeen.symbols s on s.symbol_name = vsb.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
       "union select rotatie, label, size, st_astext(geom) geom, soort, vsr.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_sleutelkluis_ruimtelijk vsr " +
+      "from objecten." + getViewPrefix() + "_sleutelkluis_ruimtelijk vsr " +
       "inner join algemeen.symbols s on s.symbol_name = vsr.symbol_name " +
       "where object_id = ? " +
       "union select rotatie, label, size, st_astext(geom) geom, soort, vvi.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_veiligh_install vvi " +
+      "from objecten." + getViewPrefix() + "_veiligh_install vvi " +
       "inner join algemeen.symbols s on s.symbol_name = vvi.symbol_name " +
       "where object_id = ? " +
       "  and bouwlaag = ? " +
       "union select rotatie, label, size, st_astext(geom) geom, soort, vvr.symbol_name, " + opm + labelpos + " " +
-      "from objecten.mview_veiligh_ruimtelijk vvr " +
+      "from objecten." + getViewPrefix() + "_veiligh_ruimtelijk vvr " +
       "inner join algemeen.symbols s on s.symbol_name = vvr.symbol_name " +
       "where object_id = ?"
     , new MapListHandler(), id, id, id, layer, id, id, layer, id, id, id, layer, id, id, layer, id);  
@@ -367,7 +371,7 @@ public class OIVActionBean implements ActionBean {
       "select * from (select omschrijving, rotatie, size, st_astext(geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
       "from ( " +
       "  select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-      "  from objecten.mview_label_bouwlaag vlb " +
+      "  from objecten." + getViewPrefix() + "_label_bouwlaag vlb " +
       "  where vlb.object_id = ? " +
       "    and vlb.bouwlaag = ? " +
       ") b " +
@@ -375,7 +379,7 @@ public class OIVActionBean implements ActionBean {
       "union select omschrijving, rotatie, size, st_astext(geom) geom, lijndikte, lijnkleur, vulkleur, vulstijl, verbindingsstijl, eindstijl, lijnstijl " +
       "from ( " +
       "  select *, cast(unnest(string_to_array(coalesce(style_ids, '0'), ',')) as integer) styleid " +
-      "  from objecten.mview_label_ruimtelijk vlr " +
+      "  from objecten." + getViewPrefix() + "_label_ruimtelijk vlr " +
       "  where vlr.object_id = ? " +
       ") b " +
       "left join algemeen.vw_styles s on s.id = b.styleid) sel "
@@ -385,14 +389,14 @@ public class OIVActionBean implements ActionBean {
 
     try {
       List<Map<String,Object>> media = DB.oivQr().query(
-        "select 'document' as \"type\", file_name as filename, geom from objecten.mview_scenario_bouwlaag vsb where vsb.object_id = ? and vsb.bouwlaag = ? " + 
-        "union select 'document' as \"type\", file_name as filename, geom from objecten.mview_scenario_ruimtelijk vsr where vsr.object_id = ? "
+        "select 'document' as \"type\", file_name as filename, geom from objecten." + getViewPrefix() + "_scenario_bouwlaag vsb where vsb.object_id = ? and vsb.bouwlaag = ? " + 
+        "union select 'document' as \"type\", file_name as filename, geom from objecten." + getViewPrefix() + "_scenario_ruimtelijk vsr where vsr.object_id = ? "
       , new MapListHandler(), id, layer, id);
 
       dbkJSON.put("media", rowsToJson(media, false, false));
 
       List<Map<String,Object>> bhv = DB.oivQr().query(
-        "select dagen, tijdvakbegin, tijdvakeind, ademluchtdragend from mview_bedrijfshulpverlening where object_id = ? "
+        "select dagen, tijdvakbegin, tijdvakeind, ademluchtdragend from " + getViewPrefix() + "_bedrijfshulpverlening where object_id = ? "
       , new MapListHandler(), id);
 
       dbkJSON.put("bhv", rowsToJson(bhv, false, false));
@@ -461,11 +465,11 @@ public class OIVActionBean implements ActionBean {
       String where = id > 0 ? "where vo.id = ?" : "where vo.id <> ?";
       /*List<Map<String,Object>> dbks = DB.oivQr().query(
           "select typeobject, ot.symbol_name, vo.id, vo.formelenaam, st_astext(coalesce(st_centroid(be.geovlak), vo.geom)) geom, coalesce(vb.pand_id, basisreg_identifier) as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(t.geom) as terrein_geom " +
-          "from objecten.mview_objectgegevens vo " +
+          "from objecten." + getViewPrefix() + "_objectgegevens vo " +
           "inner join objecten.object_type ot on ot.naam = vo.typeobject " + 
-          "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id " +
+          "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten." + getViewPrefix() + "_bouwlagen) vb on vb.object_id = vo.id " +
           "left join algemeen.bag_extent be on vb.pand_id = be.identificatie " +
-          "left join objecten.mview_terrein t on vo.id = t.object_id " + where
+          "left join objecten." + getViewPrefix() + "_terrein t on vo.id = t.object_id " + where
         , new MapListHandler(), id);*/
 
       String prefix = getVersion() > 30611 ? "concat(ot.symbol_name, '_', ot.symbol_type) as symbol_name" : "symbol_name";
@@ -473,10 +477,10 @@ public class OIVActionBean implements ActionBean {
 
       List<Map<String,Object>> dbks = DB.oivQr().query(
         "select vo.typeobject, " + prefix + ", vo.id, vo.formelenaam, st_astext(vo.geom) geom, basisreg_identifier as bid, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag, st_astext(ST_Union(ST_SnapToGrid(t.geom, 0.0001))) as terrein_geom " +
-        "from objecten.mview_objectgegevens vo " + 
+        "from objecten." + getViewPrefix() + "_objectgegevens vo " + 
         "inner join objecten.object_type ot on ot.naam = vo.typeobject " +
-        "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten.mview_bouwlagen) vb on vb.object_id = vo.id and vb.pand_id = basisreg_identifier " + 
-        "left join objecten.mview_terrein t on vo.id = t.object_id " + where +
+        "left join (select distinct object_id, pand_id, hoogste_bouwlaag, laagste_bouwlaag from objecten." + getViewPrefix() + "_bouwlagen) vb on vb.object_id = vo.id and vb.pand_id = basisreg_identifier " + 
+        "left join objecten." + getViewPrefix() + "_terrein t on vo.id = t.object_id " + where +
         " group by vo.typeobject, ot.symbol_name," + suffix +" vo.id, vo.formelenaam, vo.geom, basisreg_identifier, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag"
       , new MapListHandler(), id);
       
