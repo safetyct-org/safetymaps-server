@@ -303,7 +303,7 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
 
         for(String user : users) {
             for(String extraRole : extraRoles) {
-                qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values(?,?)", user, extraRole);
+                qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values(?,?) on conflict (username, role) do update set role = ?", user, extraRole, extraRole);
             }
         }
 
@@ -320,7 +320,7 @@ public class EditGroupsActionBean implements ActionBean, ValidationErrorHandler 
 
         qr().update("delete from " + USER_ROLE_TABLE + " where role = ?", role);
         for(String u: users) {
-            qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values (?,?)", u, role);
+            qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values (?,?) on conflict (username, role) do update set role = ?", u, role, role);
         }
 
         UpdatableLoginSessionFilter.updateAllSessionRoles();

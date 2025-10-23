@@ -349,7 +349,7 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
 
         if(roles != null) {
             for(String r: roles) {
-                qr().update("insert into " + USER_ROLE_TABLE + " (username, role) values (?, ?)", username, r);
+                qr().update("insert into " + USER_ROLE_TABLE + " (username, role) values (?, ?) on conflict (username, role) do update set role = ?", username, r, r);
         
                 if (r != "admin") {
                     String er = qr().query("select roles from " + ROLE_TABLE + " where role = ?", new ScalarHandler<String>(), r);
@@ -359,7 +359,7 @@ public class EditUsersActionBean implements ActionBean, ValidationErrorHandler {
             
                         for(String extraRole : extraRoles) {
                             if (extraRole.length() > 0) {
-                                qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values(?,?)", username, extraRole);
+                                qr().update("insert into " + USER_ROLE_TABLE + "(username,role) values(?,?) on conflict (username, role) do update set role = ?", username, extraRole, extraRole);
                             }
                         }
                     }
