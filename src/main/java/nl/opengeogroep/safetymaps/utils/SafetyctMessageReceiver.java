@@ -129,10 +129,12 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         .build(); 
 
       CronExpression ceCacheClean = new CronExpression("0 0 0/1 1/1 * ?");
-      CronExpression ceCacheSave = new CronExpression("*/1 * * * * ?");
+      CronExpression ceCacheSave = new CronExpression("5 0/2 * * * ?");
+      CronExpression ceCacheLoad = new CronExpression("15 0/5 * * * ?");
 
       CronScheduleBuilder csCacheClean = CronScheduleBuilder.cronSchedule(ceCacheClean);
       CronScheduleBuilder csCacheSave = CronScheduleBuilder.cronSchedule(ceCacheSave);
+      CronScheduleBuilder csCacheLoad = CronScheduleBuilder.cronSchedule(ceCacheLoad);
 
       Trigger cacheCleanTrigger = TriggerBuilder.newTrigger()
         .withIdentity("CacheClean trigger")
@@ -150,14 +152,13 @@ public class SafetyctMessageReceiver implements ServletContextListener {
 
       if (OIV_DBK.equals("true")) {
         JobDetail cacheDbkJob = JobBuilder.newJob(CacheDbkJob.class)
-        .withIdentity("CacheDbk job")
-        .withDescription("Load DBK list into cach each hour at the start of each hour")
-        .build();
-        CronScheduleBuilder csCacheDbk = CronScheduleBuilder.cronSchedule(ceCacheClean);
+          .withIdentity("CacheDbk job")
+          .withDescription("Load DBK list into cach each hour at the start of each hour")
+          .build();
         Trigger cacheDbkTrigger = TriggerBuilder.newTrigger()
           .withIdentity("CacheDbk trigger")
           .startNow()
-          .withSchedule(csCacheDbk)
+          .withSchedule(csCacheLoad)
           .build();
         SCHEDULER.scheduleJob(cacheDbkJob, cacheDbkTrigger);
       }

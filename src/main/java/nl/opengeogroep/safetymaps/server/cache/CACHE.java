@@ -65,9 +65,7 @@ public class CACHE {
     return Integer.parseInt(Cfg.getSetting("oivVersion", "30611"));
   }
 
-  public static final void ReInitDbks() throws SQLException, NamingException, Exception {
-    ClearDbks();
-    
+  public static final void ReInitDbks() throws SQLException, NamingException, Exception {    
     String prefix = CACHE.getOIVVersion() > 30611 ? "concat(ot.symbol_name, '_', ot.symbol_type) as symbol_name" : "symbol_name";
     String suffix = CACHE.getOIVVersion() > 30611 ? " ot.symbol_type,": "";
 
@@ -80,6 +78,8 @@ public class CACHE {
       " group by vo.typeobject, ot.symbol_name,"+ suffix +" vo.id, vo.formelenaam, vo.geom, basisreg_identifier, vo.bron, bron_tabel, hoogste_bouwlaag, laagste_bouwlaag"
     , new MapListHandler());
     
+    ClearDbks();
+
     for(Map<String, Object> dbk: dbks) {
         String source = (String)dbk.get("bron");
         String bid = (String)dbk.get("bid");
