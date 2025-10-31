@@ -376,8 +376,12 @@ public class CACHE {
     //return CACHE.units.stream().filter(u -> u.GetSourceEnvId().equals(sourceEnvId)).findFirst();
   }
 
-  public static final List<UnitCacheItem> FindUnitsWithId(String unitId) {
-    return CACHE.units.values().stream().filter(u -> u.sourceId.equals(unitId)).collect(Collectors.toList());
+  public static final List<UnitCacheItem> FindUnitsWithId(String sourceEnv, String unitId) {
+    if (sourceEnv.equals("productie")) {
+      return CACHE.units.values().stream().filter(u -> u.sourceId.equals(unitId)).collect(Collectors.toList());
+    } else {
+      return CACHE.units.values().stream().filter(u -> u.sourceEnv.equals(sourceEnv) && u.sourceId.equals(unitId)).collect(Collectors.toList());
+    }
   }
 
   public static final List<Map<String, Object>> GetUnits(String sourceEnv) {

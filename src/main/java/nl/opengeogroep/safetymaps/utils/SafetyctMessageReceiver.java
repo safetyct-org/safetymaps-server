@@ -61,6 +61,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
   private static String RQ_PARAMS;
   private static String RQ_OPTIONAL_ONLY_UNITS;
   private static String RQ_OPTIONAL_TEST_UNITS;
+  private static String RQ_OPTIONAL_ACC_UNITS;
   private static String RQ_OPTIONAL_ROAD_ATTENTIONS;
   private static String RQ_OPTIONAL_NAME_PREFIX;
   
@@ -207,7 +208,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       }
 
       // Vehicle pos and eta only for prod
-      if (vhost.toLowerCase().equals("productie") || (RQ_OPTIONAL_TEST_UNITS.toLowerCase().equals("true") && vhost.toLowerCase().equals("test"))) {
+      if (vhost.toLowerCase().equals("productie") || (RQ_OPTIONAL_ACC_UNITS.toLowerCase().equals("true") && vhost.toLowerCase().equals("acceptatie")) || (RQ_OPTIONAL_TEST_UNITS.toLowerCase().equals("true") && vhost.toLowerCase().equals("test"))) {
         try {
           initRabbitMqChannel(vhost, host.get().replace(matchVhost, ""), RQ_MB_POSITION_RECEIVED, "unit_moved");
         } catch (Exception e) {
@@ -278,6 +279,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
     RQ_OPTIONAL_ONLY_UNITS = Cfg.getSetting("safetyconnect_rq_optional_only_units", "false");
     RQ_OPTIONAL_NAME_PREFIX = Cfg.getSetting("safetyconnect_rq_optional_name_prefix", "");
     RQ_OPTIONAL_TEST_UNITS = Cfg.getSetting("safetyconnect_rq_optional_test_units", "false");
+    RQ_OPTIONAL_ACC_UNITS = Cfg.getSetting("safetyconnect_rq_optional_acc_units", "false");
 
     if (RQ_HOST == null || RQ_USER == null || RQ_PASS == null) {
       throw new Exception("One or more required 'safetyconnect_rq' settings are empty.");
@@ -418,7 +420,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
         Integer heading = move.has("heading") && move.get("heading").toString() != "null" ? move.getInt("heading") : 0;
         Integer eta = move.has("eta") && move.get("eta").toString() != "null" ? move.getInt("eta") : null;
 
-        List<UnitCacheItem>ocis = CACHE.FindUnitsWithId(moveId);
+        List<UnitCacheItem>ocis = CACHE.FindUnitsWithId(vhost, moveId);
         ocis.forEach((oci) -> {
           if (isForMe == 1 || (isForMe == 2 && oci.GetIncident() != null && !oci.GetIncident().equals(""))) {
             oci.UpdateLocation(lon, lat, speed, heading, eta);
@@ -445,7 +447,7 @@ public class SafetyctMessageReceiver implements ServletContextListener {
       if (unitIsForMyRegion(eta, Arrays.asList(RQ_REGIONS.split(","))) > 0) {
         Integer etaInSec = eta.has("etaInSec") && eta.get("etaInSec").toString() != "null" ? eta.getInt("etaInSec") : 0;
   
-        List<UnitCacheItem>ocis = CACHE.FindUnitsWithId(etaId);
+        List<UnitCacheItem>ocis = CACHE.FindUnitsWithId(vhost, etaId);
         ocis.forEach((oci) -> {
           oci.UpdateEta(etaInSec);
           CACHE.UpdateUnit(oci.GetSourceEnvId(), oci);
