@@ -102,6 +102,8 @@ public class ModAuthPubTktSSOFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse)servletResponse;
         HttpSession session = request.getSession();
 
+        domain = request.getServerName().replaceAll(".*\\.(?=.*\\.)", "");
+
         if(enabled) {
             try {
                 addSSOCookie(request, response, privateKey, name, domain, validitySeconds, assumeExternallyAuthenticated);
