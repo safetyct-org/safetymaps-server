@@ -86,17 +86,24 @@ public class CACHE {
         JSONObject result = rowToJson(dbk, false, false);
 
         if ("BAG".equals(source)) {
-          List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
-              "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam, pandid " +
-              "from bag_actueel.adres_full " +
-              "where pandid = ?"
-            , new MapListHandler(), bid);
-          
           JSONArray addresses = new JSONArray();
-          for(Map<String, Object> da: dbkAdresses) {
-            CACHE.bag.add(da);
-            addresses.put(rowToJson(da, true, false));
+
+          Optional<Map<String,Object>> dbkAdres = CACHE.bag.stream().filter(itm -> itm.get("pandid").toString().equals(bid)).findFirst();
+          if (!dbkAdres.isEmpty()) {
+            addresses.put(rowToJson(dbkAdres, true, false));
+          } else {
+            List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
+                "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam, pandid " +
+                "from bag_actueel.adres_full " +
+                "where pandid = ?"
+              , new MapListHandler(), bid);
+          
+            for(Map<String, Object> da: dbkAdresses) {
+              CACHE.bag.add(da);
+              addresses.put(rowToJson(da, true, false));
+            }
           }
+          
           result.put("adressen", addresses);
         } else {
           result.put("adressen", new JSONArray());
