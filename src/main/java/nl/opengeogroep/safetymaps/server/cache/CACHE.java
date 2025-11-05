@@ -87,10 +87,10 @@ public class CACHE {
 
         if ("BAG".equals(source)) {
           JSONArray addresses = new JSONArray();
-
           Optional<Map<String,Object>> dbkAdres = CACHE.bag.stream().filter(itm -> itm.get("pandid").toString().equals(bid)).findFirst();
-          if (!dbkAdres.isEmpty()) {
-            addresses.put(rowToJson(dbkAdres, true, false));
+
+          if (dbkAdres.isPresent()) {
+            addresses.put(rowToJson(dbkAdres.get(), true, false));
           } else {
             List<Map<String,Object>> dbkAdresses = DB.bagQr().query(
                 "select huisnummer, huisletter, huisnummertoevoeging, postcode, woonplaatsnaam, openbareruimtenaam as straatnaam, pandid " +

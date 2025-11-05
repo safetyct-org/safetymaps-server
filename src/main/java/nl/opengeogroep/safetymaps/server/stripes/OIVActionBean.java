@@ -412,7 +412,7 @@ public class OIVActionBean implements ActionBean {
       , new MapHandler(), bagid);*/
       Optional<Map<String,Object>> dbkAdres = CACHE.bag.stream().filter(itm -> itm.get("pandid").toString().equals(bagid)).findFirst();
 
-      if (!dbkAdres.isEmpty()) {
+      if (dbkAdres.isPresent()) {
         dbkJSON.put("adres", rowToJson(dbkAdres.get(), false, false));
       }
     }
